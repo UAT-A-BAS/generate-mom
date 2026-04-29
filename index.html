@@ -4821,6 +4821,278 @@
         });
       }
 
+      function appendInlineStyle(element, styleText) {
+        const currentStyle = element.getAttribute("style") || "";
+        element.setAttribute("style", `${currentStyle};${styleText}`);
+      }
+
+      function removeInlineStyleProperties(element, properties) {
+        properties.forEach((property) => {
+          element.style.removeProperty(property);
+        });
+      }
+
+      function applyOutlookTableColumnWidths(table, widths) {
+        if (!widths.length) {
+          return;
+        }
+
+        table.querySelector(":scope > colgroup")?.remove();
+
+        const colgroup = document.createElement("colgroup");
+        widths.forEach((width) => {
+          const col = document.createElement("col");
+          if (width) {
+            col.setAttribute("width", width.replace("px", ""));
+            col.setAttribute("style", `width:${width};`);
+          }
+          colgroup.appendChild(col);
+        });
+
+        table.insertBefore(colgroup, table.firstElementChild);
+
+        const activeRowSpans = [];
+        [...table.rows].forEach((row) => {
+          let columnIndex = 0;
+
+          [...row.cells].forEach((cell) => {
+            while (activeRowSpans[columnIndex] > 0) {
+              columnIndex += 1;
+            }
+
+            const width = widths[columnIndex];
+            if (width) {
+              cell.setAttribute("width", width.replace("px", ""));
+              appendInlineStyle(cell, `width:${width};`);
+            }
+
+            const rowSpan = Number(cell.getAttribute("rowspan") || 1);
+            const colSpan = Number(cell.getAttribute("colspan") || 1);
+            for (let offset = 0; offset < colSpan; offset += 1) {
+              activeRowSpans[columnIndex + offset] = Math.max(
+                activeRowSpans[columnIndex + offset] || 0,
+                rowSpan
+              );
+            }
+            columnIndex += colSpan;
+          });
+
+          for (let index = 0; index < activeRowSpans.length; index += 1) {
+            activeRowSpans[index] = Math.max((activeRowSpans[index] || 0) - 1, 0);
+          }
+        });
+      }
+
+      function getOutlookColumnWidths(table) {
+        if (table.classList.contains("table1")) {
+          return ["70px", "170px", "190px", "190px", "210px", "170px", "180px"];
+        }
+
+        if (table.classList.contains("table2")) {
+          return ["70px", "240px", "130px", "125px", "125px", "245px"];
+        }
+
+        if (table.classList.contains("table3")) {
+          return ["230px", "130px", "300px", "170px", "130px", "245px"];
+        }
+
+        return [...table.querySelectorAll("thead th")]
+          .map((heading) => heading.style.width)
+          .filter(Boolean);
+      }
+
+      function getOutlookTableWidth(table) {
+        if (table.classList.contains("table1")) {
+          return "1180px";
+        }
+
+        if (table.classList.contains("table2")) {
+          return "935px";
+        }
+
+        if (table.classList.contains("table3")) {
+          return "1205px";
+        }
+
+        return "1180px";
+      }
+
+      function applyOutlookSafeLayout(clonedRoot) {
+        const unsafeStyleProperties = [
+          "animation",
+          "animation-delay",
+          "animation-direction",
+          "animation-duration",
+          "animation-fill-mode",
+          "animation-iteration-count",
+          "animation-name",
+          "animation-play-state",
+          "animation-timing-function",
+          "box-shadow",
+          "column-gap",
+          "flex",
+          "flex-basis",
+          "flex-direction",
+          "flex-flow",
+          "flex-grow",
+          "flex-shrink",
+          "flex-wrap",
+          "gap",
+          "grid",
+          "grid-area",
+          "grid-auto-columns",
+          "grid-auto-flow",
+          "grid-auto-rows",
+          "grid-column",
+          "grid-column-end",
+          "grid-column-start",
+          "grid-row",
+          "grid-row-end",
+          "grid-row-start",
+          "grid-template",
+          "grid-template-areas",
+          "grid-template-columns",
+          "grid-template-rows",
+          "row-gap",
+          "transform",
+          "transition",
+          "transition-delay",
+          "transition-duration",
+          "transition-property",
+          "transition-timing-function",
+        ];
+
+        [clonedRoot, ...clonedRoot.querySelectorAll("*")].forEach((element) => {
+          if (!(element instanceof HTMLElement)) {
+            return;
+          }
+
+          const display = element.style.display;
+          removeInlineStyleProperties(element, unsafeStyleProperties);
+          if (!["TABLE", "TH", "TD"].includes(element.tagName)) {
+            element.style.minWidth = "0";
+            element.style.maxWidth = "100%";
+          }
+          element.style.borderRadius = "0";
+
+          if (display === "grid" || display === "inline-grid" || display === "flex" || display === "inline-flex") {
+            element.style.display =
+              element.tagName === "SPAN" || element.tagName === "A" ? "inline-block" : "block";
+          }
+        });
+
+        appendInlineStyle(
+          clonedRoot,
+          "display:block;width:100%;max-width:100%;min-width:0;margin:0;padding:0;"
+        );
+
+        clonedRoot.querySelectorAll(".doc-block, .table1-result-block, .title-with-flag").forEach((block) => {
+          appendInlineStyle(block, "display:block;width:100%;max-width:100%;min-width:0;margin:0 0 12px 0;");
+        });
+
+        clonedRoot.querySelectorAll(".doc-table-spacer").forEach((spacer) => {
+          appendInlineStyle(spacer, "display:block;height:14px;line-height:14px;font-size:0;");
+        });
+
+        clonedRoot.querySelectorAll("table").forEach((table) => {
+          const tableWidth = getOutlookTableWidth(table);
+          table.setAttribute("width", tableWidth.replace("px", ""));
+          table.setAttribute("cellpadding", "0");
+          table.setAttribute("cellspacing", "0");
+          table.setAttribute("border", "0");
+          appendInlineStyle(
+            table,
+            `width:${tableWidth};min-width:${tableWidth};max-width:none;border-collapse:collapse;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+          );
+        });
+
+        clonedRoot.querySelectorAll("th, td").forEach((cell) => {
+          cell.setAttribute("valign", "middle");
+          appendInlineStyle(
+            cell,
+            "border:1px solid #111;padding:8px 10px;vertical-align:middle;white-space:normal;word-break:break-word;overflow-wrap:anywhere;line-break:anywhere;mso-line-height-rule:exactly;"
+          );
+
+          if (cell.classList.contains("center")) {
+            appendInlineStyle(cell, "text-align:center;");
+          }
+
+          if (cell.classList.contains("top")) {
+            appendInlineStyle(cell, "vertical-align:top;");
+            cell.setAttribute("valign", "top");
+          }
+
+          if (cell.tagName === "TH") {
+            appendInlineStyle(cell, "font-weight:700;text-align:center;color:#111;");
+
+            if (cell.closest(".table1")) {
+              appendInlineStyle(cell, "background:#f7ebc2;");
+              cell.setAttribute("bgcolor", "#f7ebc2");
+            }
+
+            if (cell.closest(".table2")) {
+              appendInlineStyle(cell, "background:#9bd255;");
+              cell.setAttribute("bgcolor", "#9bd255");
+            }
+
+            if (cell.closest(".table3")) {
+              appendInlineStyle(cell, "background:#d7e3f7;");
+              cell.setAttribute("bgcolor", "#d7e3f7");
+            }
+          }
+
+          if (cell.closest(".procedure-group")) {
+            appendInlineStyle(cell, "background:#dcefb9;font-weight:700;");
+            cell.setAttribute("bgcolor", "#dcefb9");
+          }
+
+          if (cell.closest(".muted-status")) {
+            appendInlineStyle(cell, "background:#808080;color:#fff;");
+            cell.setAttribute("bgcolor", "#808080");
+          }
+        });
+
+        clonedRoot.querySelectorAll("table").forEach((table) => {
+          applyOutlookTableColumnWidths(table, getOutlookColumnWidths(table));
+        });
+
+        clonedRoot.querySelectorAll(".doc-title").forEach((title) => {
+          appendInlineStyle(title, "margin:0 0 8px 0;font-size:14pt;font-weight:700;color:#1c2734;");
+        });
+
+        clonedRoot.querySelectorAll("a.doc-link").forEach((link) => {
+          appendInlineStyle(
+            link,
+            "color:#0858cb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;white-space:normal;display:inline;"
+          );
+        });
+
+        clonedRoot.querySelectorAll(".status-pill").forEach((pill) => {
+          appendInlineStyle(pill, "display:inline-block;font-weight:700;padding:0;border-radius:0;");
+
+          if (pill.classList.contains("done")) {
+            appendInlineStyle(pill, "color:#176438;");
+          } else if (pill.classList.contains("ongoing")) {
+            appendInlineStyle(pill, "color:#0e4d92;");
+          } else {
+            appendInlineStyle(pill, "color:#7a4a00;");
+          }
+        });
+
+        clonedRoot.querySelectorAll(".flagged-cell").forEach((cell) => {
+          cell.setAttribute("bgcolor", "#f8fc46");
+          appendInlineStyle(cell, "background:#f8fc46;color:#111;mso-pattern:auto none;");
+        });
+
+        clonedRoot.querySelectorAll(".flagged-content").forEach((block) => {
+          appendInlineStyle(block, "display:block;width:100%;height:auto;margin:0;padding:0;");
+        });
+
+        clonedRoot.querySelectorAll(".cell-flag").forEach((badge) => {
+          badge.remove();
+        });
+      }
+
       function buildInlineStyledResultMarkup(options = {}) {
         const sourceRoot = elements.resultArea.querySelector(".result-document");
         if (!sourceRoot) {
@@ -4834,6 +5106,10 @@
         sourceNodes.forEach((sourceNode, index) => {
           const clonedNode = clonedNodes[index];
           if (!(sourceNode instanceof HTMLElement) || !(clonedNode instanceof HTMLElement)) {
+            return;
+          }
+
+          if (options.forOutlook) {
             return;
           }
 
@@ -4951,6 +5227,10 @@
           });
 
           applyExcelMemoLayout(clonedRoot);
+        }
+
+        if (options.forOutlook) {
+          applyOutlookSafeLayout(clonedRoot);
         }
 
         return clonedRoot.outerHTML;
@@ -5076,7 +5356,7 @@
       }
 
       function buildOutlookEmailDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup({ forExcel: true, includeMemo: false });
+        const styledMarkup = buildInlineStyledResultMarkup({ forOutlook: true, includeMemo: false });
         const projectName = escapeHtml(getPrimaryProjectName());
         const today = escapeHtml(formatTodayIndonesian());
 
@@ -5087,7 +5367,7 @@
               <title>MOM Outlook Export</title>
             </head>
             <body style="margin:0;padding:0;background:#ffffff;font-family:Aptos,Calibri,'Segoe UI',Arial,sans-serif;color:#1c2734;font-size:14px;line-height:1.45;">
-              <div style="padding:16px 18px;">
+              <div style="padding:16px 18px;width:auto;min-width:1180px;">
                 <p style="margin:0 0 12px 0;font-size:14pt;">Dear All,</p>
                 <p style="margin:0 0 16px 0;font-size:14pt;">
                   Berikut merupakan MoM <strong>${projectName}</strong> per tanggal <strong>${today}</strong>.
