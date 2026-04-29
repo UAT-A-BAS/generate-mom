@@ -1,0 +1,5581 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOM Persiapan Implementasi</title>
+    <style>
+      :root {
+        --bg: #eef3f8;
+        --surface: #ffffff;
+        --surface-muted: #f7f9fc;
+        --ink: #1c2734;
+        --ink-soft: #5b6778;
+        --line: #c9d3df;
+        --line-strong: #1f2d3d;
+        --accent: #1b4d78;
+        --accent-soft: #d9e8f5;
+        --gold: #f7ebc2;
+        --green: #9bd255;
+        --green-soft: #dcefb9;
+        --blue-soft: #d7e3f7;
+        --danger: #b3261e;
+        --muted-row: #808080;
+        --shadow: 0 18px 40px rgba(31, 45, 61, 0.08);
+        --radius: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, rgba(27, 77, 120, 0.08), transparent 34%),
+          linear-gradient(180deg, #f4f7fb 0%, #eaf0f6 100%);
+        color: var(--ink);
+        font-family: Aptos, Calibri, "Segoe UI", system-ui, sans-serif;
+      }
+
+      .workspace {
+        width: min(1860px, calc(100% - 4px));
+        margin: 0 auto;
+        padding: 16px 0 40px;
+      }
+
+      .app-credit-footer {
+        width: min(1860px, calc(100% - 4px));
+        margin: 0 auto;
+        padding: 18px 0 26px;
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        text-align: center;
+      }
+
+      .app-credit-footer::before {
+        content: "";
+        display: block;
+        width: min(420px, 72%);
+        height: 1px;
+        margin: 0 auto 14px;
+        background: linear-gradient(90deg, transparent, var(--line), transparent);
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        background:
+          linear-gradient(135deg, rgba(27, 77, 120, 0.97), rgba(19, 42, 69, 0.96)),
+          #163754;
+        color: #fff;
+        border-radius: 30px;
+        padding: 20px 190px 20px 22px;
+        box-shadow: var(--shadow);
+        animation: rise-in 520ms ease both;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -80px -90px auto;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 68%);
+        pointer-events: none;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(1.9rem, 4vw, 3rem);
+        letter-spacing: -0.04em;
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 760px;
+        color: rgba(255, 255, 255, 0.86);
+        line-height: 1.6;
+      }
+
+      .hero-actions {
+        position: absolute;
+        right: 26px;
+        bottom: 28px;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+        max-width: 160px;
+      }
+
+      .hero-actions button {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 12px;
+        padding: 9px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        box-shadow: none;
+        font-size: 0.84rem;
+        backdrop-filter: blur(8px);
+      }
+
+      .hero-actions button:hover {
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .hero-actions .btn-hero-primary {
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--accent);
+        border-color: rgba(255, 255, 255, 0.72);
+      }
+
+      .hero-actions .btn-hero-primary:hover {
+        background: #fff;
+      }
+
+      .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .hero-badge {
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        padding: 9px 14px;
+        font-size: 0.92rem;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(6px);
+      }
+
+      main {
+        display: grid;
+        gap: 22px;
+        margin-top: 22px;
+      }
+
+      .panel {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(201, 211, 223, 0.9);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        animation: rise-in 520ms ease both;
+      }
+
+      .panel-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .panel-header.compact-header {
+        align-items: center;
+        margin-bottom: 0;
+      }
+
+      .panel h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        letter-spacing: -0.03em;
+      }
+
+      .panel-intro {
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        line-height: 1.55;
+      }
+
+      .required-mark {
+        color: var(--danger);
+        font-weight: 900;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .table1-main-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .table1-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .table1-detail-grid.has-blueprint-field {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+
+      .table1-main-grid .field {
+        min-width: 0;
+      }
+
+      .table1-detail-grid .field {
+        min-width: 0;
+      }
+
+      .table1-main-grid .field.span-3 {
+        grid-column: span 1;
+      }
+
+      .table1-main-grid .field.span-4 {
+        grid-column: span 1;
+      }
+
+      .table1-support-grid {
+        margin-top: 16px;
+        align-items: start;
+      }
+
+      .table1-support-grid > .field {
+        align-self: stretch;
+      }
+
+      .table1-support-grid .flag-field,
+      .table1-support-grid .field-body {
+        height: 100%;
+      }
+
+      .blueprint-level-toggle {
+        display: grid;
+        gap: 8px;
+        justify-items: end;
+      }
+
+      .blueprint-level-toggle fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface-muted);
+      }
+
+      .blueprint-level-toggle legend {
+        padding: 0 6px;
+        color: var(--ink-soft);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .blueprint-level-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        padding: 8px 10px;
+        color: var(--ink-soft);
+        font-size: 0.88rem;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .blueprint-level-option input {
+        width: auto;
+        margin: 0;
+        accent-color: var(--accent);
+      }
+
+      .blueprint-level-option:has(input:checked) {
+        background: #fff;
+        color: var(--accent);
+        box-shadow: 0 8px 18px rgba(27, 77, 120, 0.1);
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.span-12 {
+        grid-column: span 12;
+      }
+
+      .field.span-8 {
+        grid-column: span 8;
+      }
+
+      .field.span-6 {
+        grid-column: span 6;
+      }
+
+      .field.span-4 {
+        grid-column: span 4;
+      }
+
+      .field.span-3 {
+        grid-column: span 3;
+      }
+
+      .field.span-2 {
+        grid-column: span 2;
+      }
+
+      .field span {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.86rem;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font: inherit;
+        color: var(--ink);
+        background: var(--surface);
+        transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: rgba(91, 103, 120, 0.48);
+        opacity: 1;
+      }
+
+      textarea {
+        min-height: 88px;
+        height: 88px;
+        resize: none;
+        overflow: auto;
+      }
+
+      input:disabled,
+      textarea:disabled,
+      select:disabled {
+        background: #eef2f7;
+        color: #7a8596;
+        cursor: not-allowed;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: rgba(27, 77, 120, 0.72);
+        box-shadow: 0 0 0 4px rgba(27, 77, 120, 0.12);
+        outline: none;
+      }
+
+      .flag-field {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+        border-radius: 14px;
+      }
+
+      .flag-field.is-flagged .field-body {
+        background: #fff;
+        border-radius: 12px;
+      }
+
+      .flag-field.is-disabled {
+        opacity: 0.82;
+      }
+
+      .field-body {
+        position: relative;
+        flex: 1;
+        transition: box-shadow 160ms ease;
+      }
+
+      .flag-field.is-flagged .field-body > input,
+      .flag-field.is-flagged .field-body > textarea,
+      .flag-field.is-flagged .field-body > select {
+        border-color: #f8fc46;
+        box-shadow: 0 0 0 2px rgba(248, 252, 70, 0.58);
+      }
+
+      .flag-field.is-flagged .field-body > input:focus,
+      .flag-field.is-flagged .field-body > textarea:focus,
+      .flag-field.is-flagged .field-body > select:focus {
+        border-color: #d8dc1f;
+        box-shadow:
+          0 0 0 2px rgba(248, 252, 70, 0.72),
+          0 0 0 5px rgba(27, 77, 120, 0.1);
+      }
+
+      .date-field-body {
+        cursor: pointer;
+      }
+
+      .field-body > input,
+      .field-body > textarea,
+      .field-body > select {
+        height: 100%;
+      }
+
+      .flag-toggle {
+        flex: 0 0 auto;
+        width: 18px;
+        min-width: 18px;
+        height: 22px;
+        padding: 0;
+        border: 1px solid rgba(228, 214, 154, 0.95);
+        border-radius: 6px;
+        background: #fff9da;
+        color: #7a6200;
+        box-shadow: none;
+        font-size: 0.56rem;
+        line-height: 1;
+      }
+
+      .flag-toggle.is-active {
+        background: #f8fc46;
+        color: #111;
+        border-color: #d8dc1f;
+      }
+
+      .flag-toggle:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .date-display {
+        cursor: pointer;
+        font-size: 0.86rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .native-date-input {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .field-body > .free-textarea {
+        min-height: 0;
+        height: 44px;
+        resize: none;
+        white-space: pre-wrap;
+        overflow: hidden !important;
+        overflow-y: hidden !important;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .field-body > .free-textarea::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      .field-body > .free-textarea.has-scroll {
+        overflow: auto !important;
+        overflow-y: auto !important;
+        scrollbar-width: auto;
+        -ms-overflow-style: auto;
+      }
+
+      .field-body > .free-textarea.has-scroll::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      .field-body > .free-textarea[data-field="bproName"],
+      .field-body > .free-textarea[data-field="changesName"] {
+        height: 64px;
+      }
+
+      .date-range-picker {
+        position: fixed;
+        z-index: 60;
+        width: 294px;
+        border: 1px solid rgba(201, 211, 223, 0.92);
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff;
+        box-shadow: 0 24px 56px rgba(28, 39, 52, 0.2);
+      }
+
+      .date-range-picker[hidden] {
+        display: none;
+      }
+
+      .date-picker-header {
+        display: grid;
+        grid-template-columns: 34px 1fr 1fr 34px;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+        color: #005bac;
+        font-weight: 700;
+      }
+
+      .date-picker-nav {
+        width: 30px;
+        min-width: 30px;
+        height: 30px;
+        padding: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #0066bd;
+        box-shadow: none;
+        font-size: 1.4rem;
+        line-height: 1;
+      }
+
+      .date-picker-nav:disabled {
+        color: #b6c0cc;
+      }
+
+      .date-picker-month,
+      .date-picker-year {
+        text-align: center;
+      }
+
+      .date-picker-title-btn {
+        width: 100%;
+        border: 0;
+        border-radius: 8px;
+        padding: 6px 4px;
+        background: transparent;
+        color: #005bac;
+        font: inherit;
+        font-weight: 700;
+        text-align: center;
+        box-shadow: none;
+      }
+
+      .date-picker-title-btn:focus {
+        outline: 2px solid rgba(0, 103, 189, 0.25);
+        box-shadow: none;
+      }
+
+      .date-picker-panel-header {
+        grid-template-columns: 34px 1fr 34px;
+      }
+
+      .date-picker-panel-title {
+        text-align: center;
+        color: #005bac;
+        font-weight: 700;
+      }
+
+      .date-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        text-align: center;
+      }
+
+      .date-picker-grid.month-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px 8px;
+      }
+
+      .date-picker-grid.year-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px 8px;
+      }
+
+      .date-picker-weekday {
+        color: #9aa8b8;
+        font-size: 0.82rem;
+      }
+
+      .date-picker-day {
+        width: 34px;
+        min-width: 34px;
+        height: 30px;
+        padding: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #001b3a;
+        box-shadow: none;
+        font-weight: 500;
+      }
+
+      .date-picker-day.is-muted {
+        color: #b7c0cc;
+      }
+
+      .date-picker-day.is-in-range {
+        background: #eef2f6;
+      }
+
+      .date-picker-day.is-selected {
+        background: #0067bd;
+        color: #fff;
+      }
+
+      .date-picker-day:focus {
+        outline: 2px solid rgba(0, 103, 189, 0.35);
+        outline-offset: 2px;
+      }
+
+      .date-picker-choice {
+        min-width: 0;
+        height: 34px;
+        padding: 0 8px;
+        border-radius: 7px;
+        background: transparent;
+        color: #001b3a;
+        box-shadow: none;
+        font-weight: 500;
+      }
+
+      .date-picker-choice.is-current {
+        color: #001b3a;
+      }
+
+      .date-picker-choice.is-selected {
+        background: #0067bd;
+        color: #fff;
+      }
+
+      .date-picker-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .date-picker-footer button {
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 0.8rem;
+      }
+
+      .rows-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .dynamic-card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(247, 249, 252, 0.95), rgba(255, 255, 255, 0.98));
+        padding: 14px;
+      }
+
+      .project-shell {
+        border: 1px solid rgba(27, 77, 120, 0.16);
+        border-radius: 24px;
+        background:
+          linear-gradient(180deg, rgba(217, 232, 245, 0.45), rgba(255, 255, 255, 0.98));
+        padding: 14px;
+      }
+
+      .project-shell > .field-grid {
+        margin-bottom: 0;
+      }
+
+      .project-section-card {
+        border-color: rgba(27, 77, 120, 0.12);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
+        padding: 12px;
+      }
+
+      .project-section-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .project-section-copy {
+        display: grid;
+        gap: 4px;
+      }
+
+      .section-kicker {
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .section-note {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.88rem;
+        line-height: 1.5;
+      }
+
+      .project-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        border-radius: 999px;
+        padding: 7px 12px;
+        background: rgba(27, 77, 120, 0.09);
+        color: var(--accent);
+        font-size: 0.86rem;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .dynamic-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .dynamic-card-title {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .row-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .table3-row-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .table3-add-row-actions {
+        justify-content: flex-end;
+        padding-top: 12px;
+      }
+
+      .checkbox-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .checklist-flag-field {
+        display: block;
+      }
+
+      .checklist-flag-field .checkbox-row {
+        align-items: center;
+      }
+
+      .checklist-flag-field .flag-toggle {
+        margin-left: 2px;
+      }
+
+      .checkbox-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 9px 12px;
+        background: #fff;
+        font-size: 0.92rem;
+      }
+
+      .checkbox-chip input {
+        width: auto;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 14px;
+        padding: 12px 18px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(27, 77, 120, 0.18);
+      }
+
+      .btn-secondary {
+        background: #eef4fa;
+        color: var(--accent);
+      }
+
+      .btn-inline-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-inline-icon svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .heading-with-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .smart-import-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 12px;
+        font-size: 1.18rem;
+        line-height: 1;
+      }
+
+      .smart-import-icon-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink-soft);
+        border: 1px solid var(--line);
+      }
+
+      .btn-danger {
+        background: #fdeeed;
+        color: var(--danger);
+      }
+
+      .btn-compact {
+        padding: 7px 10px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+      }
+
+      .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        padding: 0;
+        border-radius: 12px;
+      }
+
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+      }
+
+      .icon-btn-secondary {
+        background: #eef4fa;
+        color: var(--accent);
+        border: 1px solid #c9dcf0;
+      }
+
+      .icon-btn-danger {
+        background: #fdeeed;
+        color: var(--danger);
+        border: 1px solid #f3c8c4;
+      }
+
+      /* DUAL ACTION RELEASE PATCH */
+      .project-release-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+      }
+
+      .table1-detail-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 12px;
+      }
+
+      .btn-add-release-bottom {
+        width: 52px;
+        min-width: 52px;
+        height: 40px;
+        border-radius: 16px;
+      }
+
+      .btn-add-release-bottom:hover {
+        box-shadow: 0 10px 22px rgba(27, 77, 120, 0.12);
+      }
+
+      .table1-package.is-new-release {
+        animation: release-package-highlight 1.4s ease;
+      }
+
+      @keyframes release-package-highlight {
+        0% {
+          border-color: rgba(27, 77, 120, 0.42);
+          box-shadow: 0 0 0 0 rgba(27, 77, 120, 0.2);
+        }
+        45% {
+          border-color: rgba(27, 77, 120, 0.72);
+          box-shadow: 0 0 0 10px rgba(27, 77, 120, 0.08);
+        }
+        100% {
+          border-color: var(--line);
+          box-shadow: 0 0 0 0 rgba(27, 77, 120, 0);
+        }
+      }
+
+      .icon-btn-slim {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        border-radius: 10px;
+      }
+
+      .btn-move {
+        min-width: 28px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        background: #e6f1ff;
+        color: #1b4d78;
+        border: 1px solid #bdd6f8;
+        font-size: 0.92rem;
+        line-height: 1;
+      }
+
+      .input-table-wrap,
+      .result-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: #fff;
+      }
+
+      .input-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 780px;
+      }
+
+      .input-table.table2,
+      .input-table.table3 {
+        table-layout: fixed;
+      }
+
+      .input-table th,
+      .input-table td {
+        border: 1px solid var(--line);
+        padding: 10px;
+        vertical-align: top;
+      }
+
+      .input-table th {
+        background: #f1f5fa;
+        text-align: left;
+        font-size: 0.92rem;
+      }
+
+      .input-table.table2 th,
+      .input-table.table3 th,
+      .doc-table.table2 th,
+      .doc-table.table3 th {
+        text-align: center;
+        font-size: 0.98rem;
+      }
+
+      .input-table.table2 td:nth-child(2),
+      .doc-table.table2 td.activity-cell {
+        text-align: left;
+      }
+
+      .input-table.table2 td:nth-child(n + 2):nth-child(-n + 6),
+      .doc-table.table2 td:nth-child(n + 2):nth-child(-n + 6) {
+        text-align: left;
+      }
+
+      .input-table.table2 td:nth-child(n + 2):nth-child(-n + 6) input,
+      .input-table.table2 td:nth-child(n + 2):nth-child(-n + 6) textarea,
+      .input-table.table2 td:nth-child(n + 2):nth-child(-n + 6) select {
+        text-align: left;
+      }
+
+      .input-table.table2 td.sub-row-number,
+      .doc-table.table2 td.sub-row-number {
+        text-align: right;
+        padding-right: 14px;
+      }
+
+      .input-table.table3 th:last-child,
+      .input-table.table3 td:last-child {
+        width: 48px;
+        padding-left: 4px;
+        padding-right: 4px;
+        text-align: center;
+      }
+
+      .input-table input,
+      .input-table textarea,
+      .input-table select {
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .input-table .field-body > .free-textarea {
+        height: 42px;
+      }
+
+      .row-number {
+        width: 72px;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .preview-jump-btn {
+        position: fixed;
+        right: 88px;
+        bottom: 22px;
+        z-index: 38;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2a7de1, #0f4caa);
+        color: #fff;
+        box-shadow: 0 18px 34px rgba(27, 77, 120, 0.24);
+      }
+
+      .preview-jump-btn.show {
+        display: inline-flex;
+      }
+
+      .preview-jump-btn svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .procedure-header {
+        background: var(--green-soft);
+        font-weight: 700;
+      }
+
+      .subitem-label {
+        padding-left: 18px;
+      }
+
+      .sticky-actions {
+        position: sticky;
+        top: 14px;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(201, 211, 223, 0.92);
+        border-radius: 18px;
+        box-shadow: 0 16px 30px rgba(28, 39, 52, 0.08);
+        backdrop-filter: blur(14px);
+      }
+
+      .sticky-actions .actions-end {
+        margin-left: auto;
+      }
+
+      .feedback {
+        display: none;
+        margin-top: 14px;
+        border-radius: 16px;
+        padding: 14px 16px;
+        font-weight: 600;
+      }
+
+      .feedback.show {
+        display: block;
+      }
+
+      .feedback.error {
+        background: #fdeeed;
+        color: #7d1510;
+      }
+
+      .feedback.success {
+        background: #e8f6ec;
+        color: #176438;
+      }
+
+      .result-placeholder {
+        padding: 20px;
+        color: var(--ink-soft);
+        line-height: 1.6;
+        background: var(--surface-muted);
+        border-radius: 18px;
+      }
+
+      .print-panel {
+        border-radius: 0;
+      }
+
+      .print-panel .result-table-wrap,
+      .print-panel #resultArea,
+      .print-panel .result-placeholder {
+        border-radius: 0;
+      }
+
+      .result-document {
+        display: grid;
+        gap: 0;
+      }
+
+      .doc-table-spacer {
+        height: 20px;
+      }
+
+      .doc-block {
+        display: grid;
+        gap: 10px;
+      }
+
+      .table1-result-block {
+        gap: 8px;
+      }
+
+      .table1-result-block .title-with-flag {
+        margin-top: -2px;
+      }
+
+      .doc-kicker {
+        display: inline-flex;
+        width: fit-content;
+        border-radius: 999px;
+        padding: 7px 12px;
+        background: rgba(27, 77, 120, 0.1);
+        color: var(--accent);
+        font-size: 0.84rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .doc-title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+      }
+
+      .doc-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        min-width: 980px;
+        font-size: 0.96rem;
+      }
+
+      .doc-table th,
+      .doc-table td {
+        border: 1px solid #111;
+        padding: 8px 10px;
+        vertical-align: middle;
+        word-break: break-word;
+      }
+
+      .doc-table th {
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .doc-table td.center {
+        text-align: center;
+      }
+
+      .doc-table td.top {
+        vertical-align: top;
+      }
+
+      .table1 th {
+        background: var(--gold);
+      }
+
+      .table2 thead th {
+        background: var(--green);
+      }
+
+      .table2 .procedure-group td {
+        background: var(--green-soft);
+        font-weight: 700;
+      }
+
+      .table2 .muted-status td {
+        background: var(--muted-row);
+        color: #fff;
+      }
+
+      .table2 .muted-status td a {
+        color: #fff;
+      }
+
+      .table3 thead th {
+        background: var(--blue-soft);
+      }
+
+      .procedure-no {
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .doc-link {
+        color: #0858cb;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 82px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.84rem;
+        background: #edf2f8;
+      }
+
+      .status-pill.todo {
+        background: #ffe8bf;
+        color: #7a4a00;
+      }
+
+      .status-pill.ongoing {
+        background: #dcecff;
+        color: #0e4d92;
+      }
+
+      .status-pill.done {
+        background: #d8f3df;
+        color: #176438;
+      }
+
+      .flagged-cell {
+        background: #fff;
+      }
+
+      .flagged-content {
+        display: grid;
+        gap: 6px;
+      }
+
+      .doc-table td.center .flagged-content {
+        justify-items: center;
+      }
+
+      .cell-flag {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #f8fc46;
+        color: #111;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .title-with-flag {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .memo-result-body {
+        min-height: 120px;
+        border: 1px solid #111;
+        border-radius: 18px;
+        padding: 16px 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 248, 214, 0.55), rgba(255, 255, 255, 1)),
+          #fffdf4;
+        line-height: 1.7;
+        white-space: pre-wrap;
+      }
+
+      .memo-fab {
+        position: fixed;
+        right: 22px;
+        bottom: 22px;
+        z-index: 40;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2a7de1, #0f4caa);
+        color: #fff;
+        box-shadow: 0 18px 34px rgba(27, 77, 120, 0.3);
+        line-height: 0;
+      }
+
+      .memo-fab svg {
+        width: 22px;
+        height: 22px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .memo-fab.has-note {
+        background: linear-gradient(135deg, #2a7de1, #0f4caa);
+      }
+
+      .memo-fab.has-note::after {
+        content: "";
+        position: absolute;
+        top: 11px;
+        right: 11px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #ffd76d;
+        box-shadow: 0 0 0 3px rgba(15, 76, 170, 0.24);
+      }
+
+      .memo-panel {
+        position: fixed;
+        right: 22px;
+        bottom: 98px;
+        z-index: 39;
+        width: min(360px, calc(100vw - 24px));
+        padding: 16px;
+        border: 1px solid rgba(201, 211, 223, 0.92);
+        border-radius: 22px;
+        background:
+          linear-gradient(180deg, rgba(255, 250, 229, 0.98), rgba(255, 255, 255, 0.98)),
+          #fff;
+        box-shadow: 0 20px 40px rgba(28, 39, 52, 0.18);
+        display: none;
+      }
+
+      .memo-panel.open {
+        display: grid;
+        gap: 12px;
+      }
+
+      .memo-panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .memo-panel-title {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .memo-panel p {
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        font-size: 0.88rem;
+        line-height: 1.5;
+      }
+
+      .memo-panel textarea {
+        min-height: 220px;
+        background:
+          repeating-linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.92) 0,
+            rgba(255, 255, 255, 0.92) 30px,
+            rgba(226, 212, 146, 0.34) 30px,
+            rgba(226, 212, 146, 0.34) 31px
+          );
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 70;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(12, 22, 34, 0.38);
+      }
+
+      .modal-backdrop.open {
+        display: flex;
+      }
+
+      .smart-import-modal {
+        width: min(1180px, calc(100vw - 28px));
+        max-height: min(86vh, 820px);
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        border: 1px solid rgba(201, 211, 223, 0.92);
+        border-radius: 22px;
+        background: #fff;
+        box-shadow: 0 28px 70px rgba(28, 39, 52, 0.28);
+        overflow: hidden;
+      }
+
+      .smart-import-header,
+      .smart-import-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .smart-import-footer {
+        border-top: 1px solid var(--line);
+        border-bottom: 0;
+      }
+
+      .smart-import-title {
+        margin: 0;
+        font-size: 1.08rem;
+      }
+
+      .smart-import-body {
+        display: grid;
+        grid-template-columns: minmax(280px, 0.42fr) minmax(360px, 0.58fr);
+        gap: 14px;
+        min-height: 0;
+        padding: 16px;
+        overflow: auto;
+      }
+
+      .smart-import-pane {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .smart-import-textarea {
+        min-height: 280px;
+        height: 280px;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.88rem;
+        line-height: 1.45;
+        resize: vertical;
+      }
+
+      .smart-import-options {
+        display: grid;
+        gap: 8px;
+      }
+
+      .smart-import-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-soft);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
+      .smart-import-option input {
+        width: auto;
+        margin: 0;
+      }
+
+      .smart-import-preview-wrap {
+        min-height: 280px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: auto;
+      }
+
+      .smart-import-preview-table {
+        width: 100%;
+        min-width: 860px;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+      }
+
+      .smart-import-preview-table th,
+      .smart-import-preview-table td {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        vertical-align: top;
+      }
+
+      .smart-import-preview-table th {
+        background: #f1f5fa;
+        text-align: left;
+      }
+
+      .smart-import-warning {
+        color: #8a5b00;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .smart-import-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 980px) {
+        .workspace {
+          width: min(100% - 6px, 100%);
+          padding-top: 18px;
+        }
+
+        .panel,
+        .hero {
+          border-radius: 22px;
+          padding: 18px;
+        }
+
+        .hero-actions {
+          position: static;
+          justify-content: flex-start;
+          max-width: none;
+          margin-top: 16px;
+        }
+
+        .field.span-8,
+        .field.span-6,
+        .field.span-4,
+        .field.span-3 {
+          grid-column: span 12;
+        }
+
+        .table1-main-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .table1-detail-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .table1-main-grid .field.span-3 {
+          grid-column: span 1;
+        }
+
+        .sticky-actions {
+          top: 8px;
+        }
+
+        .memo-fab {
+          right: 14px;
+          bottom: 14px;
+        }
+
+        .preview-jump-btn {
+          right: 80px;
+          bottom: 14px;
+        }
+
+        .memo-panel {
+          right: 10px;
+          bottom: 88px;
+        }
+      }
+
+      @media (max-width: 1320px) {
+        .table1-detail-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media print {
+        body {
+          background: #fff;
+        }
+
+        .app-credit-footer {
+          color: #5b6778;
+          padding: 14px 0 0;
+        }
+
+        .hero,
+        .panel:not(.print-panel),
+        .sticky-actions,
+        #feedbackBox,
+        .preview-jump-btn,
+        .memo-fab,
+        .memo-panel {
+          display: none !important;
+        }
+
+        .workspace {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+
+        .print-panel {
+          box-shadow: none;
+          border: none;
+          padding: 0;
+        }
+
+        .result-table-wrap {
+          overflow: visible;
+          border: none;
+        }
+
+        .doc-table {
+          min-width: 0;
+          page-break-inside: avoid;
+        }
+
+        .doc-block {
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="workspace">
+      <header class="hero">
+        <h1>MOM Persiapan Implementasi</h1>
+        <div class="hero-actions" aria-label="Draft actions">
+          <button id="loadDraftBtn" type="button" class="btn-hero-primary">Load Draft Data</button>
+          <input id="draftFileInput" type="file" accept="application/json,.json" hidden />
+        </div>
+      </header>
+
+      <main>
+        <section class="panel">
+          <div class="panel-header compact-header">
+            <div>
+              <div class="heading-with-action">
+                <h2>Sertifikasi</h2>
+                <button
+                  id="smartImportBtn"
+                  type="button"
+                  class="btn-secondary btn-inline-icon smart-import-icon-btn"
+                  aria-label="Import raw data BPRO, Changes, dan Release"
+                  title="Import raw data BPRO, Changes, dan Release"
+                >
+                  <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                    <defs>
+                      <linearGradient id="smartImportSparkGradient" x1="8" y1="36" x2="38" y2="10" gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stop-color="#12a8ff"></stop>
+                        <stop offset="0.52" stop-color="#1f7fff"></stop>
+                        <stop offset="1" stop-color="#a879ff"></stop>
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M24 4c3.6 12.1 7.9 16.4 20 20-12.1 3.6-16.4 7.9-20 20-3.6-12.1-7.9-16.4-20-20 12.1-3.6 16.4-7.9 20-20Z"
+                      fill="url(#smartImportSparkGradient)"
+                      stroke="none"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="blueprint-level-toggle">
+              <fieldset aria-label="Level Link Blueprint Tabel Sertifikasi">
+                <legend>Link Blueprint</legend>
+                <label class="blueprint-level-option">
+                  <input type="radio" name="table1BlueprintLevel" value="release" checked />
+                  Level Release
+                </label>
+                <label class="blueprint-level-option">
+                  <input type="radio" name="table1BlueprintLevel" value="bpro" />
+                  Level Fitur/BPRO
+                </label>
+              </fieldset>
+            </div>
+          </div>
+
+          <div id="table1Projects" class="rows-stack" aria-live="polite"></div>
+
+          <div class="action-row" style="margin-top: 18px">
+            <button
+              id="addTable1Project"
+              type="button"
+              class="icon-btn icon-btn-secondary"
+              aria-label="Tambah Tabel"
+              title="Tambah Tabel"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="3.5" y="5.5" width="10" height="10" rx="1.5"></rect>
+                <path d="M3.5 10.5h10"></path>
+                <path d="M8.5 5.5v10"></path>
+                <path d="M18.5 9v6"></path>
+                <path d="M15.5 12h6"></path>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header compact-header">
+            <div>
+              <h2>Tabel Checklist Sebelum Implementasi</h2>
+            </div>
+          </div>
+
+          <div class="input-table-wrap">
+            <table class="input-table table2" aria-label="Form checklist sebelum implementasi">
+              <thead>
+                <tr>
+                  <th style="width: 72px">No.</th>
+                  <th style="width: 240px">Aktivitas</th>
+                  <th style="width: 130px">Status <span class="required-mark">*</span></th>
+                  <th style="width: 125px">PIC</th>
+                  <th style="width: 125px">Target</th>
+                  <th style="width: 245px">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="table2Rows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header compact-header">
+            <div>
+              <h2>Strategi Implementasi</h2>
+            </div>
+          </div>
+
+          <div class="input-table-wrap">
+            <table class="input-table table3" aria-label="Form strategi implementasi">
+              <thead>
+                <tr>
+                  <th style="width: 90px">No.</th>
+                  <th style="width: 230px">Tanggal <span class="required-mark">*</span></th>
+                  <th style="width: 170px">Jam</th>
+                  <th>Aktivitas <span class="required-mark">*</span></th>
+                  <th style="width: 170px">PIC <span class="required-mark">*</span></th>
+                  <th style="width: 140px">Status</th>
+                  <th>Keterangan</th>
+                  <th style="width: 48px">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="table3Rows"></tbody>
+            </table>
+          </div>
+          <div class="action-row table3-add-row-actions">
+            <button
+              id="addTable3Row"
+              type="button"
+              class="icon-btn icon-btn-secondary"
+              aria-label="Tambah Baris Strategi Implementasi"
+              title="Tambah Baris Strategi Implementasi"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4.5 7.5h8"></path>
+                <path d="M4.5 12h8"></path>
+                <path d="M4.5 16.5h8"></path>
+                <path d="M18.5 9v6"></path>
+                <path d="M15.5 12h6"></path>
+              </svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="sticky-actions" aria-label="Action buttons">
+          <button id="generateBtn" type="button" class="btn-primary">Preview Table</button>
+          <button id="exportXlsBtn" type="button" class="btn-ghost">Export XLS</button>
+          <button id="exportOutlookBtn" type="button" class="btn-ghost">Export to Outlook</button>
+          <button id="saveDraftBtn" type="button" class="btn-ghost">Save Draft Data</button>
+          <button id="resetBtn" type="button" class="btn-secondary actions-end">Clear All</button>
+        </section>
+
+        <div id="feedbackBox" class="feedback" role="status" aria-live="polite"></div>
+
+        <button
+          id="previewJumpBtn"
+          type="button"
+          class="preview-jump-btn"
+          aria-label="Scroll ke hasil preview"
+          title="Scroll ke hasil preview"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 4.5v11"></path>
+            <path d="M7.5 12.5 12 17l4.5-4.5"></path>
+            <path d="M5 20h14"></path>
+          </svg>
+        </button>
+
+        <section class="panel print-panel">
+          <div class="panel-header">
+            <div>
+              <h2>Area Hasil Generate</h2>
+              <p class="panel-intro">
+                Hasil tiga tabel akan ditampilkan berurutan di bawah ini dan siap digunakan untuk
+                kebutuhan meeting MOM.
+              </p>
+            </div>
+          </div>
+
+          <div class="result-table-wrap">
+            <div id="resultArea" class="result-placeholder">
+              Belum ada hasil. Isi form di atas lalu klik <strong>Preview Table</strong>.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="app-credit-footer" aria-label="Kredit aplikasi">
+      Developed by Alex Surya Marcelo (UAT - A) &bull; MOM Generator
+    </footer>
+
+    <button
+      id="memoFab"
+      type="button"
+      class="memo-fab"
+      aria-expanded="false"
+      aria-controls="memoPanel"
+      aria-label="Catatan meeting"
+      title="Catatan meeting"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M7 5.5h10"></path>
+        <path d="M7 9.5h10"></path>
+        <path d="M7 13.5h6"></path>
+        <path d="M6 3.5h12A2.5 2.5 0 0 1 20.5 6v12.5L16 15.5H6A2.5 2.5 0 0 1 3.5 13V6A2.5 2.5 0 0 1 6 3.5Z"></path>
+      </svg>
+    </button>
+
+    <aside id="memoPanel" class="memo-panel" aria-label="Catatan meeting">
+      <div class="memo-panel-header">
+        <div>
+          <h3 class="memo-panel-title">Notes Meeting</h3>
+          <p>Catatan penting di luar tabel. Ikut masuk ke preview, HTML, dan XLS.</p>
+        </div>
+        <button id="memoCloseBtn" type="button" class="btn-ghost">Tutup</button>
+      </div>
+      <textarea id="memoTextarea" placeholder="Tulis poin meeting penting di sini..."></textarea>
+    </aside>
+
+    <div id="smartImportModal" class="modal-backdrop" role="presentation">
+      <section class="smart-import-modal" role="dialog" aria-modal="true" aria-labelledby="smartImportTitle">
+        <div class="smart-import-header">
+          <div>
+            <h3 id="smartImportTitle" class="smart-import-title">Smart Import Raw Data</h3>
+            <p class="hint">Paste raw data BPRO, Changes, dan Release dari Excel.</p>
+          </div>
+          <button id="smartImportCloseBtn" type="button" class="btn-ghost">Tutup</button>
+        </div>
+        <div class="smart-import-body">
+          <div class="smart-import-pane">
+            <label class="field">
+              <span>Paste Raw Data</span>
+              <textarea
+                id="smartImportRawTextarea"
+                class="smart-import-textarea"
+                placeholder="Paste dari Excel di sini..."
+              ></textarea>
+            </label>
+            <div class="smart-import-options">
+              <label class="smart-import-option">
+                <input id="smartImportUseLastRelease" type="checkbox" checked />
+                Gunakan release terakhir untuk baris yang release-nya kosong
+              </label>
+              <label class="smart-import-option">
+                <input type="radio" name="smartImportTargetMode" value="append" checked />
+                Append ke release aktif
+              </label>
+              <label class="smart-import-option">
+                <input type="radio" name="smartImportTargetMode" value="replace" />
+                Replace detail rows pada release aktif
+              </label>
+            </div>
+            <div class="action-row">
+              <button id="smartImportPreviewBtn" type="button" class="btn-secondary">Preview Mapping</button>
+            </div>
+          </div>
+          <div class="smart-import-pane">
+            <div class="smart-import-preview-wrap">
+              <table class="smart-import-preview-table" aria-label="Preview mapping smart import">
+                <thead>
+                  <tr>
+                    <th style="width: 56px">No</th>
+                    <th>Nomor BPRO</th>
+                    <th>Nama BPRO</th>
+                    <th>Changes ID</th>
+                    <th>Changes Name</th>
+                    <th>Release ID</th>
+                    <th>Release Name</th>
+                    <th>Status / Warning</th>
+                  </tr>
+                </thead>
+                <tbody id="smartImportPreviewRows">
+                  <tr>
+                    <td colspan="8">Belum ada preview.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="smart-import-footer">
+          <span id="smartImportSummary" class="hint">Preview mapping sebelum apply.</span>
+          <div class="action-row">
+            <button id="smartImportApplyBtn" type="button" class="btn-primary" disabled>Apply ke Tabel 1</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const documentOptions = ["SK", "SE", "Service News", "Memo"];
+      const checklistStructure = [
+        { id: "c1", no: "1", label: "UAT & Regresi", kind: "item" },
+        { id: "c2", no: "2", label: "Stress Test", kind: "item" },
+        { id: "c3", no: "3", label: "Pentest", kind: "item" },
+        { id: "c4", no: "4", label: "Sertifikasi approved oleh KLA", kind: "item" },
+        { id: "c5", no: "5", label: "Sertifikasi approved oleh CPO", kind: "item" },
+        { id: "c6", no: "6", label: "Skenario Verif After Implementasi", kind: "item" },
+        { id: "c7", no: "7", label: "BPRO dan Changes ID", kind: "item" },
+        { id: "c8", no: "8", label: "Release ID", kind: "item" },
+        { id: "c9", no: "9", label: "Approval Release ID", kind: "item" },
+        {
+          id: "c10",
+          no: "10",
+          label: "Email Persetujuan S2 (jika changes terbatas)",
+          kind: "item",
+        },
+        {
+          id: "c11",
+          no: "11",
+          label: "Prosedur",
+          kind: "group",
+          children: [
+            { id: "c11a", no: "a", label: "SK/SE" },
+            { id: "c11b", no: "b", label: "Service News" },
+            { id: "c11c", no: "c", label: "Memo Pilot / Memo Implementasi" },
+            { id: "c11d", no: "d", label: "Bahan Sosialisasi" },
+            { id: "c11e", no: "e", label: "Frequently Asked Questions (FaQ)" },
+          ],
+        },
+        { id: "c12", no: "12", label: "ROPA/DPIA", kind: "item" },
+        { id: "c13", no: "13", label: "Tanggal Implementasi", kind: "item" },
+        { id: "c14", no: "14", label: "Verifikasi After Implementasi", kind: "item" },
+        {
+          id: "c15",
+          no: "15",
+          label:
+            "Penghapusan user id atau data dummy / mengembalikan setting khusus saat verifikasi production",
+          kind: "item",
+        },
+        { id: "c16", no: "16", label: "Skenario Fallback", kind: "item" },
+      ];
+
+      const elements = {
+        table1Projects: document.querySelector("#table1Projects"),
+        table2Rows: document.querySelector("#table2Rows"),
+        table3Rows: document.querySelector("#table3Rows"),
+        resultArea: document.querySelector("#resultArea"),
+        feedbackBox: document.querySelector("#feedbackBox"),
+        previewJumpBtn: document.querySelector("#previewJumpBtn"),
+        blueprintLevelControls: document.querySelectorAll('[name="table1BlueprintLevel"]'),
+        addTable1Project: document.querySelector("#addTable1Project"),
+        addTable3Row: document.querySelector("#addTable3Row"),
+        generateBtn: document.querySelector("#generateBtn"),
+        resetBtn: document.querySelector("#resetBtn"),
+        saveDraftBtn: document.querySelector("#saveDraftBtn"),
+        loadDraftBtn: document.querySelector("#loadDraftBtn"),
+        draftFileInput: document.querySelector("#draftFileInput"),
+        exportXlsBtn: document.querySelector("#exportXlsBtn"),
+        exportOutlookBtn: document.querySelector("#exportOutlookBtn"),
+        memoFab: document.querySelector("#memoFab"),
+        memoPanel: document.querySelector("#memoPanel"),
+        memoCloseBtn: document.querySelector("#memoCloseBtn"),
+        memoTextarea: document.querySelector("#memoTextarea"),
+        smartImportBtn: document.querySelector("#smartImportBtn"),
+        smartImportModal: document.querySelector("#smartImportModal"),
+        smartImportCloseBtn: document.querySelector("#smartImportCloseBtn"),
+        smartImportRawTextarea: document.querySelector("#smartImportRawTextarea"),
+        smartImportPreviewBtn: document.querySelector("#smartImportPreviewBtn"),
+        smartImportPreviewRows: document.querySelector("#smartImportPreviewRows"),
+        smartImportSummary: document.querySelector("#smartImportSummary"),
+        smartImportApplyBtn: document.querySelector("#smartImportApplyBtn"),
+        smartImportUseLastRelease: document.querySelector("#smartImportUseLastRelease"),
+        smartImportTargetModeControls: document.querySelectorAll('[name="smartImportTargetMode"]'),
+      };
+
+      let table1ProjectsState = [createEmptyTable1Project()];
+      let table1BlueprintLevel = "release";
+      let table3State = [createEmptyTable3Row()];
+      let activeDatePicker = null;
+      let smartImportPreviewState = [];
+
+      function createEmptyProjectFlags() {
+        return {
+          projectName: false,
+        };
+      }
+
+      function createEmptyRelationPackageFlags() {
+        return {
+          releaseId: false,
+          releaseName: false,
+          blueprintLink: false,
+          documentNeeds: false,
+        };
+      }
+
+      function createEmptyDetailRowFlags() {
+        return {
+          bproNumber: false,
+          bproName: false,
+          changesId: false,
+          changesName: false,
+          blueprintLink: false,
+          uatByUser: false,
+        };
+      }
+
+      function createEmptyTable3Flags() {
+        return {
+          date: false,
+          time: false,
+          activity: false,
+          pic: false,
+          status: false,
+          note: false,
+        };
+      }
+
+      function createEmptyDetailRow() {
+        return {
+          bproNumber: "",
+          bproName: "",
+          changesId: "",
+          changesName: "",
+          blueprintLink: "",
+          uatByUser: "",
+          flags: createEmptyDetailRowFlags(),
+        };
+      }
+
+      function createEmptyRelationPackage() {
+        return {
+          releaseId: "",
+          releaseName: "",
+          blueprintLink: "",
+          documentNeeds: [],
+          flags: createEmptyRelationPackageFlags(),
+          detailRows: [createEmptyDetailRow()],
+        };
+      }
+
+      function createEmptyTable1Project() {
+        return {
+          projectName: "",
+          flags: createEmptyProjectFlags(),
+          relationPackages: [createEmptyRelationPackage()],
+        };
+      }
+
+      function createDetailRowFromPrevious(previousRow = null) {
+        const nextRow = createEmptyDetailRow();
+        if (!previousRow) {
+          return nextRow;
+        }
+
+        return {
+          ...nextRow,
+          flags: createEmptyDetailRowFlags(),
+        };
+      }
+
+      function createEmptyTable3Row() {
+        return {
+          date: "",
+          time: "",
+          activity: "",
+          pic: "",
+          status: "To Do",
+          note: "",
+          flags: createEmptyTable3Flags(),
+        };
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
+      }
+
+      function requiredLabel(label) {
+        return `${escapeHtml(label)} <span class="required-mark">*</span>`;
+      }
+
+      function renderIconSvg(name) {
+        const icons = {
+          addTable: `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="3.5" y="5.5" width="10" height="10" rx="1.5"></rect>
+              <path d="M3.5 10.5h10"></path>
+              <path d="M8.5 5.5v10"></path>
+              <path d="M18.5 9v6"></path>
+              <path d="M15.5 12h6"></path>
+            </svg>
+          `,
+          addRow: `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4.5 7.5h8"></path>
+              <path d="M4.5 12h8"></path>
+              <path d="M4.5 16.5h8"></path>
+              <path d="M18.5 9v6"></path>
+              <path d="M15.5 12h6"></path>
+            </svg>
+          `,
+          trash: `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 5h6"></path>
+              <path d="M4.5 7.5h15"></path>
+              <path d="M7.5 7.5l.8 11h7.4l.8-11"></path>
+              <path d="M10 10.5v5"></path>
+              <path d="M14 10.5v5"></path>
+            </svg>
+          `,
+        };
+
+        return icons[name] || "";
+      }
+
+      function renderIconButton(options = {}) {
+        const classes = [
+          "icon-btn",
+          options.variantClass || "icon-btn-secondary",
+          options.slim ? "icon-btn-slim" : "",
+          options.className || "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const dataAction = options.action ? ` data-action="${escapeHtml(options.action)}"` : "";
+        const idAttr = options.id ? ` id="${escapeHtml(options.id)}"` : "";
+
+        return `
+          <button
+            type="button"
+            class="${classes}"
+            ${idAttr}
+            ${dataAction}
+            aria-label="${escapeHtml(options.label || "")}"
+            title="${escapeHtml(options.label || "")}"
+          >
+            ${renderIconSvg(options.icon)}
+          </button>
+        `;
+      }
+
+      // DUAL ACTION RELEASE PATCH
+      function renderBottomAddReleaseButton() {
+        return `
+          <!-- DUAL ACTION RELEASE PATCH -->
+          ${renderIconButton({
+            action: "add-table1-package",
+            label: "Tambah Release",
+            icon: "addRow",
+            variantClass: "icon-btn-secondary",
+            className: "btn-add-release-bottom",
+          })}
+        `;
+      }
+
+      function formatMultiline(value) {
+        const safe = escapeHtml(value || "-");
+        return safe.replaceAll("\n", "<br>");
+      }
+
+      function formatMultilineWithLinks(value) {
+        const raw = `${value || "-"}`;
+        const urlPattern = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+        let lastIndex = 0;
+        const parts = [];
+
+        raw.replace(urlPattern, (match, _match, index) => {
+          const href = /^https?:\/\//i.test(match) ? match : `https://${match}`;
+          parts.push(escapeHtml(raw.slice(lastIndex, index)).replaceAll("\n", "<br>"));
+          parts.push(
+            `<a class="doc-link" href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(match)}</a>`
+          );
+          lastIndex = index + match.length;
+          return match;
+        });
+
+        parts.push(escapeHtml(raw.slice(lastIndex)).replaceAll("\n", "<br>"));
+        return parts.join("");
+      }
+
+      function formatJoined(parts) {
+        return parts
+          .map((part) => `${part ?? ""}`.trim())
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      function joinDocumentNeeds(selectedItems) {
+        return selectedItems.length ? selectedItems.join(", ") : "-";
+      }
+
+      function formatDateForDisplay(value) {
+        const raw = `${value ?? ""}`.trim();
+        if (!raw) {
+          return "";
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const [year, month, day] = raw.split("-");
+          return `${day}-${month}-${year}`;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+          return raw;
+        }
+
+        return raw;
+      }
+
+      function parseDateRangeValue(value) {
+        const raw = `${value ?? ""}`.trim();
+        if (!raw) {
+          return { start: "", end: "" };
+        }
+
+        const [start = "", end = ""] = raw.split(/\s+(?:s\/d|to|-)\s+/i);
+        return {
+          start: start.trim(),
+          end: end.trim(),
+        };
+      }
+
+      function formatDateRangeForDisplay(value) {
+        const range = parseDateRangeValue(value);
+        const start = formatDateForDisplay(range.start);
+        const end = formatDateForDisplay(range.end);
+
+        if (start && end && start !== end) {
+          return `${start} - ${end}`;
+        }
+
+        return start || end;
+      }
+
+      function formatDateForNative(value) {
+        const raw = `${value ?? ""}`.trim();
+        if (!raw) {
+          return "";
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          return raw;
+        }
+
+        if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+          const [day, month, year] = raw.split("-");
+          return `${year}-${month}-${day}`;
+        }
+
+        return "";
+      }
+
+      function formatDateRangeForNative(value, role) {
+        const range = parseDateRangeValue(value);
+        const targetValue = role === "end" ? range.end || range.start : range.start;
+        return formatDateForNative(targetValue);
+      }
+
+      function formatDateRangeFromNative(startValue, endValue) {
+        const start = formatDateForDisplay(startValue);
+        const end = formatDateForDisplay(endValue);
+
+        if (start && end && start !== end) {
+          return `${start} - ${end}`;
+        }
+
+        return start || end;
+      }
+
+      function isValidDateDisplayValue(value) {
+        const range = parseDateRangeValue(value);
+        const datePattern = /^\d{2}-\d{2}-\d{4}$/;
+        return Boolean(
+          datePattern.test(range.start) &&
+            (!range.end || datePattern.test(range.end))
+        );
+      }
+
+      function renderFlagButton(flagged, label = "Flag field", disabled = false) {
+        return `
+          <button
+            type="button"
+            class="flag-toggle ${flagged ? "is-active" : ""}"
+            data-action="toggle-flag"
+            aria-pressed="${flagged ? "true" : "false"}"
+            aria-label="${escapeHtml(label)}"
+            title="${escapeHtml(label)}"
+            ${disabled ? "disabled" : ""}
+          >
+            !
+          </button>
+        `;
+      }
+
+      function renderFlagField(fieldMarkup, options = {}) {
+        const classes = [
+          "flag-field",
+          options.className || "",
+          options.flagged ? "is-flagged" : "",
+          options.disabled ? "is-disabled" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        return `
+          <div class="${classes}">
+            ${fieldMarkup}
+            ${renderFlagButton(options.flagged, options.flagLabel, options.disabled)}
+          </div>
+        `;
+      }
+
+      function renderChecklistFlagField(contentMarkup, options = {}) {
+        const classes = [
+          "flag-field",
+          "checklist-flag-field",
+          options.className || "",
+          options.flagged ? "is-flagged" : "",
+          options.disabled ? "is-disabled" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
+        return `
+          <div class="${classes}">
+            <div class="field-body">
+              <div class="checkbox-row" data-flag-source="documentNeeds">
+                ${contentMarkup}
+                ${renderFlagButton(options.flagged, options.flagLabel, options.disabled)}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDateField(options = {}) {
+        const displayValue = formatDateRangeForDisplay(options.value);
+        const nativeStartValue = formatDateRangeForNative(options.value, "start");
+        const nativeEndValue = formatDateRangeForNative(options.value, "end");
+        const disabled = options.disabled ? "disabled" : "";
+
+        return renderFlagField(
+          `
+            <div class="field-body date-field-body" data-date-field="${escapeHtml(options.field)}">
+              <input
+                type="text"
+                class="date-display"
+                data-field="${escapeHtml(options.field)}"
+                value="${escapeHtml(displayValue)}"
+                placeholder="${escapeHtml(options.placeholder || "DD-MM-YYYY")}"
+                readonly
+                aria-label="${escapeHtml(options.ariaLabel || "Pilih tanggal")}"
+                title="Klik untuk pilih rentang tanggal"
+                ${disabled}
+              />
+              <input
+                type="hidden"
+                class="native-date-input"
+                data-native-date-for="${escapeHtml(options.field)}"
+                data-native-date-role="start"
+                value="${escapeHtml(nativeStartValue)}"
+                tabindex="-1"
+                ${disabled}
+              />
+              <input
+                type="hidden"
+                class="native-date-input"
+                data-native-date-for="${escapeHtml(options.field)}"
+                data-native-date-role="end"
+                value="${escapeHtml(nativeEndValue)}"
+                tabindex="-1"
+                ${disabled}
+              />
+            </div>
+          `,
+          {
+            flagged: options.flagged,
+            disabled: options.disabled,
+            flagLabel: options.flagLabel || `Flag ${options.field}`,
+            className: "date-flag-field",
+          }
+        );
+      }
+
+      function isFieldFlagged(node) {
+        return node?.closest(".flag-field")?.classList.contains("is-flagged") || false;
+      }
+
+      function setFlaggedFieldState(wrapper, flagged) {
+        if (!wrapper) {
+          return;
+        }
+
+        wrapper.classList.toggle("is-flagged", flagged);
+        const button = wrapper.querySelector('[data-action="toggle-flag"]');
+        if (button) {
+          button.classList.toggle("is-active", flagged);
+          button.setAttribute("aria-pressed", flagged ? "true" : "false");
+        }
+      }
+
+      function syncDateDisplayFromNative(nativeInput) {
+        const fieldBody = nativeInput.closest(".field-body");
+        const displayInput = fieldBody?.querySelector(".date-display");
+        const startInput = fieldBody?.querySelector('[data-native-date-role="start"]');
+        const endInput = fieldBody?.querySelector('[data-native-date-role="end"]');
+        if (!displayInput) {
+          return;
+        }
+
+        if (startInput?.value && endInput) {
+          endInput.min = startInput.value;
+          if (endInput.value && endInput.value < startInput.value) {
+            endInput.value = startInput.value;
+          }
+        }
+
+        displayInput.value = formatDateRangeFromNative(startInput?.value || "", endInput?.value || "");
+        displayInput.dataset.nextDateRole =
+          nativeInput.dataset.nativeDateRole === "start" ? "end" : "start";
+
+        if (nativeInput.dataset.nativeDateRole === "start" && endInput && !endInput.disabled) {
+          window.setTimeout(() => {
+            if (typeof endInput.showPicker === "function") {
+              endInput.showPicker();
+              return;
+            }
+
+            endInput.focus();
+            endInput.click();
+          }, 0);
+        }
+      }
+
+      function isoFromDate(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+          date.getDate()
+        ).padStart(2, "0")}`;
+      }
+
+      function dateFromIso(value) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) {
+          return null;
+        }
+
+        const [year, month, day] = value.split("-").map(Number);
+        return new Date(year, month - 1, day);
+      }
+
+      function getPickerMonthMatrix(viewDate) {
+        const firstOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+        const startDate = new Date(firstOfMonth);
+        startDate.setDate(startDate.getDate() - firstOfMonth.getDay());
+
+        return Array.from({ length: 42 }, (_, index) => {
+          const date = new Date(startDate);
+          date.setDate(startDate.getDate() + index);
+          return date;
+        });
+      }
+
+      function getYearPanelStart(year) {
+        return Math.floor(year / 16) * 16 + 3;
+      }
+
+      function renderMonthGrid(selectedMonth) {
+        return Array.from({ length: 12 }, (_, monthIndex) => {
+          const monthDate = new Date(2026, monthIndex, 1);
+          const monthName = monthDate.toLocaleDateString("en-US", { month: "long" });
+          const classes = [
+            "date-picker-choice",
+            monthIndex === selectedMonth ? "is-selected" : "",
+            monthIndex === new Date().getMonth() ? "is-current" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return `<button type="button" class="${classes}" data-picker-month="${monthIndex}">${escapeHtml(
+            monthName
+          )}</button>`;
+        }).join("");
+      }
+
+      function renderYearGrid(selectedYear) {
+        const startYear = getYearPanelStart(selectedYear);
+        return Array.from({ length: 16 }, (_, index) => {
+          const year = startYear + index;
+          const classes = [
+            "date-picker-choice",
+            year === selectedYear ? "is-selected" : "",
+            year === new Date().getFullYear() ? "is-current" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return `<button type="button" class="${classes}" data-picker-year-option="${year}">${year}</button>`;
+        }).join("");
+      }
+
+      function getDatePickerElements(fieldBody) {
+        return {
+          displayInput: fieldBody?.querySelector(".date-display"),
+          startInput: fieldBody?.querySelector('[data-native-date-role="start"]'),
+          endInput: fieldBody?.querySelector('[data-native-date-role="end"]'),
+        };
+      }
+
+      function closeDateRangePicker() {
+        activeDatePicker?.picker?.remove();
+        activeDatePicker = null;
+      }
+
+      function positionDateRangePicker(picker, displayInput) {
+        const rect = displayInput.getBoundingClientRect();
+        const pickerWidth = 294;
+        const left = Math.min(Math.max(8, rect.left), window.innerWidth - pickerWidth - 8);
+        const top = Math.min(rect.bottom + 8, window.innerHeight - 380);
+        picker.style.left = `${left}px`;
+        picker.style.top = `${Math.max(8, top)}px`;
+      }
+
+      function renderDateRangePicker() {
+        if (!activeDatePicker) {
+          return;
+        }
+
+        const { picker, viewDate, startInput, endInput } = activeDatePicker;
+        const yearValue = viewDate.getFullYear();
+        const monthValue = viewDate.getMonth();
+        const viewMode = activeDatePicker.viewMode || "days";
+        const monthName = viewDate.toLocaleDateString("en-US", { month: "long" });
+        const yearPanelStart = getYearPanelStart(yearValue);
+        const days = getPickerMonthMatrix(viewDate);
+        const startValue = startInput.value;
+        const endValue = endInput.value;
+
+        if (viewMode === "months") {
+          picker.innerHTML = `
+            <div class="date-picker-header date-picker-panel-header">
+              <button type="button" class="date-picker-nav" data-picker-action="prev" aria-label="Tahun sebelumnya">&#8249;</button>
+              <button type="button" class="date-picker-title-btn date-picker-panel-title" data-picker-action="show-years">${escapeHtml(
+                yearValue
+              )}</button>
+              <button type="button" class="date-picker-nav" data-picker-action="next" aria-label="Tahun berikutnya">&#8250;</button>
+            </div>
+            <div class="date-picker-grid month-grid">
+              ${renderMonthGrid(monthValue)}
+            </div>
+          `;
+          return;
+        }
+
+        if (viewMode === "years") {
+          picker.innerHTML = `
+            <div class="date-picker-header date-picker-panel-header">
+              <button type="button" class="date-picker-nav" data-picker-action="prev" aria-label="Rentang tahun sebelumnya">&#8249;</button>
+              <div class="date-picker-panel-title">${yearPanelStart} - ${yearPanelStart + 15}</div>
+              <button type="button" class="date-picker-nav" data-picker-action="next" aria-label="Rentang tahun berikutnya">&#8250;</button>
+            </div>
+            <div class="date-picker-grid year-grid">
+              ${renderYearGrid(yearValue)}
+            </div>
+          `;
+          return;
+        }
+
+        picker.innerHTML = `
+          <div class="date-picker-header">
+            <button type="button" class="date-picker-nav" data-picker-action="prev" aria-label="Bulan sebelumnya">&#8249;</button>
+            <button type="button" class="date-picker-title-btn date-picker-month" data-picker-action="show-months">${escapeHtml(
+              monthName
+            )}</button>
+            <button type="button" class="date-picker-title-btn date-picker-year" data-picker-action="show-years">${escapeHtml(
+              yearValue
+            )}</button>
+            <button type="button" class="date-picker-nav" data-picker-action="next" aria-label="Bulan berikutnya">&#8250;</button>
+          </div>
+          <div class="date-picker-grid">
+            ${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+              .map((day) => `<div class="date-picker-weekday">${day}</div>`)
+              .join("")}
+            ${days
+              .map((date) => {
+                const iso = isoFromDate(date);
+                const isMuted = date.getMonth() !== viewDate.getMonth();
+                const isSelected = iso === startValue || iso === endValue;
+                const isInRange = startValue && endValue && iso > startValue && iso < endValue;
+                const classes = [
+                  "date-picker-day",
+                  isMuted ? "is-muted" : "",
+                  isInRange ? "is-in-range" : "",
+                  isSelected ? "is-selected" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                return `<button type="button" class="${classes}" data-picker-date="${iso}" aria-label="${formatDateForDisplay(
+                  iso
+                )}">${date.getDate()}</button>`;
+              })
+              .join("")}
+          </div>
+          <div class="date-picker-footer">
+            <button type="button" class="btn-ghost" data-picker-action="clear">Clear</button>
+            <button type="button" class="btn-secondary" data-picker-action="done">Done</button>
+          </div>
+        `;
+      }
+
+      function openNativeDatePicker(sourceNode) {
+        const fieldBody = sourceNode?.closest(".date-field-body");
+        const { displayInput, startInput, endInput } = getDatePickerElements(fieldBody);
+        if (!displayInput || displayInput.disabled || !startInput || !endInput) {
+          return;
+        }
+
+        closeDateRangePicker();
+
+        const picker = document.createElement("div");
+        picker.className = "date-range-picker";
+        picker.setAttribute("role", "dialog");
+        picker.setAttribute("aria-label", "Pilih rentang tanggal");
+        document.body.appendChild(picker);
+
+        activeDatePicker = {
+          picker,
+          fieldBody,
+          displayInput,
+          startInput,
+          endInput,
+          selectingEnd: Boolean(startInput.value && !endInput.value),
+          viewMode: "days",
+          viewDate: dateFromIso(startInput.value) || new Date(),
+        };
+
+        renderDateRangePicker();
+        positionDateRangePicker(picker, displayInput);
+      }
+
+      function applyActiveDatePickerValue() {
+        if (!activeDatePicker) {
+          return;
+        }
+
+        const { displayInput, startInput, endInput } = activeDatePicker;
+        displayInput.value = formatDateRangeFromNative(startInput.value, endInput.value);
+      }
+
+      function handleDatePickerClick(event) {
+        const actionButton = event.target.closest("[data-picker-action]");
+        const dayButton = event.target.closest("[data-picker-date]");
+        const monthButton = event.target.closest("[data-picker-month]");
+        const yearButton = event.target.closest("[data-picker-year-option]");
+        if (!activeDatePicker || (!actionButton && !dayButton && !monthButton && !yearButton)) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (actionButton) {
+          const action = actionButton.dataset.pickerAction;
+          if (action === "prev" || action === "next") {
+            const direction = action === "prev" ? -1 : 1;
+            const mode = activeDatePicker.viewMode || "days";
+            const monthDelta = mode === "days" ? direction : 0;
+            const yearDelta = mode === "months" ? direction : mode === "years" ? direction * 16 : 0;
+            activeDatePicker.viewDate = new Date(
+              activeDatePicker.viewDate.getFullYear() + yearDelta,
+              activeDatePicker.viewDate.getMonth() + monthDelta,
+              1
+            );
+            renderDateRangePicker();
+            return;
+          }
+
+          if (action === "show-months") {
+            activeDatePicker.viewMode = "months";
+            renderDateRangePicker();
+            return;
+          }
+
+          if (action === "show-years") {
+            activeDatePicker.viewMode = "years";
+            renderDateRangePicker();
+            return;
+          }
+
+          if (action === "clear") {
+            activeDatePicker.startInput.value = "";
+            activeDatePicker.endInput.value = "";
+            applyActiveDatePickerValue();
+            closeDateRangePicker();
+            return;
+          }
+
+          if (action === "done") {
+            applyActiveDatePickerValue();
+            closeDateRangePicker();
+            return;
+          }
+        }
+
+        if (monthButton) {
+          activeDatePicker.viewDate = new Date(
+            activeDatePicker.viewDate.getFullYear(),
+            Number(monthButton.dataset.pickerMonth),
+            1
+          );
+          activeDatePicker.viewMode = "days";
+          renderDateRangePicker();
+          return;
+        }
+
+        if (yearButton) {
+          activeDatePicker.viewDate = new Date(
+            Number(yearButton.dataset.pickerYearOption),
+            activeDatePicker.viewDate.getMonth(),
+            1
+          );
+          activeDatePicker.viewMode = "months";
+          renderDateRangePicker();
+          return;
+        }
+
+        if (!dayButton) {
+          return;
+        }
+
+        const selectedIso = dayButton.dataset.pickerDate;
+        const { startInput, endInput } = activeDatePicker;
+        if (!startInput.value || !activeDatePicker.selectingEnd) {
+          startInput.value = selectedIso;
+          endInput.value = "";
+          activeDatePicker.selectingEnd = true;
+          activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
+          applyActiveDatePickerValue();
+          renderDateRangePicker();
+          return;
+        }
+
+        if (selectedIso < startInput.value) {
+          startInput.value = selectedIso;
+          endInput.value = "";
+          activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
+          applyActiveDatePickerValue();
+          renderDateRangePicker();
+          return;
+        }
+
+        endInput.value = selectedIso;
+        activeDatePicker.selectingEnd = false;
+        applyActiveDatePickerValue();
+        closeDateRangePicker();
+      }
+
+      function refreshTextareaScrollState(textarea) {
+        if (!textarea?.classList?.contains("free-textarea")) {
+          return;
+        }
+
+        const needsScroll = textarea.value.includes("\n");
+        textarea.classList.toggle("has-scroll", needsScroll);
+      }
+
+      function refreshTextareasScrollState(root = document) {
+        root.querySelectorAll(".free-textarea").forEach(refreshTextareaScrollState);
+      }
+
+      function upgradeFreeTextInputsToTextarea(root = document) {
+        const inputs = root.querySelectorAll(
+          '.field-body > input[type="text"]:not(.date-display), .field-body > input[type="url"]'
+        );
+
+        inputs.forEach((input) => {
+          const textarea = document.createElement("textarea");
+          [...input.attributes].forEach((attribute) => {
+            if (attribute.name !== "type" && attribute.name !== "value") {
+              textarea.setAttribute(attribute.name, attribute.value);
+            }
+          });
+          textarea.classList.add("free-textarea");
+          textarea.value = input.value;
+          textarea.rows = 1;
+          input.replaceWith(textarea);
+          refreshTextareaScrollState(textarea);
+        });
+      }
+
+      function renderFlagBadge(flagged) {
+        return flagged ? '<span class="cell-flag">Flag</span>' : "";
+      }
+
+      function buildResultCellClass(baseClass, flagged) {
+        return [baseClass || "", flagged ? "flagged-cell" : ""].filter(Boolean).join(" ");
+      }
+
+      function renderResultCellContent(content, flagged) {
+        if (!flagged) {
+          return content;
+        }
+
+        return `
+          <div class="flagged-content">
+            ${renderFlagBadge(true)}
+            <div>${content}</div>
+          </div>
+        `;
+      }
+
+      function syncBlueprintLevelControls() {
+        elements.blueprintLevelControls.forEach((control) => {
+          control.checked = control.value === table1BlueprintLevel;
+        });
+      }
+
+      function hasAnyFlag(rows, startIndex, span, matcher) {
+        return rows.slice(startIndex, startIndex + span).some((row) => matcher(row));
+      }
+
+      function updateChecklistRowState(rowElement) {
+        const statusInput = rowElement?.querySelector('[data-field="status"]');
+        if (!statusInput) {
+          return;
+        }
+
+        const statusValue = statusInput.value.trim();
+        const shouldDisable = statusValue === "-";
+        ["pic", "target", "note"].forEach((field) => {
+          const control = rowElement.querySelector(`[data-field="${field}"]`);
+          if (control) {
+            control.disabled = shouldDisable;
+          }
+
+          const nativeDates = rowElement.querySelectorAll(`[data-native-date-for="${field}"]`);
+          nativeDates.forEach((nativeDate) => {
+            nativeDate.disabled = shouldDisable;
+          });
+
+          const wrapper =
+            control?.closest(".flag-field") || nativeDates[0]?.closest(".flag-field");
+          if (wrapper) {
+            wrapper.classList.toggle("is-disabled", shouldDisable);
+            const button = wrapper.querySelector('[data-action="toggle-flag"]');
+            if (button) {
+              button.disabled = shouldDisable;
+            }
+          }
+        });
+      }
+
+      function refreshChecklistRowsState() {
+        [...elements.table2Rows.querySelectorAll("tr[data-checklist-id]")].forEach(updateChecklistRowState);
+      }
+
+      function refreshMemoState() {
+        const hasNote = Boolean(elements.memoTextarea?.value.trim());
+        elements.memoFab.classList.toggle("has-note", hasNote);
+      }
+
+      function setMemoPanelOpen(open) {
+        elements.memoPanel.classList.toggle("open", open);
+        elements.memoFab.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+
+      function buildGroupMeta(rows, getKey) {
+        const meta = rows.map(() => ({ rowSpan: 1, show: true }));
+        let index = 0;
+
+        while (index < rows.length) {
+          const key = getKey(rows[index], index);
+          let next = index + 1;
+
+          while (next < rows.length && getKey(rows[next], next) === key) {
+            next += 1;
+          }
+
+          const span = next - index;
+          meta[index] = { rowSpan: span, show: true };
+
+          for (let hidden = index + 1; hidden < next; hidden += 1) {
+            meta[hidden] = { rowSpan: 0, show: false };
+          }
+
+          index = next;
+        }
+
+        return meta;
+      }
+
+      // Merge hanya untuk nilai berurutan yang identik, supaya hasil tabel tetap mengikuti urutan input user.
+      function buildMergeMeta(rows) {
+        const bpro = buildGroupMeta(rows, (row) => formatJoined([row.bproNumber, row.bproName]) || "-");
+        const release = buildGroupMeta(rows, (row) => formatJoined([row.releaseId, row.releaseName]) || "-");
+        const blueprint = buildGroupMeta(rows, (row, index) => {
+          const blueprintValue = (row.blueprintLink || "").trim() || "-";
+          if (table1BlueprintLevel === "bpro") {
+            return `${formatJoined([row.bproNumber, row.bproName]) || index}||${blueprintValue}`;
+          }
+
+          return `${formatJoined([row.releaseId, row.releaseName]) || "-"}||${blueprintValue}`;
+        });
+        const documentNeed = buildGroupMeta(rows, (row) => joinDocumentNeeds(row.documentNeeds));
+        const uatByUser = buildGroupMeta(rows, (row, index) => {
+          const uat = (row.uatByUser || "").trim().toLowerCase();
+          if (!uat) {
+            return `__uat_empty_${index}`;
+          }
+
+          return `${formatJoined([row.releaseId, row.releaseName]) || "-"}||${uat}`;
+        });
+
+        return rows.map((_, index) => ({
+          bpro: bpro[index],
+          release: release[index],
+          blueprint: blueprint[index],
+          documentNeed: documentNeed[index],
+          uatByUser: uatByUser[index],
+        }));
+      }
+
+      function showFeedback(message, type) {
+        elements.feedbackBox.textContent = message;
+        elements.feedbackBox.className = `feedback show ${type}`;
+      }
+
+      function clearFeedback() {
+        elements.feedbackBox.textContent = "";
+        elements.feedbackBox.className = "feedback";
+      }
+
+      function setPreviewJumpVisible(visible) {
+        elements.previewJumpBtn.classList.toggle("show", visible);
+      }
+
+      function scrollToPreviewResult() {
+        elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+        setPreviewJumpVisible(false);
+      }
+
+      function focusChecklistControl(checklistId, field = "status") {
+        const row = elements.table2Rows.querySelector(`tr[data-checklist-id="${checklistId}"]`);
+        const control = row?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        row?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
+      function focusProjectField(projectIndex = 0, field = "projectName") {
+        const project = elements.table1Projects.querySelector(
+          `.table1-project[data-project-index="${projectIndex}"]`
+        );
+        const control = project?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        project?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
+      function focusTable3Field(rowIndex = 0, field = "date") {
+        const row = elements.table3Rows.querySelector(`.table3-row[data-row-index="${rowIndex}"]`);
+        const control = row?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        row?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
+      // DUAL ACTION RELEASE PATCH
+      function scrollToNewRelationPackage(projectIndex, packageIndex) {
+        window.requestAnimationFrame(() => {
+          const projectElement = elements.table1Projects.querySelector(
+            `.table1-project[data-project-index="${projectIndex}"]`
+          );
+          const packageElement = projectElement?.querySelector(
+            `.table1-package[data-package-index="${packageIndex}"]`
+          );
+          const releaseIdInput = packageElement?.querySelector('[data-field="releaseId"]');
+          if (!packageElement) {
+            return;
+          }
+
+          packageElement.classList.remove("is-new-release");
+          void packageElement.offsetWidth;
+          packageElement.classList.add("is-new-release");
+          packageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          window.setTimeout(() => {
+            releaseIdInput?.focus();
+          }, 180);
+
+          window.setTimeout(() => {
+            packageElement.classList.remove("is-new-release");
+          }, 1600);
+        });
+      }
+
+      // DUAL ACTION RELEASE PATCH
+      function addRelationPackageToProject(projectIndex, options = {}) {
+        const safeProjectIndex = Math.min(Math.max(projectIndex, 0), table1ProjectsState.length - 1);
+        const project = table1ProjectsState[safeProjectIndex];
+        if (!project) {
+          return;
+        }
+
+        const newPackageIndex = project.relationPackages.length;
+        project.relationPackages.push(createEmptyRelationPackage());
+        renderTable1Projects();
+
+        if (options.scrollToNew !== false) {
+          scrollToNewRelationPackage(safeProjectIndex, newPackageIndex);
+        }
+      }
+
+      function readDetailRowFromDom(detailRowElement, previousRow = null) {
+        const valueOf = (field) => detailRowElement.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
+        const fieldOf = (field) => detailRowElement.querySelector(`[data-field="${field}"]`);
+        const blueprintInput = fieldOf("blueprintLink");
+
+        return {
+          bproNumber: valueOf("bproNumber"),
+          bproName: valueOf("bproName"),
+          changesId: valueOf("changesId"),
+          changesName: valueOf("changesName"),
+          blueprintLink: blueprintInput ? blueprintInput.value.trim() : previousRow?.blueprintLink || "",
+          uatByUser: valueOf("uatByUser"),
+          flags: {
+            bproNumber: isFieldFlagged(detailRowElement.querySelector('[data-field="bproNumber"]')),
+            bproName: isFieldFlagged(detailRowElement.querySelector('[data-field="bproName"]')),
+            changesId: isFieldFlagged(detailRowElement.querySelector('[data-field="changesId"]')),
+            changesName: isFieldFlagged(detailRowElement.querySelector('[data-field="changesName"]')),
+            blueprintLink: blueprintInput
+              ? isFieldFlagged(blueprintInput)
+              : previousRow?.flags?.blueprintLink || false,
+            uatByUser: isFieldFlagged(detailRowElement.querySelector('[data-field="uatByUser"]')),
+          },
+        };
+      }
+
+      function readRelationPackageFromDom(packageElement, previousPackage = null) {
+        const packageFieldOf = (field) =>
+          packageElement.querySelector(`:scope > .table1-main-grid [data-field="${field}"]`);
+        const valueOf = (field) => packageFieldOf(field)?.value.trim() || "";
+        const blueprintInput = packageFieldOf("blueprintLink");
+        const documentNeeds = [...packageElement.querySelectorAll('[data-field="documentNeeds"]')]
+          .filter((checkbox) => checkbox.checked)
+          .map((checkbox) => checkbox.dataset.option);
+        const documentNeedsSource = packageElement.querySelector('[data-flag-source="documentNeeds"]');
+        const detailRows = [...packageElement.querySelectorAll(".table1-detail-row")].map(
+          (detailRowElement, detailRowIndex) =>
+            readDetailRowFromDom(detailRowElement, previousPackage?.detailRows?.[detailRowIndex])
+        );
+
+        return {
+          releaseId: valueOf("releaseId"),
+          releaseName: valueOf("releaseName"),
+          blueprintLink: blueprintInput ? blueprintInput.value.trim() : previousPackage?.blueprintLink || "",
+          documentNeeds,
+          flags: {
+            releaseId: isFieldFlagged(packageFieldOf("releaseId")),
+            releaseName: isFieldFlagged(packageFieldOf("releaseName")),
+            blueprintLink: blueprintInput
+              ? isFieldFlagged(blueprintInput)
+              : previousPackage?.flags?.blueprintLink || false,
+            documentNeeds: isFieldFlagged(documentNeedsSource),
+          },
+          detailRows: detailRows.length ? detailRows : [createEmptyDetailRow()],
+        };
+      }
+
+      function setSmartImportModalOpen(open) {
+        elements.smartImportModal.classList.toggle("open", open);
+        if (open) {
+          elements.smartImportRawTextarea.focus();
+          return;
+        }
+
+        smartImportPreviewState = [];
+        elements.smartImportApplyBtn.disabled = true;
+      }
+
+      function countDelimiterOutsideQuotes(raw, delimiter) {
+        let count = 0;
+        let inQuotes = false;
+
+        for (let index = 0; index < raw.length; index += 1) {
+          const char = raw[index];
+          if (char === '"') {
+            if (inQuotes && raw[index + 1] === '"') {
+              index += 1;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (!inQuotes && char === delimiter) {
+            count += 1;
+          }
+        }
+
+        return count;
+      }
+
+      function detectImportDelimiter(raw) {
+        const tabCount = countDelimiterOutsideQuotes(raw, "\t");
+        const commaCount = countDelimiterOutsideQuotes(raw, ",");
+        return tabCount >= commaCount && tabCount > 0 ? "\t" : ",";
+      }
+
+      function parseDelimitedRawData(raw) {
+        const delimiter = detectImportDelimiter(raw);
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+
+        for (let index = 0; index < raw.length; index += 1) {
+          const char = raw[index];
+
+          if (char === '"') {
+            if (inQuotes && raw[index + 1] === '"') {
+              cell += '"';
+              index += 1;
+            } else {
+              inQuotes = !inQuotes;
+            }
+            continue;
+          }
+
+          if (!inQuotes && char === delimiter) {
+            row.push(cell);
+            cell = "";
+            continue;
+          }
+
+          if (!inQuotes && (char === "\n" || char === "\r")) {
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+            if (char === "\r" && raw[index + 1] === "\n") {
+              index += 1;
+            }
+            continue;
+          }
+
+          cell += char;
+        }
+
+        row.push(cell);
+        rows.push(row);
+
+        return rows
+          .map((entry) => entry.map((value) => `${value ?? ""}`.trim()))
+          .filter((entry) => entry.some(Boolean));
+      }
+
+      function normalizeSmartImportName(value) {
+        return `${value || ""}`.replace(/\s+/g, " ").trim();
+      }
+
+      function classifyImportCell(value) {
+        const text = normalizeSmartImportName(value);
+        if (!text) {
+          return null;
+        }
+
+        const bproMatch = text.match(/^((?:BPRO|GP)\S*)(?:\s+(.+))?$/i);
+        if (bproMatch) {
+          return {
+            type: "bpro",
+            id: bproMatch[1],
+            name: normalizeSmartImportName(bproMatch[2]),
+          };
+        }
+
+        const changesMatch = text.match(/^(5\d+)(?:\s+(.+))?$/);
+        if (changesMatch) {
+          return {
+            type: "changes",
+            id: changesMatch[1],
+            name: normalizeSmartImportName(changesMatch[2]),
+          };
+        }
+
+        const releaseMatch = text.match(/^(6\d+)(?:\s+(.+))?$/);
+        if (releaseMatch) {
+          return {
+            type: "release",
+            id: releaseMatch[1],
+            name: normalizeSmartImportName(releaseMatch[2]),
+          };
+        }
+
+        return { type: "text", value: normalizeSmartImportName(text) };
+      }
+
+      function isImportTextCell(value) {
+        const parsed = classifyImportCell(value);
+        return parsed?.type === "text";
+      }
+
+      function consumeImportNameFromNextCell(cells, index, usedIndexes) {
+        const nextIndex = index + 1;
+        if (usedIndexes.has(nextIndex) || !isImportTextCell(cells[nextIndex])) {
+          return "";
+        }
+
+        usedIndexes.add(nextIndex);
+        return normalizeSmartImportName(cells[nextIndex]);
+      }
+
+      function parseImportRow(cells, rowNumber, context) {
+        const result = {
+          no: rowNumber,
+          bproNumber: "",
+          bproName: "",
+          changesId: "",
+          changesName: "",
+          releaseId: "",
+          releaseName: "",
+          status: "OK",
+          warnings: [],
+        };
+        const usedIndexes = new Set();
+
+        cells.forEach((cell, index) => {
+          if (usedIndexes.has(index)) {
+            return;
+          }
+
+          const parsed = classifyImportCell(cell);
+          if (!parsed || parsed.type === "text") {
+            return;
+          }
+
+          if (parsed.type === "bpro") {
+            if (result.bproNumber) {
+              result.warnings.push("Nomor BPRO duplikat diabaikan");
+              return;
+            }
+            result.bproNumber = parsed.id;
+            result.bproName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
+            return;
+          }
+
+          if (parsed.type === "changes") {
+            if (result.changesId) {
+              result.warnings.push("Changes ID duplikat diabaikan");
+              return;
+            }
+            result.changesId = parsed.id;
+            result.changesName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
+            return;
+          }
+
+          if (parsed.type === "release") {
+            if (result.releaseId) {
+              result.warnings.push("Release ID duplikat diabaikan");
+              return;
+            }
+            result.releaseId = parsed.id;
+            result.releaseName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
+          }
+        });
+
+        if (!result.releaseId && !result.releaseName && context.useLastRelease && context.lastRelease) {
+          result.releaseId = context.lastRelease.releaseId;
+          result.releaseName = context.lastRelease.releaseName;
+          result.warnings.push("Release kosong memakai release terakhir");
+        }
+
+        if (result.releaseId || result.releaseName) {
+          context.lastRelease = {
+            releaseId: result.releaseId,
+            releaseName: result.releaseName,
+          };
+        }
+
+        if (!result.bproNumber && !result.changesId && !result.releaseId && !result.releaseName) {
+          result.status = "Warning";
+          result.warnings.push("Tidak ada data yang bisa dimapping");
+        } else if (result.warnings.length) {
+          result.status = "Warning";
+        }
+
+        return result;
+      }
+
+      function parseSmartImportRawData(raw, options = {}) {
+        const rows = parseDelimitedRawData(raw);
+        const context = {
+          useLastRelease: Boolean(options.useLastRelease),
+          lastRelease: null,
+        };
+
+        return rows.map((row, index) => parseImportRow(row, index + 1, context));
+      }
+
+      function renderSmartImportPreview(rows) {
+        if (!rows.length) {
+          elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="8">Belum ada data valid.</td></tr>';
+          elements.smartImportSummary.textContent = "Tidak ada data untuk di-apply.";
+          elements.smartImportApplyBtn.disabled = true;
+          return;
+        }
+
+        elements.smartImportPreviewRows.innerHTML = rows
+          .map(
+            (row) => `
+              <tr>
+                <td>${row.no}</td>
+                <td>${escapeHtml(row.bproNumber)}</td>
+                <td>${escapeHtml(row.bproName)}</td>
+                <td>${escapeHtml(row.changesId)}</td>
+                <td>${escapeHtml(row.changesName)}</td>
+                <td>${escapeHtml(row.releaseId)}</td>
+                <td>${escapeHtml(row.releaseName)}</td>
+                <td class="${row.status === "Warning" ? "smart-import-warning" : ""}">${escapeHtml(
+                  row.warnings.length ? row.warnings.join("; ") : row.status
+                )}</td>
+              </tr>
+            `
+          )
+          .join("");
+
+        const applyCount = rows.filter((row) => row.bproNumber || row.changesId).length;
+        elements.smartImportSummary.textContent = `${rows.length} row terdeteksi, ${applyCount} row siap masuk detail Tabel 1.`;
+        elements.smartImportApplyBtn.disabled = applyCount === 0;
+      }
+
+      function previewSmartImportRawData() {
+        smartImportPreviewState = parseSmartImportRawData(elements.smartImportRawTextarea.value, {
+          useLastRelease: elements.smartImportUseLastRelease.checked,
+        });
+        renderSmartImportPreview(smartImportPreviewState);
+      }
+
+      function getSmartImportTargetMode() {
+        return (
+          [...elements.smartImportTargetModeControls].find((control) => control.checked)?.value ||
+          "append"
+        );
+      }
+
+      function createDetailRowFromImport(row) {
+        return {
+          bproNumber: row.bproNumber || "",
+          bproName: row.bproName || "",
+          changesId: row.changesId || "",
+          changesName: row.changesName || "",
+          blueprintLink: "",
+          uatByUser: "",
+          flags: createEmptyDetailRowFlags(),
+        };
+      }
+
+      function createRelationPackageFromImport(row) {
+        return {
+          ...createEmptyRelationPackage(),
+          releaseId: row.releaseId || "",
+          releaseName: row.releaseName || "",
+          blueprintLink: "",
+          flags: createEmptyRelationPackageFlags(),
+          detailRows: [],
+        };
+      }
+
+      function findRelationPackageByRelease(project, releaseId) {
+        if (!releaseId) {
+          return null;
+        }
+
+        return project.relationPackages.find(
+          (relationPackage) => relationPackage.releaseId.trim() === releaseId.trim()
+        );
+      }
+
+      function getActiveImportProjectAndPackage() {
+        if (!table1ProjectsState.length) {
+          table1ProjectsState = [createEmptyTable1Project()];
+        }
+
+        const project = table1ProjectsState[0];
+        if (!project.relationPackages?.length) {
+          project.relationPackages = [createEmptyRelationPackage()];
+        }
+
+        return {
+          project,
+          package: project.relationPackages[0],
+        };
+      }
+
+      function applySmartImportToTable1() {
+        if (!smartImportPreviewState.length) {
+          previewSmartImportRawData();
+        }
+
+        const importRows = smartImportPreviewState.filter((row) => row.bproNumber || row.changesId);
+        if (!importRows.length) {
+          showFeedback("Tidak ada row import yang bisa dimasukkan ke Tabel 1.", "error");
+          return;
+        }
+
+        syncTable1ProjectsStateFromDom();
+
+        const targetMode = getSmartImportTargetMode();
+        const { project, package: activePackage } = getActiveImportProjectAndPackage();
+        const activePackageTouched = new Set();
+
+        importRows.forEach((row) => {
+          const detailRow = createDetailRowFromImport(row);
+
+          if (row.releaseId || row.releaseName) {
+            let relationPackage = findRelationPackageByRelease(project, row.releaseId);
+            if (!relationPackage) {
+              relationPackage = createRelationPackageFromImport(row);
+              project.relationPackages.push(relationPackage);
+            } else if (!relationPackage.releaseName && row.releaseName) {
+              relationPackage.releaseName = row.releaseName;
+            }
+            relationPackage.detailRows.push(detailRow);
+            return;
+          }
+
+          if (targetMode === "replace" && !activePackageTouched.has(activePackage)) {
+            activePackage.detailRows = [];
+            activePackageTouched.add(activePackage);
+          }
+          activePackage.detailRows.push(detailRow);
+        });
+
+        project.relationPackages.forEach((relationPackage) => {
+          if (!relationPackage.detailRows.length) {
+            relationPackage.detailRows = [createEmptyDetailRow()];
+          }
+        });
+
+        renderTable1Projects();
+        setSmartImportModalOpen(false);
+        clearPreviewResult();
+        showFeedback(`${importRows.length} row raw data berhasil di-import ke Tabel 1.`, "success");
+      }
+
+      function renderTable1Projects() {
+        elements.table1Projects.innerHTML = table1ProjectsState
+          .map((project, projectIndex) => {
+            const projectFlags = project.flags || createEmptyProjectFlags();
+            const relationPackages = project.relationPackages?.length
+              ? project.relationPackages
+              : [createEmptyRelationPackage()];
+            const removeProjectButton =
+              table1ProjectsState.length > 1
+                ? `<button type="button" class="btn-danger" data-action="remove-table1-project">Hapus Tabel</button>`
+                : "";
+
+            const relationPackageMarkup = relationPackages
+              .map((relationPackage, packageIndex) => {
+                const relationPackageFlags =
+                  relationPackage.flags || createEmptyRelationPackageFlags();
+                const checkboxMarkup = documentOptions
+                  .map((option) => {
+                    const checked = relationPackage.documentNeeds.includes(option) ? "checked" : "";
+                    return `
+                      <label class="checkbox-chip">
+                        <input type="checkbox" data-field="documentNeeds" data-option="${escapeHtml(option)}" ${checked}>
+                        ${escapeHtml(option)}
+                      </label>
+                    `;
+                  })
+                  .join("");
+                const removeRelationPackageButton =
+                  relationPackages.length > 1
+                    ? renderIconButton({
+                        action: "remove-table1-package",
+                        label: `Hapus Paket Release ${packageIndex + 1}`,
+                        icon: "trash",
+                        variantClass: "icon-btn-danger",
+                        slim: true,
+                      })
+                    : "";
+                const addDetailRowButton = renderIconButton({
+                  action: "add-table1-detail-row",
+                  label: "Tambah Baris",
+                  icon: "addRow",
+                  variantClass: "icon-btn-secondary",
+                });
+                const detailRows = relationPackage.detailRows?.length
+                  ? relationPackage.detailRows
+                  : [createEmptyDetailRow()];
+                const detailRowMarkup = detailRows
+                  .map((detailRow, detailRowIndex) => {
+                    const detailRowFlags = detailRow.flags || createEmptyDetailRowFlags();
+                    const removeDetailRowButton =
+                      detailRows.length > 1
+                        ? renderIconButton({
+                            action: "remove-table1-detail-row",
+                            label: "Hapus Baris",
+                            icon: "trash",
+                            variantClass: "icon-btn-danger",
+                            slim: true,
+                          })
+                        : "";
+                    const moveUpButton =
+                      detailRowIndex > 0
+                        ? `<button type="button" class="btn-move" data-action="move-table1-detail-row-up" aria-label="Naikkan fitur ${detailRowIndex + 1}">&#8593;</button>`
+                        : "";
+                    const moveDownButton =
+                      detailRowIndex < detailRows.length - 1
+                        ? `<button type="button" class="btn-move" data-action="move-table1-detail-row-down" aria-label="Turunkan fitur ${detailRowIndex + 1}">&#8595;</button>`
+                        : "";
+                    const detailRowActionButtons = [moveUpButton, moveDownButton, removeDetailRowButton]
+                      .filter(Boolean)
+                      .join("");
+                    const detailBlueprintField =
+                      table1BlueprintLevel === "bpro"
+                        ? `
+                          <label class="field">
+                            <span>Link Blueprint</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="url" data-field="blueprintLink" value="${escapeHtml(detailRow.blueprintLink)}" placeholder="https://..." />
+                                </div>
+                              `,
+                              {
+                                flagged: detailRowFlags.blueprintLink,
+                                flagLabel: "Flag Link Blueprint",
+                              }
+                            )}
+                          </label>
+                        `
+                        : "";
+
+                    return `
+                      <article class="dynamic-card table1-detail-row" data-detail-row-index="${detailRowIndex}">
+                        <div class="dynamic-card-header">
+                          <h3 class="dynamic-card-title">Fitur ${detailRowIndex + 1}</h3>
+                          <div class="row-header-actions">${detailRowActionButtons}</div>
+                        </div>
+                        <div class="table1-detail-grid ${table1BlueprintLevel === "bpro" ? "has-blueprint-field" : ""}">
+                          <label class="field">
+                            <span>${requiredLabel("Nomor BPRO")}</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="text" data-field="bproNumber" value="${escapeHtml(detailRow.bproNumber)}" placeholder="Contoh: BPRO110030691" />
+                                </div>
+                              `,
+                              { flagged: detailRowFlags.bproNumber, flagLabel: "Flag Nomor BPRO" }
+                            )}
+                          </label>
+                          <label class="field">
+                            <span>${requiredLabel("Nama BPRO")}</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="text" data-field="bproName" value="${escapeHtml(detailRow.bproName)}" placeholder="Nama proses / fitur" />
+                                </div>
+                              `,
+                              { flagged: detailRowFlags.bproName, flagLabel: "Flag Nama BPRO" }
+                            )}
+                          </label>
+                          <label class="field">
+                            <span>${requiredLabel("Changes ID")}</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="text" data-field="changesId" value="${escapeHtml(detailRow.changesId)}" placeholder="Contoh: 500272406" />
+                                </div>
+                              `,
+                              { flagged: detailRowFlags.changesId, flagLabel: "Flag Changes ID" }
+                            )}
+                          </label>
+                          <label class="field">
+                            <span>${requiredLabel("Changes Name")}</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="text" data-field="changesName" value="${escapeHtml(detailRow.changesName)}" placeholder="Nama perubahan" />
+                                </div>
+                              `,
+                              { flagged: detailRowFlags.changesName, flagLabel: "Flag Changes Name" }
+                            )}
+                          </label>
+                          ${detailBlueprintField}
+                          <label class="field">
+                            <span>Pelaku UAT by User</span>
+                            ${renderFlagField(
+                              `
+                                <div class="field-body">
+                                  <input type="text" data-field="uatByUser" value="${escapeHtml(detailRow.uatByUser)}" placeholder="Nama PIC / tim user" />
+                                </div>
+                              `,
+                              {
+                                flagged: detailRowFlags.uatByUser,
+                                flagLabel: "Flag Pelaku UAT by User",
+                              }
+                            )}
+                          </label>
+                        </div>
+                      </article>
+                    `;
+                  })
+                  .join("");
+                const releaseBlueprintField =
+                  table1BlueprintLevel === "release"
+                    ? `
+                      <label class="field span-4">
+                        <span>Link Blueprint</span>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <input type="url" data-field="blueprintLink" value="${escapeHtml(relationPackage.blueprintLink)}" placeholder="https://..." />
+                            </div>
+                          `,
+                          {
+                            flagged: relationPackageFlags.blueprintLink,
+                            flagLabel: "Flag Link Blueprint",
+                          }
+                        )}
+                      </label>
+                    `
+                    : "";
+
+                return `
+                  <article class="dynamic-card table1-package" data-package-index="${packageIndex}">
+                    <div class="dynamic-card-header">
+                      <h3 class="dynamic-card-title">Release ${packageIndex + 1}</h3>
+                      <div class="row-header-actions">${removeRelationPackageButton}</div>
+                    </div>
+                    <div class="table1-main-grid">
+                      <label class="field span-4">
+                        <span>${requiredLabel("Release ID")}</span>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <input type="text" data-field="releaseId" value="${escapeHtml(relationPackage.releaseId)}" placeholder="Contoh: 600104635" />
+                            </div>
+                          `,
+                          {
+                            flagged: relationPackageFlags.releaseId,
+                            flagLabel: "Flag Release ID",
+                          }
+                        )}
+                      </label>
+                      <label class="field span-4">
+                        <span>${requiredLabel("Release Name")}</span>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <input type="text" data-field="releaseName" value="${escapeHtml(relationPackage.releaseName)}" placeholder="Nama release" />
+                            </div>
+                          `,
+                          {
+                            flagged: relationPackageFlags.releaseName,
+                            flagLabel: "Flag Release Name",
+                          }
+                        )}
+                      </label>
+                      ${releaseBlueprintField}
+                      <label class="field span-4">
+                        <span>Apakah diperlukan SK/SE/Service News/Memo?</span>
+                        ${renderChecklistFlagField(
+                          `
+                            ${checkboxMarkup}
+                          `,
+                          {
+                            flagged: relationPackageFlags.documentNeeds,
+                            flagLabel: "Flag kebutuhan dokumen",
+                          }
+                        )}
+                      </label>
+                    </div>
+                    <section class="dynamic-card project-section-card" style="margin-top: 6px">
+                      <div class="rows-stack">${detailRowMarkup}</div>
+                      <div class="table1-detail-actions">${addDetailRowButton}</div>
+                    </section>
+                  </article>
+                `;
+              })
+              .join("");
+
+            return `
+              <section class="project-shell table1-project" data-project-index="${projectIndex}">
+                <div class="dynamic-card-header">
+                  <div>
+                    <h3 class="dynamic-card-title">Project ${projectIndex + 1}</h3>
+                  </div>
+                  <div class="row-header-actions">${removeProjectButton}</div>
+                </div>
+                <div class="field-grid">
+                  <label class="field span-6">
+                    <span>${requiredLabel("Nama Project")}</span>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <input
+                            type="text"
+                            data-field="projectName"
+                            value="${escapeHtml(project.projectName)}"
+                            placeholder="Contoh: BERTA Release 4 2026"
+                            autocomplete="off"
+                          />
+                        </div>
+                      `,
+                      { flagged: projectFlags.projectName, flagLabel: "Flag Nama Project" }
+                    )}
+                  </label>
+                </div>
+                <div class="rows-stack">${relationPackageMarkup}</div>
+                <div class="project-release-actions">
+                  ${renderBottomAddReleaseButton()}
+                </div>
+              </section>
+            `;
+          })
+          .join("");
+        upgradeFreeTextInputsToTextarea(elements.table1Projects);
+      }
+
+      function renderTable2Rows() {
+        const rowMarkup = checklistStructure
+          .map((item) => {
+            if (item.kind === "group") {
+              const childRows = item.children
+                .map(
+                  (child) => `
+                    <tr data-checklist-id="${child.id}">
+                      <td class="row-number sub-row-number">${escapeHtml(child.no)}</td>
+                      <td class="subitem-label">- ${escapeHtml(child.label)}</td>
+                      <td>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <select data-field="status">
+                                <option value="" selected></option>
+                                <option value="-">-</option>
+                                <option value="To Do">To Do</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Done">Done</option>
+                              </select>
+                            </div>
+                          `,
+                          { flagged: false, flagLabel: "Flag Status" }
+                        )}
+                      </td>
+                      <td>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <input type="text" data-field="pic" placeholder="PIC" />
+                            </div>
+                          `,
+                          { flagged: false, flagLabel: "Flag PIC" }
+                        )}
+                      </td>
+                      <td>
+                        ${renderDateField({
+                          field: "target",
+                          value: "",
+                          placeholder: "DD-MM-YYYY",
+                          flagged: false,
+                          ariaLabel: `Pilih target untuk ${child.label}`,
+                          flagLabel: "Flag Target",
+                        })}
+                      </td>
+                      <td>
+                        ${renderFlagField(
+                          `
+                            <div class="field-body">
+                              <textarea data-field="note" placeholder="Keterangan"></textarea>
+                            </div>
+                          `,
+                          { flagged: false, flagLabel: "Flag Keterangan" }
+                        )}
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("");
+
+              return `
+                <tr class="procedure-header" data-checklist-id="${item.id}">
+                  <td class="row-number">${escapeHtml(item.no)}</td>
+                  <td>${escapeHtml(item.label)}</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                ${childRows}
+              `;
+            }
+
+            return `
+              <tr data-checklist-id="${item.id}">
+                <td class="row-number">${escapeHtml(item.no)}</td>
+                <td>${escapeHtml(item.label)}</td>
+                <td>
+                  ${renderFlagField(
+                    `
+                      <div class="field-body">
+                        <select data-field="status">
+                          <option value="" selected></option>
+                          <option value="-">-</option>
+                          <option value="To Do">To Do</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Done">Done</option>
+                        </select>
+                      </div>
+                    `,
+                    { flagged: false, flagLabel: "Flag Status" }
+                  )}
+                </td>
+                <td>
+                  ${renderFlagField(
+                    `
+                      <div class="field-body">
+                        <input type="text" data-field="pic" placeholder="PIC" />
+                      </div>
+                    `,
+                    { flagged: false, flagLabel: "Flag PIC" }
+                  )}
+                </td>
+                <td>
+                  ${renderDateField({
+                    field: "target",
+                    value: "",
+                    placeholder: "DD-MM-YYYY",
+                    flagged: false,
+                    ariaLabel: `Pilih target untuk ${item.label}`,
+                    flagLabel: "Flag Target",
+                  })}
+                </td>
+                <td>
+                  ${renderFlagField(
+                    `
+                      <div class="field-body">
+                        <textarea data-field="note" placeholder="Keterangan"></textarea>
+                      </div>
+                    `,
+                    { flagged: false, flagLabel: "Flag Keterangan" }
+                  )}
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        elements.table2Rows.innerHTML = rowMarkup;
+        upgradeFreeTextInputsToTextarea(elements.table2Rows);
+        refreshChecklistRowsState();
+      }
+
+      function renderTable3Rows() {
+        elements.table3Rows.innerHTML = table3State
+          .map(
+            (row, index) => {
+              const moveUpButton =
+                index > 0
+                  ? `<button type="button" class="btn-move" data-action="move-table3-row-up" aria-label="Naikkan strategi implementasi ${index + 1}">&#8593;</button>`
+                  : "";
+              const moveDownButton =
+                index < table3State.length - 1
+                  ? `<button type="button" class="btn-move" data-action="move-table3-row-down" aria-label="Turunkan strategi implementasi ${index + 1}">&#8595;</button>`
+                  : "";
+
+              return `
+                <tr class="table3-row" data-row-index="${index}">
+                  <td class="row-number">${index + 1}</td>
+                  <td>
+                    ${renderDateField({
+                      field: "date",
+                      value: row.date,
+                      placeholder: "DD-MM-YYYY - DD-MM-YYYY",
+                      flagged: row.flags?.date,
+                      ariaLabel: `Pilih tanggal strategi implementasi row ${index + 1}`,
+                      flagLabel: "Flag Tanggal",
+                    })}
+                  </td>
+                  <td>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <input type="text" data-field="time" value="${escapeHtml(row.time)}" placeholder="17:30-18:30" />
+                        </div>
+                      `,
+                      { flagged: row.flags?.time, flagLabel: "Flag Jam" }
+                    )}
+                  </td>
+                  <td>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <input type="text" data-field="activity" value="${escapeHtml(row.activity)}" placeholder="Aktivitas" />
+                        </div>
+                      `,
+                      { flagged: row.flags?.activity, flagLabel: "Flag Aktivitas" }
+                    )}
+                  </td>
+                  <td>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <input type="text" data-field="pic" value="${escapeHtml(row.pic)}" placeholder="PIC" />
+                        </div>
+                      `,
+                      { flagged: row.flags?.pic, flagLabel: "Flag PIC" }
+                    )}
+                  </td>
+                  <td>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <select data-field="status">
+                            <option value="To Do" ${row.status === "To Do" ? "selected" : ""}>To Do</option>
+                            <option value="Ongoing" ${row.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
+                            <option value="Done" ${row.status === "Done" ? "selected" : ""}>Done</option>
+                          </select>
+                        </div>
+                      `,
+                      { flagged: row.flags?.status, flagLabel: "Flag Status" }
+                    )}
+                  </td>
+                  <td>
+                    ${renderFlagField(
+                      `
+                        <div class="field-body">
+                          <textarea data-field="note" placeholder="Keterangan">${escapeHtml(row.note)}</textarea>
+                        </div>
+                      `,
+                      { flagged: row.flags?.note, flagLabel: "Flag Keterangan" }
+                    )}
+                  </td>
+                  <td>
+                    <div class="table3-row-actions">
+                      ${moveUpButton}
+                      ${moveDownButton}
+                      ${renderIconButton({
+                        action: "remove-table3-row",
+                        label: "Hapus Baris Strategi Implementasi",
+                        icon: "trash",
+                        variantClass: "icon-btn-danger",
+                        slim: true,
+                      })}
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }
+          )
+          .join("");
+        upgradeFreeTextInputsToTextarea(elements.table3Rows);
+      }
+
+      function syncTable1ProjectsStateFromDom() {
+        const projects = [...elements.table1Projects.querySelectorAll(".table1-project")].map((projectElement) => {
+          const projectIndex = Number(projectElement.dataset.projectIndex);
+          const previousProject = table1ProjectsState[projectIndex];
+          const projectNameInput = projectElement.querySelector('[data-field="projectName"]');
+          const projectName = projectNameInput?.value.trim() || "";
+          const relationPackages = [...projectElement.querySelectorAll(".table1-package")].map(
+            (packageElement) => {
+              const packageIndex = Number(packageElement.dataset.packageIndex);
+              return readRelationPackageFromDom(
+                packageElement,
+                previousProject?.relationPackages?.[packageIndex]
+              );
+            }
+          );
+
+          return {
+            projectName,
+            flags: {
+              projectName: isFieldFlagged(projectNameInput),
+            },
+            relationPackages: relationPackages.length ? relationPackages : [createEmptyRelationPackage()],
+          };
+        });
+
+        table1ProjectsState = projects.length ? projects : [createEmptyTable1Project()];
+      }
+
+      function syncTable3StateFromDom() {
+        const rows = [...elements.table3Rows.querySelectorAll(".table3-row")].map((rowElement) => {
+          const valueOf = (field) => rowElement.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
+
+          return {
+            date: valueOf("date"),
+            time: valueOf("time"),
+            activity: valueOf("activity"),
+            pic: valueOf("pic"),
+            status: valueOf("status") || "To Do",
+            note: valueOf("note"),
+            flags: {
+              date: isFieldFlagged(rowElement.querySelector('[data-field="date"]')),
+              time: isFieldFlagged(rowElement.querySelector('[data-field="time"]')),
+              activity: isFieldFlagged(rowElement.querySelector('[data-field="activity"]')),
+              pic: isFieldFlagged(rowElement.querySelector('[data-field="pic"]')),
+              status: isFieldFlagged(rowElement.querySelector('[data-field="status"]')),
+              note: isFieldFlagged(rowElement.querySelector('[data-field="note"]')),
+            },
+          };
+        });
+
+        table3State = rows.length ? rows : [createEmptyTable3Row()];
+      }
+
+      function collectChecklistValues() {
+        return [...elements.table2Rows.querySelectorAll("tr[data-checklist-id]")].map((row) => {
+          const config = findChecklistConfig(row.dataset.checklistId);
+          const statusValue = row.querySelector('[data-field="status"]')?.value.trim() || "";
+          const disableLinkedFields = statusValue === "-";
+
+          return {
+            id: row.dataset.checklistId,
+            no: config.no,
+            label: config.label,
+            kind: config.kind,
+            status: statusValue,
+            pic: disableLinkedFields ? "" : row.querySelector('[data-field="pic"]')?.value.trim() || "",
+            target:
+              disableLinkedFields ? "" : row.querySelector('[data-field="target"]')?.value.trim() || "",
+            note: disableLinkedFields ? "" : row.querySelector('[data-field="note"]')?.value.trim() || "",
+            flags: {
+              status: isFieldFlagged(row.querySelector('[data-field="status"]')),
+              pic: disableLinkedFields ? false : isFieldFlagged(row.querySelector('[data-field="pic"]')),
+              target:
+                disableLinkedFields ? false : isFieldFlagged(row.querySelector('[data-field="target"]')),
+              note: disableLinkedFields ? false : isFieldFlagged(row.querySelector('[data-field="note"]')),
+            },
+          };
+        });
+      }
+
+      function findChecklistConfig(id) {
+        for (const item of checklistStructure) {
+          if (item.id === id) {
+            return { ...item };
+          }
+
+          if (item.kind === "group") {
+            const child = item.children.find((entry) => entry.id === id);
+            if (child) {
+              return {
+                id: child.id,
+                no: child.no,
+                label: child.label,
+                kind: "subitem",
+                parentId: item.id,
+              };
+            }
+          }
+        }
+
+        return { id, no: "", label: "", kind: "item" };
+      }
+
+      function isBlankDetailRow(detailRow) {
+        return ![
+          detailRow.bproNumber,
+          detailRow.bproName,
+          detailRow.changesId,
+          detailRow.changesName,
+          table1BlueprintLevel === "bpro" ? detailRow.blueprintLink : "",
+          detailRow.uatByUser,
+        ].some((value) => `${value}`.trim() !== "");
+      }
+
+      function isBlankRelationPackage(relationPackage) {
+        return (
+          ![
+            relationPackage.releaseId,
+            relationPackage.releaseName,
+            table1BlueprintLevel === "release" ? relationPackage.blueprintLink : "",
+            relationPackage.documentNeeds.join(""),
+          ].some((value) => `${value}`.trim() !== "") &&
+          relationPackage.detailRows.every((detailRow) => isBlankDetailRow(detailRow))
+        );
+      }
+
+      function isBlankTable1Project(project) {
+        return (
+          !project.projectName.trim() &&
+          project.relationPackages.every((relationPackage) => isBlankRelationPackage(relationPackage))
+        );
+      }
+
+      function isBlankTable3Row(row) {
+        return ![row.date, row.time, row.activity, row.pic, row.status, row.note].some(
+          (value) => `${value}`.trim() !== ""
+        );
+      }
+
+      function validateForm() {
+        setPreviewJumpVisible(false);
+        syncTable1ProjectsStateFromDom();
+        syncTable3StateFromDom();
+
+        const activeProjects = table1ProjectsState
+          .map((project, index) => ({ project, index }))
+          .filter(({ project }) => !isBlankTable1Project(project));
+
+        if (!activeProjects.length) {
+          focusProjectField(0, "projectName");
+          return "Minimal isi satu project";
+        }
+
+        const missingProjectName = activeProjects.find(({ project }) => !project.projectName.trim());
+        if (missingProjectName) {
+          focusProjectField(missingProjectName.index, "projectName");
+          return "Setiap project aktif pada Tabel Sertifikasi wajib punya nama project.";
+        }
+
+        const projectWithoutRelationPackage = activeProjects.find(
+          ({ project }) =>
+            !project.relationPackages.some(
+              (relationPackage) => !isBlankRelationPackage(relationPackage)
+            )
+        );
+        if (projectWithoutRelationPackage) {
+          focusProjectField(projectWithoutRelationPackage.index, "projectName");
+          return "Setiap project aktif pada Tabel Sertifikasi wajib punya minimal satu paket release aktif.";
+        }
+
+        for (const { project, index } of activeProjects) {
+          const activeRelationPackages = project.relationPackages.filter(
+            (relationPackage) => !isBlankRelationPackage(relationPackage)
+          );
+
+          for (const relationPackage of activeRelationPackages) {
+            if (!relationPackage.releaseId || !relationPackage.releaseName) {
+              focusProjectField(index, "projectName");
+              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+            }
+
+            const activeDetailRows = relationPackage.detailRows.filter(
+              (detailRow) => !isBlankDetailRow(detailRow)
+            );
+
+            if (!activeDetailRows.length) {
+              focusProjectField(index, "projectName");
+              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+            }
+
+            const invalidDetailRow = activeDetailRows.find(
+              (detailRow) =>
+                !detailRow.bproNumber ||
+                !detailRow.bproName ||
+                !detailRow.changesId ||
+                !detailRow.changesName
+            );
+
+            if (invalidDetailRow) {
+              focusProjectField(index, "projectName");
+              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+            }
+          }
+        }
+
+        const checklistRows = collectChecklistValues();
+        const invalidChecklistRow = checklistRows.find((row) => row.kind !== "group" && !row.status);
+        if (invalidChecklistRow) {
+          focusChecklistControl(invalidChecklistRow.id, "status");
+          setPreviewJumpVisible(true);
+          return `Status pada Tabel Checklist Sebelum Implementasi untuk aktivitas "${invalidChecklistRow.label}" wajib dipilih.`;
+        }
+
+        const invalidTable3Entry = table3State
+          .map((row, index) => ({ row, index }))
+          .filter(({ row }) => !isBlankTable3Row(row))
+          .find(
+            ({ row }) =>
+              !row.date || !isValidDateDisplayValue(row.date) || !row.activity || !row.pic
+          );
+
+        if (invalidTable3Entry) {
+          const invalidField = !invalidTable3Entry.row.date ||
+            !isValidDateDisplayValue(invalidTable3Entry.row.date)
+            ? "date"
+            : !invalidTable3Entry.row.activity
+              ? "activity"
+              : "pic";
+          focusTable3Field(invalidTable3Entry.index, invalidField);
+          return "Setiap row aktif pada Tabel Strategi Implementasi wajib memiliki tanggal format DD-MM-YYYY atau DD-MM-YYYY - DD-MM-YYYY, aktivitas, dan PIC.";
+        }
+
+        return "";
+      }
+
+      function normalizeTable1Projects(projects) {
+        return projects
+          .filter((project) => !isBlankTable1Project(project))
+          .map((project) => ({
+            projectName: project.projectName.trim(),
+            flags: project.flags || createEmptyProjectFlags(),
+            relationPackages: project.relationPackages
+              .filter((relationPackage) => !isBlankRelationPackage(relationPackage))
+              .map((relationPackage) => ({
+                releaseId: relationPackage.releaseId.trim(),
+                releaseName: relationPackage.releaseName.trim(),
+                blueprintLink: (relationPackage.blueprintLink || "").trim(),
+                documentNeeds: Array.isArray(relationPackage.documentNeeds)
+                  ? [...relationPackage.documentNeeds]
+                  : [],
+                flags: relationPackage.flags || createEmptyRelationPackageFlags(),
+                detailRows: relationPackage.detailRows
+                  .filter((detailRow) => !isBlankDetailRow(detailRow))
+                  .map((detailRow) => ({
+                    bproNumber: detailRow.bproNumber.trim(),
+                    bproName: detailRow.bproName.trim(),
+                    changesId: detailRow.changesId.trim(),
+                    changesName: detailRow.changesName.trim(),
+                    blueprintLink: (detailRow.blueprintLink || "").trim(),
+                    uatByUser: detailRow.uatByUser.trim(),
+                    flags: detailRow.flags || createEmptyDetailRowFlags(),
+                  })),
+              })),
+          }));
+      }
+
+      // Ratakan paket relasi dan detail row tanpa mengubah urutan input user.
+      function flattenTable1ProjectRows(project) {
+        return project.relationPackages.flatMap((relationPackage) =>
+          relationPackage.detailRows.map((detailRow) => ({
+            bproNumber: detailRow.bproNumber,
+            bproName: detailRow.bproName,
+            changesId: detailRow.changesId,
+            changesName: detailRow.changesName,
+            uatByUser: detailRow.uatByUser,
+            releaseId: relationPackage.releaseId,
+            releaseName: relationPackage.releaseName,
+            blueprintLink:
+              table1BlueprintLevel === "bpro"
+                ? detailRow.blueprintLink || "-"
+                : relationPackage.blueprintLink || "-",
+            documentNeeds: relationPackage.documentNeeds,
+            blueprintLinkFlag:
+              table1BlueprintLevel === "bpro"
+                ? detailRow.flags?.blueprintLink
+                : relationPackage.flags?.blueprintLink,
+            detailRowFlags: detailRow.flags || createEmptyDetailRowFlags(),
+            relationPackageFlags: relationPackage.flags || createEmptyRelationPackageFlags(),
+          }))
+        );
+      }
+
+      function normalizeTable3Rows(rows) {
+        return rows.filter((row) => !isBlankTable3Row(row));
+      }
+
+      function renderTable1Result(project, tableIndex) {
+        const rows = flattenTable1ProjectRows(project);
+        const { projectName, flags: projectFlags = createEmptyProjectFlags() } = project;
+        const mergeMeta = buildMergeMeta(rows);
+        const bodyMarkup = rows
+          .map((row, index) => {
+            const meta = mergeMeta[index];
+            const detailRowFlags = row.detailRowFlags || createEmptyDetailRowFlags();
+            const relationPackageFlags =
+              row.relationPackageFlags || createEmptyRelationPackageFlags();
+            const blueprintValue = row.blueprintLink || "-";
+            const blueprintMarkup =
+              blueprintValue !== "-" && /^https?:\/\//i.test(blueprintValue)
+                ? `<a class="doc-link" href="${escapeHtml(blueprintValue)}" target="_blank" rel="noopener noreferrer">${escapeHtml(blueprintValue)}</a>`
+                : escapeHtml(blueprintValue || "-");
+            const bproFlagged = meta.bpro.show
+              ? hasAnyFlag(
+                  rows,
+                  index,
+                  meta.bpro.rowSpan,
+                  (entry) =>
+                    entry.detailRowFlags?.bproNumber || entry.detailRowFlags?.bproName
+                )
+              : false;
+            const releaseFlagged = meta.release.show
+              ? hasAnyFlag(
+                  rows,
+                  index,
+                  meta.release.rowSpan,
+                  (entry) =>
+                    entry.relationPackageFlags?.releaseId ||
+                    entry.relationPackageFlags?.releaseName
+                )
+              : false;
+            const blueprintFlagged = meta.blueprint.show
+              ? hasAnyFlag(
+                  rows,
+                  index,
+                  meta.blueprint.rowSpan,
+                  (entry) => entry.blueprintLinkFlag
+                )
+              : false;
+            const documentNeedFlagged = meta.documentNeed.show
+              ? hasAnyFlag(
+                  rows,
+                  index,
+                  meta.documentNeed.rowSpan,
+                  (entry) => entry.relationPackageFlags?.documentNeeds
+                )
+              : false;
+            const uatByUserFlagged = meta.uatByUser.show
+              ? hasAnyFlag(
+                  rows,
+                  index,
+                  meta.uatByUser.rowSpan,
+                  (entry) => entry.detailRowFlags?.uatByUser
+                )
+              : false;
+
+            return `
+              <tr>
+                <td class="center">${index + 1}</td>
+                ${
+                  meta.bpro.show
+                    ? `<td rowspan="${meta.bpro.rowSpan}" class="${buildResultCellClass("center", bproFlagged)}">${renderResultCellContent(
+                        formatMultiline(formatJoined([row.bproNumber, row.bproName])),
+                        bproFlagged
+                      )}</td>`
+                    : ""
+                }
+                <td class="${buildResultCellClass("center", detailRowFlags.changesId || detailRowFlags.changesName)}">${renderResultCellContent(
+                  formatMultiline(formatJoined([row.changesId, row.changesName])),
+                  detailRowFlags.changesId || detailRowFlags.changesName
+                )}</td>
+                ${
+                  meta.release.show
+                    ? `<td rowspan="${meta.release.rowSpan}" class="${buildResultCellClass("center", releaseFlagged)}">${renderResultCellContent(
+                        formatMultiline(formatJoined([row.releaseId, row.releaseName])),
+                        releaseFlagged
+                      )}</td>`
+                    : ""
+                }
+                ${
+                  meta.blueprint.show
+                    ? `<td rowspan="${meta.blueprint.rowSpan}" class="${buildResultCellClass("center", blueprintFlagged)}">${renderResultCellContent(
+                        blueprintMarkup,
+                        blueprintFlagged
+                      )}</td>`
+                    : ""
+                }
+                ${
+                  meta.documentNeed.show
+                    ? `<td rowspan="${meta.documentNeed.rowSpan}" class="${buildResultCellClass("center", documentNeedFlagged)}">${renderResultCellContent(
+                        escapeHtml(joinDocumentNeeds(row.documentNeeds)),
+                        documentNeedFlagged
+                      )}</td>`
+                    : ""
+                }
+                ${
+                  meta.uatByUser.show
+                    ? `<td rowspan="${meta.uatByUser.rowSpan}" class="${buildResultCellClass("center", uatByUserFlagged)}">${renderResultCellContent(
+                        formatMultiline(row.uatByUser || "-"),
+                        uatByUserFlagged
+                      )}</td>`
+                    : ""
+                }
+              </tr>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="doc-block table1-result-block">
+            <div class="title-with-flag">
+              <h3 class="doc-title">Sertifikasi - ${escapeHtml(projectName)}</h3>
+              ${renderFlagBadge(projectFlags.projectName)}
+            </div>
+            <table class="doc-table table1">
+              <thead>
+                <tr>
+                  <th style="width: 70px">No.</th>
+                  <th style="width: 170px">Nomor &amp; Nama BPRO</th>
+                  <th style="width: 190px">Changes ID &amp; Changes Name</th>
+                  <th style="width: 190px">Release ID &amp; Release Name</th>
+                  <th style="width: 210px">Link Blueprint</th>
+                  <th style="width: 170px">Apakah diperlukan SK/SE/Service News/Memo?</th>
+                  <th style="width: 180px">Pelaku UAT by User</th>
+                </tr>
+              </thead>
+              <tbody>${bodyMarkup}</tbody>
+            </table>
+          </section>
+        `;
+      }
+
+      function getChecklistRowClass(statusValue) {
+        const normalized = statusValue.trim().toUpperCase();
+        return !normalized || normalized === "-" || normalized === "N/A" ? "muted-status" : "";
+      }
+
+      function renderChecklistNoteContent(row) {
+        return row.id === "c12" ? formatMultilineWithLinks(row.note) : formatMultiline(row.note);
+      }
+
+      function renderChecklistResult(rows) {
+        const procedureGroup = checklistStructure.find((item) => item.id === "c11");
+        const procedureChildren = rows.filter((row) => row.id.startsWith("c11") && row.id !== "c11");
+
+        const procedureMarkup = `
+          <tr class="procedure-group">
+            <td class="procedure-no">${escapeHtml(procedureGroup.no)}</td>
+            <td>${escapeHtml(procedureGroup.label)}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          ${procedureChildren
+            .map(
+              (row) => `
+                <tr class="${getChecklistRowClass(row.status)}">
+                  <td class="sub-row-number">${escapeHtml(row.no)}</td>
+                  <td class="activity-cell top">- ${escapeHtml(row.label)}</td>
+                  <td class="${buildResultCellClass("center", row.flags?.status)}">${renderResultCellContent(
+                    escapeHtml(row.status || "-"),
+                    row.flags?.status
+                  )}</td>
+                  <td class="${buildResultCellClass("center", row.flags?.pic)}">${renderResultCellContent(
+                    escapeHtml(row.pic || "-"),
+                    row.flags?.pic
+                  )}</td>
+                  <td class="${buildResultCellClass("center", row.flags?.target)}">${renderResultCellContent(
+                    escapeHtml(row.target || "-"),
+                    row.flags?.target
+                  )}</td>
+                  <td class="${buildResultCellClass("", row.flags?.note)}">${renderResultCellContent(
+                    renderChecklistNoteContent(row),
+                    row.flags?.note
+                  )}</td>
+                </tr>
+              `
+            )
+            .join("")}
+        `;
+
+        const rowsById = new Map(rows.map((row) => [row.id, row]));
+        // Susun ulang sesuai struktur fixed checklist agar grup Prosedur tetap berada di posisi nomor 11.
+        const orderedMarkup = checklistStructure
+          .map((item) => {
+            if (item.kind === "group") {
+              return procedureMarkup;
+            }
+
+            const row = rowsById.get(item.id);
+            return `
+              <tr class="${getChecklistRowClass(row.status)}">
+                <td class="center">${escapeHtml(row.no)}</td>
+                <td class="activity-cell">${formatMultiline(row.label)}</td>
+                <td class="${buildResultCellClass("center", row.flags?.status)}">${renderResultCellContent(
+                  escapeHtml(row.status || "-"),
+                  row.flags?.status
+                )}</td>
+                <td class="${buildResultCellClass("center", row.flags?.pic)}">${renderResultCellContent(
+                  escapeHtml(row.pic || "-"),
+                  row.flags?.pic
+                )}</td>
+                <td class="${buildResultCellClass("center", row.flags?.target)}">${renderResultCellContent(
+                  escapeHtml(row.target || "-"),
+                  row.flags?.target
+                )}</td>
+                <td class="${buildResultCellClass("", row.flags?.note)}">${renderResultCellContent(
+                  renderChecklistNoteContent(row),
+                  row.flags?.note
+                )}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="doc-block">
+            <h3 class="doc-title">Tabel Checklist Sebelum Implementasi</h3>
+            <table class="doc-table table2">
+              <thead>
+                <tr>
+                  <th style="width: 70px">No.</th>
+                  <th style="width: 240px">Aktivitas</th>
+                  <th style="width: 130px">Status</th>
+                  <th style="width: 125px">PIC</th>
+                  <th style="width: 125px">Target</th>
+                  <th style="width: 245px">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>${orderedMarkup}</tbody>
+            </table>
+          </section>
+        `;
+      }
+
+      function getStatusClass(status) {
+        const value = status.trim().toLowerCase();
+        if (value === "done") {
+          return "done";
+        }
+
+        if (value === "ongoing") {
+          return "ongoing";
+        }
+
+        return "todo";
+      }
+
+      function normalizeMergeKey(value) {
+        return `${value ?? ""}`.trim().toLowerCase() || "-";
+      }
+
+      function buildTable3MergeMeta(rows) {
+        return {
+          date: buildGroupMeta(rows, (row) => normalizeMergeKey(row.date)),
+          time: buildGroupMeta(rows, (row) => normalizeMergeKey(row.time)),
+          activity: buildGroupMeta(rows, (row) => normalizeMergeKey(row.activity)),
+          pic: buildGroupMeta(rows, (row) => normalizeMergeKey(row.pic)),
+          status: buildGroupMeta(rows, (row) => normalizeMergeKey(row.status)),
+          note: buildGroupMeta(rows, (row) => normalizeMergeKey(row.note)),
+        };
+      }
+
+      function renderTable3Result(rows) {
+        const mergeMeta = buildTable3MergeMeta(rows);
+        const renderMergedTable3Cell = (field, row, index, content, baseClass = "center") => {
+          const meta = mergeMeta[field][index];
+          if (!meta.show) {
+            return "";
+          }
+
+          const flagged = hasAnyFlag(rows, index, meta.rowSpan, (entry) => entry.flags?.[field]);
+          return `<td rowspan="${meta.rowSpan}" class="${buildResultCellClass(baseClass, flagged)}">${renderResultCellContent(
+            content,
+            flagged
+          )}</td>`;
+        };
+
+        const bodyMarkup = rows
+          .map(
+            (row, index) => `
+              <tr>
+                ${renderMergedTable3Cell("date", row, index, escapeHtml(row.date))}
+                ${renderMergedTable3Cell("time", row, index, escapeHtml(row.time || "-"))}
+                ${renderMergedTable3Cell("activity", row, index, formatMultiline(row.activity))}
+                ${renderMergedTable3Cell("pic", row, index, formatMultiline(row.pic))}
+                ${renderMergedTable3Cell(
+                  "status",
+                  row,
+                  index,
+                  `<span class="status-pill ${getStatusClass(row.status)}">${escapeHtml(row.status)}</span>`
+                )}
+                ${renderMergedTable3Cell("note", row, index, formatMultiline(row.note), "")}
+              </tr>
+            `
+          )
+          .join("");
+
+        return `
+          <section class="doc-block">
+            <h3 class="doc-title">Strategi Implementasi</h3>
+            <table class="doc-table table3">
+              <thead>
+                <tr>
+                  <th style="width: 230px">Tanggal</th>
+                  <th style="width: 130px">Jam</th>
+                  <th>Aktivitas</th>
+                  <th style="width: 170px">PIC</th>
+                  <th style="width: 130px">Status</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>${bodyMarkup}</tbody>
+            </table>
+          </section>
+        `;
+      }
+
+      function renderMeetingMemoResult(note) {
+        return `
+          <section class="doc-block meeting-memo-result-block">
+            <h3 class="doc-title">Catatan Meeting</h3>
+            <div class="memo-result-body">${formatMultiline(note)}</div>
+          </section>
+        `;
+      }
+
+      function joinResultBlocks(blocks) {
+        return blocks
+          .filter(Boolean)
+          .join('<div class="doc-table-spacer" aria-hidden="true"></div>');
+      }
+
+      function generateResult() {
+        setPreviewJumpVisible(false);
+        const validationMessage = validateForm();
+        if (validationMessage) {
+          showFeedback(validationMessage, "error");
+          return;
+        }
+
+        clearFeedback();
+
+        const table1Projects = normalizeTable1Projects(table1ProjectsState);
+        const checklistRows = collectChecklistValues();
+        const table3Rows = normalizeTable3Rows(table3State);
+        const memoValue = elements.memoTextarea.value.trim();
+        const table1Blocks = table1Projects.map((project, index) => renderTable1Result(project, index));
+
+        const resultMarkup = `
+          <div class="result-document">
+            ${joinResultBlocks([
+              ...table1Blocks,
+              renderChecklistResult(checklistRows),
+              renderTable3Result(table3Rows),
+              memoValue ? renderMeetingMemoResult(memoValue) : "",
+            ])}
+          </div>
+        `;
+
+        elements.resultArea.className = "";
+        elements.resultArea.innerHTML = resultMarkup;
+        showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
+        elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function applyExcelMemoLayout(clonedRoot) {
+        const rootStyle = clonedRoot.getAttribute("style") || "";
+        clonedRoot.setAttribute("style", `${rootStyle};display:block;width:100%;`);
+
+        const spacers = clonedRoot.querySelectorAll(".doc-table-spacer");
+        spacers.forEach((spacer) => {
+          const spacerTable = document.createElement("table");
+          spacerTable.setAttribute("role", "presentation");
+          spacerTable.setAttribute("cellpadding", "0");
+          spacerTable.setAttribute("cellspacing", "0");
+          spacerTable.setAttribute("border", "0");
+          spacerTable.setAttribute("width", "100%");
+          spacerTable.setAttribute(
+            "style",
+            "width:100%;border-collapse:collapse;margin:0;"
+          );
+          spacerTable.innerHTML = `
+            <tbody>
+              <tr>
+                <td style="height:20px;border:none;padding:0;mso-height-source:userset;">&nbsp;</td>
+              </tr>
+            </tbody>
+          `;
+          spacer.replaceWith(spacerTable);
+        });
+
+        const docBlocks = clonedRoot.querySelectorAll(".doc-block");
+        docBlocks.forEach((block) => {
+          const currentStyle = block.getAttribute("style") || "";
+          block.setAttribute(
+            "style",
+            `${currentStyle};display:block;width:100%;margin:0;page-break-inside:avoid;`
+          );
+        });
+
+        const memoSections = clonedRoot.querySelectorAll(".doc-block");
+        memoSections.forEach((section) => {
+          const memoBody = section.querySelector(".memo-result-body");
+          const memoTitle = section.querySelector(".doc-title");
+          if (!memoBody || !memoTitle) {
+            return;
+          }
+
+          const memoTable = document.createElement("table");
+          memoTable.setAttribute("role", "presentation");
+          memoTable.setAttribute("cellpadding", "0");
+          memoTable.setAttribute("cellspacing", "0");
+          memoTable.setAttribute("border", "0");
+          memoTable.setAttribute("width", "100%");
+          memoTable.setAttribute(
+            "style",
+            "width:100%;border-collapse:collapse;margin:0;"
+          );
+
+          memoTable.innerHTML = `
+            <tbody>
+              <tr>
+                <td colspan="6" style="padding:0 0 10px 0;border:none;font-size:20px;font-weight:800;color:#1c2734;">
+                  ${escapeHtml(memoTitle.textContent || "Catatan Meeting")}
+                </td>
+              </tr>
+              <tr>
+                <td colspan="6" style="border:1px solid #111;padding:20px 24px;background:#fffdf4;line-height:1.75;vertical-align:top;white-space:normal;word-break:break-word;mso-line-height-rule:exactly;">
+                  ${memoBody.innerHTML}
+                </td>
+              </tr>
+            </tbody>
+          `;
+
+          section.innerHTML = "";
+          section.appendChild(memoTable);
+        });
+      }
+
+      function buildInlineStyledResultMarkup(options = {}) {
+        const sourceRoot = elements.resultArea.querySelector(".result-document");
+        if (!sourceRoot) {
+          return "";
+        }
+
+        const clonedRoot = sourceRoot.cloneNode(true);
+        const sourceNodes = [sourceRoot, ...sourceRoot.querySelectorAll("*")];
+        const clonedNodes = [clonedRoot, ...clonedRoot.querySelectorAll("*")];
+
+        sourceNodes.forEach((sourceNode, index) => {
+          const clonedNode = clonedNodes[index];
+          if (!(sourceNode instanceof HTMLElement) || !(clonedNode instanceof HTMLElement)) {
+            return;
+          }
+
+          const computed = window.getComputedStyle(sourceNode);
+          const inlineStyle = Array.from(computed)
+            .filter(
+              (property) =>
+                !property.startsWith("--") &&
+                !property.startsWith("animation") &&
+                !property.startsWith("transition") &&
+                property !== "cursor" &&
+                property !== "caret-color"
+            )
+            .map((property) => `${property}:${computed.getPropertyValue(property)};`)
+            .join("");
+
+          clonedNode.setAttribute("style", inlineStyle);
+        });
+
+        if (options.includeMemo === false) {
+          const memoSections = new Set([
+            ...clonedRoot.querySelectorAll(".meeting-memo-result-block"),
+            ...[...clonedRoot.querySelectorAll(".memo-result-body")]
+              .map((memoBody) => memoBody.closest(".doc-block"))
+              .filter(Boolean),
+          ]);
+          memoSections.forEach((memoSection) => {
+            const previousSpacer = memoSection.previousElementSibling?.classList.contains("doc-table-spacer")
+              ? memoSection.previousElementSibling
+              : null;
+            const nextSpacer = memoSection.nextElementSibling?.classList.contains("doc-table-spacer")
+              ? memoSection.nextElementSibling
+              : null;
+
+            if (previousSpacer) {
+              previousSpacer.remove();
+            } else {
+              nextSpacer?.remove();
+            }
+
+            memoSection.remove();
+          });
+
+          while (clonedRoot.lastElementChild?.classList.contains("doc-table-spacer")) {
+            clonedRoot.lastElementChild.remove();
+          }
+        }
+
+        if (options.forExcel) {
+          const excelChecklistAndStrategyCells = clonedRoot.querySelectorAll(
+            ".table1 th, .table1 td, .table2 th, .table2 td, .table3 th, .table3 td"
+          );
+          excelChecklistAndStrategyCells.forEach((cell) => {
+            const currentStyle = cell.getAttribute("style") || "";
+            cell.setAttribute(
+              "style",
+              `${currentStyle};border-top:1px solid #111;border-right:1px solid #111;border-bottom:1px solid #111;border-left:1px solid #111;mso-border-top-alt:solid #111 1.0pt;mso-border-right-alt:solid #111 1.0pt;mso-border-bottom-alt:solid #111 1.0pt;mso-border-left-alt:solid #111 1.0pt;border-collapse:collapse;`
+            );
+          });
+
+          const keteranganCells = clonedRoot.querySelectorAll(
+            ".table2 tbody tr td:last-child, .table3 tbody tr td:last-child"
+          );
+
+          keteranganCells.forEach((cell) => {
+            const currentStyle = cell.getAttribute("style") || "";
+            cell.setAttribute(
+              "style",
+              `${currentStyle};text-align:left;vertical-align:middle;`
+            );
+          });
+
+          const flaggedCells = clonedRoot.querySelectorAll(".flagged-cell");
+          flaggedCells.forEach((cell) => {
+            const currentStyle = cell.getAttribute("style") || "";
+            const isExportTableCell = cell.closest(".table1, .table2, .table3");
+            cell.setAttribute(
+              "style",
+              `${currentStyle};background:#f8fc46;color:#111;border-top:1px solid #111;border-right:1px solid #111;border-bottom:1px solid #111;border-left:1px solid #111;mso-border-top-alt:solid #111 1.0pt;mso-border-right-alt:solid #111 1.0pt;mso-border-bottom-alt:solid #111 1.0pt;mso-border-left-alt:solid #111 1.0pt;mso-pattern:auto none;display:table-cell;`
+            );
+            if (isExportTableCell) {
+              cell.setAttribute("bgcolor", "#f8fc46");
+              cell.setAttribute("valign", "middle");
+            }
+          });
+
+          const flaggedContentBlocks = clonedRoot.querySelectorAll(".flagged-content");
+          flaggedContentBlocks.forEach((block) => {
+            const isExportTableBlock = block.closest(".table1, .table2, .table3");
+            if (isExportTableBlock) {
+              const fragment = document.createDocumentFragment();
+              [...block.childNodes].forEach((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "DIV") {
+                  while (node.firstChild) {
+                    fragment.appendChild(node.firstChild);
+                  }
+                  return;
+                }
+                fragment.appendChild(node);
+              });
+              block.replaceWith(fragment);
+              return;
+            }
+
+            const currentStyle = block.getAttribute("style") || "";
+            block.setAttribute(
+              "style",
+              `${currentStyle};display:block;gap:0;width:100%;height:100%;margin:0;padding:0;border:none;background:transparent;`
+            );
+          });
+
+          const flagBadges = clonedRoot.querySelectorAll(".cell-flag");
+          flagBadges.forEach((badge) => {
+            badge.remove();
+          });
+
+          applyExcelMemoLayout(clonedRoot);
+        }
+
+        return clonedRoot.outerHTML;
+      }
+
+      function buildStandaloneDocument() {
+        const styledMarkup = buildInlineStyledResultMarkup();
+        return `
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Export MOM Meeting</title>
+            </head>
+            <body style="margin:0;padding:24px;background:#ffffff;font-family:Aptos,Calibri,'Segoe UI',sans-serif;color:#1c2734;">
+              ${styledMarkup}
+            </body>
+          </html>
+        `;
+      }
+
+      function buildExcelDocument() {
+        const styledMarkup = buildInlineStyledResultMarkup({ forExcel: true });
+        return `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:x="urn:schemas-microsoft-com:office:excel"
+                xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+              <meta charset="UTF-8">
+              <meta http-equiv="Content-Type" content="application/vnd.ms-excel; charset=UTF-8">
+              <meta name="ProgId" content="Excel.Sheet">
+              <meta name="Generator" content="MOM Meeting Generator">
+            </head>
+            <body style="margin:0;padding:24px;background:#ffffff;font-family:Calibri,Arial,sans-serif;color:#1c2734;">
+              ${styledMarkup}
+            </body>
+          </html>
+        `;
+      }
+
+      async function copyResult() {
+        if (!elements.resultArea.querySelector(".result-document")) {
+          showFeedback("Belum ada hasil untuk dicopy.", "error");
+          return;
+        }
+
+        const html = buildInlineStyledResultMarkup();
+        const text = elements.resultArea.innerText.trim();
+
+        try {
+          if (window.ClipboardItem && navigator.clipboard?.write) {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "text/html": new Blob([html], { type: "text/html" }),
+                "text/plain": new Blob([text], { type: "text/plain" }),
+              }),
+            ]);
+          } else if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            throw new Error("Clipboard API unavailable");
+          }
+
+          showFeedback("Hasil berhasil dicopy ke clipboard.", "success");
+        } catch (error) {
+          showFeedback("Copy gagal di browser ini. Silakan gunakan browser modern lalu coba lagi.", "error");
+        }
+      }
+
+      function exportResult() {
+        if (!elements.resultArea.querySelector(".result-document")) {
+          showFeedback("Preview tabel dulu sebelum export.", "error");
+          return;
+        }
+
+        const html = buildStandaloneDocument();
+        const fileName = `mom-meeting-export-${new Date().toISOString().slice(0, 10)}.html`;
+        downloadResultFile(html, "text/html;charset=utf-8", fileName);
+        showFeedback("File HTML berhasil diexport dengan style hasil generate.", "success");
+      }
+
+      function exportXlsResult() {
+        if (!elements.resultArea.querySelector(".result-document")) {
+          showFeedback("Preview tabel dulu sebelum export XLS.", "error");
+          return;
+        }
+
+        const html = buildExcelDocument();
+        const fileName = `mom-meeting-export-${new Date().toISOString().slice(0, 10)}.xls`;
+        downloadResultFile(html, "application/vnd.ms-excel;charset=utf-8", fileName);
+        showFeedback("File XLS berhasil diexport dan siap dibuka di Excel.", "success");
+      }
+
+      // OUTLOOK EXPORT PATCH START
+      function getPrimaryProjectName() {
+        syncTable1ProjectsStateFromDom();
+        return (
+          table1ProjectsState.find((project) => project?.projectName?.trim())?.projectName.trim() ||
+          "Project"
+        );
+      }
+
+      function formatTodayIndonesian() {
+        const months = [
+          "Januari",
+          "Februari",
+          "Maret",
+          "April",
+          "Mei",
+          "Juni",
+          "Juli",
+          "Agustus",
+          "September",
+          "Oktober",
+          "November",
+          "Desember",
+        ];
+        const today = new Date();
+
+        return `${String(today.getDate()).padStart(2, "0")} ${
+          months[today.getMonth()]
+        } ${today.getFullYear()}`;
+      }
+
+      function buildOutlookEmailDocument() {
+        const styledMarkup = buildInlineStyledResultMarkup({ forExcel: true, includeMemo: false });
+        const projectName = escapeHtml(getPrimaryProjectName());
+        const today = escapeHtml(formatTodayIndonesian());
+
+        return `
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <title>MOM Outlook Export</title>
+            </head>
+            <body style="margin:0;padding:0;background:#ffffff;font-family:Aptos,Calibri,'Segoe UI',Arial,sans-serif;color:#1c2734;font-size:14px;line-height:1.45;">
+              <div style="padding:16px 18px;">
+                <p style="margin:0 0 12px 0;">Dear All,</p>
+                <p style="margin:0 0 16px 0;">
+                  Berikut merupakan MoM <strong>${projectName}</strong> per tanggal <strong>${today}</strong>.
+                </p>
+                ${styledMarkup}
+                <p style="margin:18px 0 6px 0;">Demikian saya sampaikan</p>
+                <p style="margin:0;">Atas perhatiannya saya mengucapkan Terima Kasih</p>
+              </div>
+            </body>
+          </html>
+        `;
+      }
+
+      function exportOutlookResult() {
+        if (!elements.resultArea.querySelector(".result-document")) {
+          showFeedback("Preview tabel dulu sebelum export ke Outlook.", "error");
+          return;
+        }
+
+        const projectSlug = slugifyDraftFilePart(getPrimaryProjectName());
+        const fileName = `mom-outlook-export-${projectSlug}-${new Date()
+          .toISOString()
+          .slice(0, 10)}.html`;
+        const html = buildOutlookEmailDocument();
+        downloadResultFile(html, "text/html;charset=utf-8", fileName);
+        showFeedback(
+          "File Outlook HTML berhasil diexport. Jalankan macro Outlook VBA lalu pilih file ini.",
+          "success"
+        );
+      }
+      // OUTLOOK EXPORT PATCH END
+
+      function downloadResultFile(content, mimeType, fileName) {
+        const blob = new Blob([content], { type: mimeType });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function collectDraftData() {
+        syncTable1ProjectsStateFromDom();
+        syncTable3StateFromDom();
+
+        return {
+          version: "mom-generator-draft-v1",
+          savedAt: new Date().toISOString(),
+          table1BlueprintLevel,
+          table1ProjectsState,
+          checklistRows: collectChecklistValues(),
+          table3State,
+          memo: elements.memoTextarea.value,
+        };
+      }
+
+      function slugifyDraftFilePart(value) {
+        const slug = `${value || ""}`
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+        return slug || "mom";
+      }
+
+      function buildDraftFileName(draft) {
+        const projectName = draft.table1ProjectsState.find((project) => project?.projectName?.trim())
+          ?.projectName;
+        const projectSlug = slugifyDraftFilePart(projectName);
+        const date = new Date().toISOString().slice(0, 10);
+
+        return `mom-draft-${projectSlug}-${date}.json`;
+      }
+
+      async function saveDraftData() {
+        const draft = collectDraftData();
+        const json = JSON.stringify(draft, null, 2);
+        const fileName = buildDraftFileName(draft);
+
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(json);
+          } else {
+            window.prompt("Copy draft JSON di bawah ini:", json);
+          }
+
+          downloadResultFile(json, "application/json;charset=utf-8", fileName);
+          showFeedback("Draft data berhasil disimpan. Simpan JSON ini untuk digunakan kembali.", "success");
+        } catch (error) {
+          window.prompt("Copy draft JSON di bawah ini:", json);
+          downloadResultFile(json, "application/json;charset=utf-8", fileName);
+          showFeedback("Draft data berhasil disimpan. Simpan JSON ini untuk digunakan kembali.", "success");
+        }
+      }
+
+      function isValidDraftData(data) {
+        return (
+          data &&
+          typeof data === "object" &&
+          !Array.isArray(data) &&
+          data.version === "mom-generator-draft-v1" &&
+          Array.isArray(data.table1ProjectsState) &&
+          Array.isArray(data.table3State)
+        );
+      }
+
+      function applyFieldValue(rowElement, field, value, flagged = false) {
+        const control = rowElement.querySelector(`[data-field="${field}"]`);
+        if (!control) {
+          return;
+        }
+
+        control.value = value || "";
+        setFlaggedFieldState(control.closest(".flag-field"), Boolean(flagged));
+      }
+
+      function applyChecklistValues(checklistRows) {
+        if (!Array.isArray(checklistRows)) {
+          refreshChecklistRowsState();
+          return;
+        }
+
+        checklistRows.forEach((row) => {
+          if (!row?.id) {
+            return;
+          }
+
+          const rowElement = [...elements.table2Rows.querySelectorAll("tr[data-checklist-id]")].find(
+            (entry) => entry.dataset.checklistId === row.id
+          );
+          if (!rowElement) {
+            return;
+          }
+
+          applyFieldValue(rowElement, "status", row.status, row.flags?.status);
+          applyFieldValue(rowElement, "pic", row.pic, row.flags?.pic);
+          applyFieldValue(rowElement, "note", row.note, row.flags?.note);
+
+          const targetDisplay = rowElement.querySelector('[data-field="target"]');
+          const targetNative = rowElement.querySelector('[data-native-date-for="target"]');
+          if (targetDisplay) {
+            targetDisplay.value = row.target || "";
+            setFlaggedFieldState(targetDisplay.closest(".flag-field"), Boolean(row.flags?.target));
+          }
+          if (targetNative) {
+            targetNative.value = formatDateRangeForNative(row.target || "", "start");
+          }
+
+          const targetNativeEnd = rowElement.querySelector(
+            '[data-native-date-for="target"][data-native-date-role="end"]'
+          );
+          if (targetNativeEnd) {
+            targetNativeEnd.value = formatDateRangeForNative(row.target || "", "end");
+          }
+        });
+
+        refreshChecklistRowsState();
+        refreshTextareasScrollState(elements.table2Rows);
+      }
+
+      function clearPreviewResult() {
+        setPreviewJumpVisible(false);
+        elements.resultArea.className = "result-placeholder";
+        elements.resultArea.innerHTML =
+          'Belum ada hasil. Isi form di atas lalu klik <strong>Preview Table</strong>.';
+      }
+
+      function applyDraftDataFromJson(raw) {
+        let draft;
+        try {
+          draft = JSON.parse(raw);
+        } catch (error) {
+          showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
+          return false;
+        }
+
+        if (!isValidDraftData(draft)) {
+          showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
+          return false;
+        }
+
+        table1BlueprintLevel = draft.table1BlueprintLevel === "bpro" ? "bpro" : "release";
+        table1ProjectsState = draft.table1ProjectsState.length
+          ? draft.table1ProjectsState
+          : [createEmptyTable1Project()];
+        table3State = draft.table3State.length ? draft.table3State : [createEmptyTable3Row()];
+
+        syncBlueprintLevelControls();
+        renderTable1Projects();
+        renderTable2Rows();
+        applyChecklistValues(draft.checklistRows);
+        renderTable3Rows();
+        elements.memoTextarea.value = draft.memo || "";
+        refreshMemoState();
+        clearPreviewResult();
+        clearFeedback();
+        showFeedback("Draft data berhasil dimuat. Silakan review lalu Preview Table.", "success");
+        return true;
+      }
+
+      function loadDraftData() {
+        elements.draftFileInput.value = "";
+        elements.draftFileInput.click();
+      }
+
+      async function loadDraftFile(event) {
+        const file = event.target.files?.[0];
+        if (!file) {
+          return;
+        }
+
+        try {
+          const raw = await file.text();
+          applyDraftDataFromJson(raw);
+        } catch (error) {
+          showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
+        } finally {
+          event.target.value = "";
+        }
+      }
+
+      function resetAll() {
+        table1ProjectsState = [createEmptyTable1Project()];
+        table1BlueprintLevel = "release";
+        table3State = [createEmptyTable3Row()];
+        syncBlueprintLevelControls();
+        renderTable1Projects();
+        renderTable2Rows();
+        renderTable3Rows();
+        elements.memoTextarea.value = "";
+        refreshMemoState();
+        setMemoPanelOpen(false);
+        clearPreviewResult();
+        clearFeedback();
+      }
+
+      elements.blueprintLevelControls.forEach((control) => {
+        control.addEventListener("change", (event) => {
+          if (!event.target.checked) {
+            return;
+          }
+
+          syncTable1ProjectsStateFromDom();
+          table1BlueprintLevel = event.target.value === "bpro" ? "bpro" : "release";
+          renderTable1Projects();
+          clearFeedback();
+        });
+      });
+
+      elements.addTable1Project.addEventListener("click", () => {
+        syncTable1ProjectsStateFromDom();
+        table1ProjectsState.push(createEmptyTable1Project());
+        renderTable1Projects();
+      });
+
+      elements.table1Projects.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button || button.dataset.action === "toggle-flag") {
+          return;
+        }
+
+        const projectElement = button.closest(".table1-project");
+        if (!projectElement) {
+          return;
+        }
+
+        const projectIndex = Number(projectElement.dataset.projectIndex);
+        syncTable1ProjectsStateFromDom();
+
+        if (button.dataset.action === "add-table1-package") {
+          addRelationPackageToProject(projectIndex, { scrollToNew: true });
+          return;
+        }
+
+        if (button.dataset.action === "remove-table1-project") {
+          table1ProjectsState.splice(projectIndex, 1);
+          if (!table1ProjectsState.length) {
+            table1ProjectsState = [createEmptyTable1Project()];
+          }
+          renderTable1Projects();
+          return;
+        }
+
+        const packageElement = button.closest(".table1-package");
+        if (!packageElement) {
+          return;
+        }
+
+        const packageIndex = Number(packageElement.dataset.packageIndex);
+        const relationPackages = table1ProjectsState[projectIndex].relationPackages;
+        const activePackage = relationPackages[packageIndex];
+
+        if (button.dataset.action === "add-table1-detail-row") {
+          const previousDetailRow =
+            activePackage.detailRows[activePackage.detailRows.length - 1] || null;
+          activePackage.detailRows.push(createDetailRowFromPrevious(previousDetailRow));
+          renderTable1Projects();
+          return;
+        }
+
+        if (button.dataset.action === "remove-table1-package") {
+          relationPackages.splice(packageIndex, 1);
+          if (!relationPackages.length) {
+            table1ProjectsState[projectIndex].relationPackages = [createEmptyRelationPackage()];
+          }
+          renderTable1Projects();
+          return;
+        }
+
+        if (
+          button.dataset.action === "move-table1-detail-row-up" ||
+          button.dataset.action === "move-table1-detail-row-down"
+        ) {
+          const detailRowElement = button.closest(".table1-detail-row");
+          const detailRowIndex = Number(detailRowElement.dataset.detailRowIndex);
+          const detailRows = activePackage.detailRows;
+          const targetIndex =
+            button.dataset.action === "move-table1-detail-row-up"
+              ? detailRowIndex - 1
+              : detailRowIndex + 1;
+
+          if (targetIndex < 0 || targetIndex >= detailRows.length) {
+            return;
+          }
+
+          const [movedDetailRow] = detailRows.splice(detailRowIndex, 1);
+          detailRows.splice(targetIndex, 0, movedDetailRow);
+          renderTable1Projects();
+          return;
+        }
+
+        if (button.dataset.action === "remove-table1-detail-row") {
+          const detailRowElement = button.closest(".table1-detail-row");
+          const detailRowIndex = Number(detailRowElement.dataset.detailRowIndex);
+          activePackage.detailRows.splice(detailRowIndex, 1);
+          if (!activePackage.detailRows.length) {
+            activePackage.detailRows = [createEmptyDetailRow()];
+          }
+          renderTable1Projects();
+          return;
+        }
+      });
+
+      elements.addTable3Row.addEventListener("click", () => {
+        syncTable3StateFromDom();
+        table3State.push(createEmptyTable3Row());
+        renderTable3Rows();
+      });
+
+      elements.table3Rows.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button || button.dataset.action === "toggle-flag") {
+          return;
+        }
+
+        const rowElement = button.closest(".table3-row");
+        const index = Number(rowElement.dataset.rowIndex);
+        syncTable3StateFromDom();
+
+        if (
+          button.dataset.action === "move-table3-row-up" ||
+          button.dataset.action === "move-table3-row-down"
+        ) {
+          const targetIndex = button.dataset.action === "move-table3-row-up" ? index - 1 : index + 1;
+          if (targetIndex < 0 || targetIndex >= table3State.length) {
+            return;
+          }
+
+          const [movedRow] = table3State.splice(index, 1);
+          table3State.splice(targetIndex, 0, movedRow);
+          renderTable3Rows();
+          return;
+        }
+
+        if (button.dataset.action !== "remove-table3-row") {
+          return;
+        }
+
+        table3State.splice(index, 1);
+
+        if (!table3State.length) {
+          table3State = [createEmptyTable3Row()];
+        }
+
+        renderTable3Rows();
+      });
+
+      elements.table2Rows.addEventListener("input", (event) => {
+        refreshTextareaScrollState(event.target);
+
+        if (event.target.matches('[data-field="status"]')) {
+          updateChecklistRowState(event.target.closest("tr"));
+        }
+      });
+
+      elements.table2Rows.addEventListener("change", (event) => {
+        if (event.target.matches('[data-field="status"]')) {
+          updateChecklistRowState(event.target.closest("tr"));
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (event.target.closest(".date-range-picker")) {
+          handleDatePickerClick(event);
+          return;
+        }
+
+        const flagButton = event.target.closest('[data-action="toggle-flag"]');
+        if (flagButton) {
+          if (flagButton.disabled) {
+            return;
+          }
+
+          const wrapper = flagButton.closest(".flag-field");
+          setFlaggedFieldState(wrapper, !wrapper.classList.contains("is-flagged"));
+        }
+
+        const dateDisplay = event.target.closest(".date-display");
+        if (dateDisplay && !dateDisplay.disabled) {
+          openNativeDatePicker(dateDisplay);
+          return;
+        }
+
+        closeDateRangePicker();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && elements.smartImportModal.classList.contains("open")) {
+          setSmartImportModalOpen(false);
+          return;
+        }
+
+        if (event.key === "Escape" && activeDatePicker) {
+          closeDateRangePicker();
+          return;
+        }
+
+        if (!event.target.matches(".date-display")) {
+          return;
+        }
+
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openNativeDatePicker(event.target);
+        }
+      });
+
+      document.addEventListener("change", (event) => {
+        if (event.target.matches(".native-date-input")) {
+          syncDateDisplayFromNative(event.target);
+        }
+      });
+
+      document.addEventListener("input", (event) => {
+        refreshTextareaScrollState(event.target);
+      });
+
+      elements.memoFab.addEventListener("click", () => {
+        setMemoPanelOpen(!elements.memoPanel.classList.contains("open"));
+      });
+
+      elements.memoCloseBtn.addEventListener("click", () => {
+        setMemoPanelOpen(false);
+      });
+
+      elements.memoTextarea.addEventListener("input", refreshMemoState);
+      elements.smartImportBtn.addEventListener("click", () => {
+        setSmartImportModalOpen(true);
+      });
+      elements.smartImportCloseBtn.addEventListener("click", () => {
+        setSmartImportModalOpen(false);
+      });
+      elements.smartImportModal.addEventListener("click", (event) => {
+        if (event.target === elements.smartImportModal) {
+          setSmartImportModalOpen(false);
+        }
+      });
+      elements.smartImportRawTextarea.addEventListener("input", () => {
+        smartImportPreviewState = [];
+        elements.smartImportApplyBtn.disabled = true;
+        elements.smartImportSummary.textContent = "Preview mapping sebelum apply.";
+      });
+      elements.smartImportPreviewBtn.addEventListener("click", previewSmartImportRawData);
+      elements.smartImportApplyBtn.addEventListener("click", applySmartImportToTable1);
+
+      elements.generateBtn.addEventListener("click", generateResult);
+      elements.previewJumpBtn.addEventListener("click", scrollToPreviewResult);
+      elements.saveDraftBtn.addEventListener("click", saveDraftData);
+      elements.loadDraftBtn.addEventListener("click", loadDraftData);
+      elements.draftFileInput.addEventListener("change", loadDraftFile);
+      elements.resetBtn.addEventListener("click", resetAll);
+      elements.exportXlsBtn.addEventListener("click", exportXlsResult);
+      elements.exportOutlookBtn.addEventListener("click", exportOutlookResult);
+
+      renderTable1Projects();
+      renderTable2Rows();
+      renderTable3Rows();
+      refreshMemoState();
+    </script>
+  </body>
+</html>
