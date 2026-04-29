@@ -1434,12 +1434,12 @@
 
       .memo-panel.open {
         display: grid;
-        gap: 12px;
+        gap: 8px;
       }
 
       .memo-panel-header {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
@@ -1447,6 +1447,21 @@
       .memo-panel-title {
         margin: 0;
         font-size: 1rem;
+      }
+
+      #memoCloseBtn {
+        width: 32px;
+        min-height: 32px;
+        padding: 0;
+        border-radius: 50%;
+        font-size: 1rem;
+        line-height: 1;
+      }
+
+      #memoCloseBtn:hover {
+        background: #fdeeed;
+        color: var(--danger);
+        border-color: rgba(196, 65, 57, 0.42);
       }
 
       .memo-panel p {
@@ -1931,9 +1946,8 @@
       <div class="memo-panel-header">
         <div>
           <h3 class="memo-panel-title">Notes Meeting</h3>
-          <p>Catatan penting di luar tabel. Ikut masuk ke preview, HTML, dan XLS.</p>
         </div>
-        <button id="memoCloseBtn" type="button" class="btn-ghost">Tutup</button>
+        <button id="memoCloseBtn" type="button" class="btn-ghost" aria-label="Tutup notes meeting" title="Tutup">X</button>
       </div>
       <textarea id="memoTextarea" placeholder="Tulis poin meeting penting di sini..."></textarea>
     </aside>
