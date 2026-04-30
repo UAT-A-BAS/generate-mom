@@ -1961,10 +1961,10 @@
         <section class="panel" aria-labelledby="lampiranTitle">
           <div class="lampiran-toggle-row">
             <div>
-              <h2 id="lampiranTitle">Lampiran Skenario Verif Implementasi</h2>
-              <p class="panel-intro">Tambahkan Lampiran Skenario Verif Implementasi?</p>
+              <h2 id="lampiranTitle">Lampiran Skenario Verifikasi Implementasi</h2>
+              <p class="panel-intro">Tambahkan Lampiran Skenario Verifikasi Implementasi?</p>
             </div>
-            <fieldset aria-label="Tambahkan Lampiran Skenario Verif Implementasi?">
+            <fieldset aria-label="Tambahkan Lampiran Skenario Verifikasi Implementasi?">
               <label class="blueprint-level-option">
                 <input type="radio" name="lampiranEnabled" value="yes" />
                 Ya
@@ -2157,7 +2157,7 @@
         { id: "c3", no: "3", label: "Pentest", kind: "item" },
         { id: "c4", no: "4", label: "Sertifikasi approved oleh KLA", kind: "item" },
         { id: "c5", no: "5", label: "Sertifikasi approved oleh CPO", kind: "item" },
-        { id: "c6", no: "6", label: "Skenario Verif After Implementasi", kind: "item" },
+        { id: "c6", no: "6", label: "Skenario Verifikasi After Implementasi", kind: "item" },
         { id: "c7", no: "7", label: "BPRO dan Changes ID", kind: "item" },
         { id: "c8", no: "8", label: "Release ID", kind: "item" },
         { id: "c9", no: "9", label: "Approval Release ID", kind: "item" },
@@ -4626,7 +4626,7 @@
       }
 
       // =====================================================
-      // LAMPIRAN SKENARIO VERIF IMPLEMENTASI
+      // LAMPIRAN SKENARIO VERIFIKASI IMPLEMENTASI
       // =====================================================
 
       function syncLampiranEnabledControls() {
@@ -5181,14 +5181,14 @@
             const dateGroup = lampiranState[dateIndex];
             if (!dateGroup.date || !isValidDateDisplayValue(dateGroup.date)) {
               focusLampiranField(dateIndex, 0, 0, "date");
-              return "Setiap tanggal pada Lampiran Skenario Verif Implementasi wajib format DD-MM-YYYY atau DD-MM-YYYY - DD-MM-YYYY.";
+              return "Setiap tanggal pada Lampiran Skenario Verifikasi Implementasi wajib format DD-MM-YYYY atau DD-MM-YYYY - DD-MM-YYYY.";
             }
 
             for (let featureIndex = 0; featureIndex < dateGroup.features.length; featureIndex += 1) {
               const feature = dateGroup.features[featureIndex];
               if (!feature.title) {
                 focusLampiranField(dateIndex, featureIndex, 0, "title");
-                return "Setiap fitur pada Lampiran Skenario Verif Implementasi wajib memiliki judul fitur.";
+                return "Setiap fitur pada Lampiran Skenario Verifikasi Implementasi wajib memiliki judul fitur.";
               }
 
               for (let scenarioIndex = 0; scenarioIndex < feature.scenarios.length; scenarioIndex += 1) {
@@ -5200,7 +5200,7 @@
                     scenarioIndex,
                     !scenario.activity ? "activity" : "status"
                   );
-                  return "Setiap skenario pada Lampiran Skenario Verif Implementasi wajib memiliki aktivitas dan status.";
+                  return "Setiap skenario pada Lampiran Skenario Verifikasi Implementasi wajib memiliki aktivitas dan status.";
                 }
               }
             }
@@ -5662,7 +5662,7 @@
 
         return `
           <section class="doc-block">
-            <h3 class="doc-title">Lampiran Skenario Verif Implementasi</h3>
+            <h3 class="doc-title">Lampiran Skenario Verifikasi Implementasi</h3>
             <table class="doc-table lampiran-table">
               <thead>
                 <tr>
@@ -5984,10 +5984,40 @@
         });
 
         clonedRoot.querySelectorAll(".doc-table-spacer").forEach((spacer) => {
-          appendInlineStyle(spacer, "display:block;height:14px;line-height:14px;font-size:0;");
+          const spacerTable = document.createElement("table");
+          spacerTable.className = "outlook-section-spacer-table";
+          spacerTable.setAttribute("role", "presentation");
+          spacerTable.setAttribute("cellpadding", "0");
+          spacerTable.setAttribute("cellspacing", "0");
+          spacerTable.setAttribute("border", "0");
+          spacerTable.setAttribute("width", "100%");
+          spacerTable.setAttribute(
+            "style",
+            "width:100%;border-collapse:collapse;margin:0;mso-table-lspace:0pt;mso-table-rspace:0pt;"
+          );
+          spacerTable.innerHTML = `
+            <tbody>
+              <tr>
+                <td class="outlook-section-spacer-cell" style="height:18px;line-height:18px;font-size:0;border:none;padding:0;mso-height-source:userset;">&nbsp;</td>
+              </tr>
+            </tbody>
+          `;
+          spacer.replaceWith(spacerTable);
         });
 
         clonedRoot.querySelectorAll("table").forEach((table) => {
+          if (table.classList.contains("outlook-section-spacer-table")) {
+            table.setAttribute("width", "100%");
+            table.setAttribute("cellpadding", "0");
+            table.setAttribute("cellspacing", "0");
+            table.setAttribute("border", "0");
+            appendInlineStyle(
+              table,
+              "width:100%;min-width:0;max-width:100%;border-collapse:collapse;table-layout:auto;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;"
+            );
+            return;
+          }
+
           const tableWidth = getOutlookTableWidth(table);
           table.setAttribute("width", tableWidth.replace("px", ""));
           table.setAttribute("cellpadding", "0");
@@ -6000,6 +6030,15 @@
         });
 
         clonedRoot.querySelectorAll("th, td").forEach((cell) => {
+          if (cell.closest(".outlook-section-spacer-table")) {
+            cell.setAttribute("valign", "middle");
+            appendInlineStyle(
+              cell,
+              "height:18px;line-height:18px;font-size:0;border:none;padding:0;background:#ffffff;mso-height-source:userset;"
+            );
+            return;
+          }
+
           cell.setAttribute("valign", "middle");
           appendInlineStyle(
             cell,
