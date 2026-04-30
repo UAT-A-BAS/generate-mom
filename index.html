@@ -2146,6 +2146,10 @@
     </div>
 
     <script>
+      // =====================================================
+      // STATE, CONSTANTS, AND DOM REFERENCES
+      // =====================================================
+
       const documentOptions = ["SK", "SE", "Service News", "Memo"];
       const checklistStructure = [
         { id: "c1", no: "1", label: "UAT & Regresi", kind: "item" },
@@ -2233,6 +2237,10 @@
       let lampiranState = [createEmptyLampiranDateGroup()];
       let activeDatePicker = null;
       let smartImportPreviewState = [];
+
+      // =====================================================
+      // FACTORY FUNCTIONS
+      // =====================================================
 
       function createEmptyProjectFlags() {
         return {
@@ -2370,6 +2378,10 @@
           features: [createEmptyLampiranFeature()],
         };
       }
+
+      // =====================================================
+      // FORMATTERS AND HTML HELPERS
+      // =====================================================
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -2851,6 +2863,10 @@
         activeDatePicker?.picker?.remove();
         activeDatePicker = null;
       }
+
+      // =====================================================
+      // DATE PICKER
+      // =====================================================
 
       function positionDateRangePicker(picker, displayInput) {
         const rect = displayInput.getBoundingClientRect();
@@ -3368,6 +3384,10 @@
         }
       }
 
+      // =====================================================
+      // TABLE 1 - SERTIFIKASI
+      // =====================================================
+
       function readDetailRowFromDom(detailRowElement, previousRow = null) {
         const valueOf = (field) => detailRowElement.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
         const fieldOf = (field) => detailRowElement.querySelector(`[data-field="${field}"]`);
@@ -3423,6 +3443,10 @@
           detailRows: detailRows.length ? detailRows : [createEmptyDetailRow()],
         };
       }
+
+      // =====================================================
+      // SMART IMPORT
+      // =====================================================
 
       function setSmartImportModalOpen(open) {
         elements.smartImportModal.classList.toggle("open", open);
@@ -4358,6 +4382,10 @@
         upgradeFreeTextInputsToTextarea(elements.table1Projects);
       }
 
+      // =====================================================
+      // TABLE 2 - CHECKLIST
+      // =====================================================
+
       function renderTable2Rows() {
         const rowMarkup = checklistStructure
           .map((item) => {
@@ -4492,6 +4520,10 @@
         refreshChecklistRowsState();
       }
 
+      // =====================================================
+      // TABLE 3 - STRATEGI IMPLEMENTASI
+      // =====================================================
+
       function renderTable3Rows() {
         elements.table3Rows.innerHTML = table3State
           .map(
@@ -4592,6 +4624,10 @@
           .join("");
         upgradeFreeTextInputsToTextarea(elements.table3Rows);
       }
+
+      // =====================================================
+      // LAMPIRAN SKENARIO VERIF IMPLEMENTASI
+      // =====================================================
 
       function syncLampiranEnabledControls() {
         elements.lampiranEnabledControls.forEach((control) => {
@@ -4939,6 +4975,10 @@
         return { id, no: "", label: "", kind: "item" };
       }
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       function isBlankDetailRow(detailRow) {
         return ![
           detailRow.bproNumber,
@@ -5230,6 +5270,10 @@
       function normalizeTable3Rows(rows) {
         return rows.filter((row) => !isBlankTable3Row(row));
       }
+
+      // =====================================================
+      // PREVIEW RENDERING
+      // =====================================================
 
       function renderTable1Result(project, tableIndex) {
         const rows = flattenTable1ProjectRows(project);
@@ -5683,6 +5727,10 @@
         showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
         elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+
+      // =====================================================
+      // EXPORT ENGINE
+      // =====================================================
 
       function applyExcelMemoLayout(clonedRoot) {
         const rootStyle = clonedRoot.getAttribute("style") || "";
@@ -6221,8 +6269,18 @@
         return clonedRoot.outerHTML;
       }
 
+      function buildExportMarkup(target = "html") {
+        const optionsByTarget = {
+          html: {},
+          excel: { forExcel: true },
+          outlook: { forOutlook: true, includeMemo: false },
+        };
+
+        return buildInlineStyledResultMarkup(optionsByTarget[target] || {});
+      }
+
       function buildStandaloneDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup();
+        const styledMarkup = buildExportMarkup("html");
         return `
           <html>
             <head>
@@ -6238,7 +6296,7 @@
       }
 
       function buildExcelDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup({ forExcel: true });
+        const styledMarkup = buildExportMarkup("excel");
         return `
           <html xmlns:o="urn:schemas-microsoft-com:office:office"
                 xmlns:x="urn:schemas-microsoft-com:office:excel"
@@ -6262,7 +6320,7 @@
           return;
         }
 
-        const html = buildInlineStyledResultMarkup();
+        const html = buildExportMarkup("html");
         const text = elements.resultArea.innerText.trim();
 
         try {
@@ -6341,7 +6399,7 @@
       }
 
       function buildOutlookEmailDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup({ forOutlook: true, includeMemo: false });
+        const styledMarkup = buildExportMarkup("outlook");
         const projectName = escapeHtml(getPrimaryProjectName());
         const today = escapeHtml(formatTodayIndonesian());
 
@@ -6397,6 +6455,10 @@
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
+
+      // =====================================================
+      // DRAFT SAVE / LOAD
+      // =====================================================
 
       function collectDraftData() {
         syncTable1ProjectsStateFromDom();
@@ -6604,6 +6666,10 @@
         clearPreviewResult();
         clearFeedback();
       }
+
+      // =====================================================
+      // EVENT HANDLERS
+      // =====================================================
 
       elements.blueprintLevelControls.forEach((control) => {
         control.addEventListener("change", (event) => {
