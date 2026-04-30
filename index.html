@@ -687,6 +687,73 @@
         padding: 14px;
       }
 
+      .lampiran-toggle-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .lampiran-toggle-row fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0;
+        padding: 4px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface-muted);
+      }
+
+      #lampiranInputSection[hidden] {
+        display: none !important;
+      }
+
+      .lampiran-date-card,
+      .lampiran-feature-card {
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 16px;
+      }
+
+      .lampiran-feature-card {
+        background: #fff;
+      }
+
+      .lampiran-scenario-card {
+        padding: 10px;
+        border-radius: 14px;
+      }
+
+      .lampiran-date-card .dynamic-card-header,
+      .lampiran-feature-card .dynamic-card-header,
+      .lampiran-scenario-card .dynamic-card-header {
+        margin-bottom: 0;
+      }
+
+      .lampiran-date-card .field,
+      .lampiran-feature-card .field,
+      .lampiran-scenario-card .field {
+        gap: 6px;
+      }
+
+      .lampiran-date-card .rows-stack,
+      .lampiran-feature-card .rows-stack {
+        gap: 8px;
+      }
+
+      .lampiran-scenario-card textarea {
+        min-height: 64px;
+        height: 64px;
+      }
+
+      .lampiran-card-actions {
+        justify-content: flex-end;
+        padding-top: 2px;
+      }
+
       .project-shell {
         border: 1px solid rgba(27, 77, 120, 0.16);
         border-radius: 24px;
@@ -1290,6 +1357,20 @@
         background: var(--blue-soft);
       }
 
+      .lampiran-table thead th {
+        background: #e9edf3;
+      }
+
+      .lampiran-date-row td {
+        background: #d7dbe2;
+        font-weight: 800;
+      }
+
+      .lampiran-feature-row td {
+        background: #f0f2f5;
+        font-weight: 800;
+      }
+
       .procedure-no {
         text-align: center;
         font-weight: 700;
@@ -1877,6 +1958,48 @@
           </div>
         </section>
 
+        <section class="panel" aria-labelledby="lampiranTitle">
+          <div class="lampiran-toggle-row">
+            <div>
+              <h2 id="lampiranTitle">Lampiran Skenario Verif Implementasi</h2>
+              <p class="panel-intro">Tambahkan Lampiran Skenario Verif Implementasi?</p>
+            </div>
+            <fieldset aria-label="Tambahkan Lampiran Skenario Verif Implementasi?">
+              <label class="blueprint-level-option">
+                <input type="radio" name="lampiranEnabled" value="yes" />
+                Ya
+              </label>
+              <label class="blueprint-level-option">
+                <input type="radio" name="lampiranEnabled" value="no" checked />
+                Tidak
+              </label>
+            </fieldset>
+          </div>
+
+          <div id="lampiranInputSection" class="rows-stack" hidden>
+            <div id="lampiranRows" class="rows-stack"></div>
+            <div class="action-row table3-add-row-actions lampiran-card-actions">
+              <button
+                id="addLampiranDateGroup"
+                type="button"
+                class="icon-btn icon-btn-secondary"
+                aria-label="Tambah Tanggal Lampiran"
+                title="Tambah Tanggal Lampiran"
+                data-action="add-lampiran-date"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M6.5 4.5v3"></path>
+                  <path d="M17.5 4.5v3"></path>
+                  <rect x="4.5" y="6.5" width="15" height="13" rx="2"></rect>
+                  <path d="M4.5 10.5h15"></path>
+                  <path d="M12 13.5v4"></path>
+                  <path d="M10 15.5h4"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section class="sticky-actions" aria-label="Action buttons">
           <button id="generateBtn" type="button" class="btn-primary">Preview Table</button>
           <button id="exportXlsBtn" type="button" class="btn-ghost">Export XLS</button>
@@ -2023,6 +2146,10 @@
     </div>
 
     <script>
+      // =====================================================
+      // STATE, CONSTANTS, AND DOM REFERENCES
+      // =====================================================
+
       const documentOptions = ["SK", "SE", "Service News", "Memo"];
       const checklistStructure = [
         { id: "c1", no: "1", label: "UAT & Regresi", kind: "item" },
@@ -2070,6 +2197,10 @@
         table1Projects: document.querySelector("#table1Projects"),
         table2Rows: document.querySelector("#table2Rows"),
         table3Rows: document.querySelector("#table3Rows"),
+        lampiranInputSection: document.querySelector("#lampiranInputSection"),
+        lampiranRows: document.querySelector("#lampiranRows"),
+        lampiranEnabledControls: document.querySelectorAll('[name="lampiranEnabled"]'),
+        addLampiranDateGroup: document.querySelector("#addLampiranDateGroup"),
         resultArea: document.querySelector("#resultArea"),
         feedbackBox: document.querySelector("#feedbackBox"),
         previewJumpBtn: document.querySelector("#previewJumpBtn"),
@@ -2102,8 +2233,14 @@
       let table1ProjectsState = [createEmptyTable1Project()];
       let table1BlueprintLevel = "release";
       let table3State = [createEmptyTable3Row()];
+      let lampiranEnabled = false;
+      let lampiranState = [createEmptyLampiranDateGroup()];
       let activeDatePicker = null;
       let smartImportPreviewState = [];
+
+      // =====================================================
+      // FACTORY FUNCTIONS
+      // =====================================================
 
       function createEmptyProjectFlags() {
         return {
@@ -2196,6 +2333,55 @@
           flags: createEmptyTable3Flags(),
         };
       }
+
+      function createEmptyLampiranScenarioFlags() {
+        return {
+          activity: false,
+          result: false,
+          status: false,
+        };
+      }
+
+      function createEmptyLampiranFeatureFlags() {
+        return {
+          title: false,
+        };
+      }
+
+      function createEmptyLampiranDateFlags() {
+        return {
+          date: false,
+        };
+      }
+
+      function createEmptyLampiranScenario() {
+        return {
+          activity: "",
+          result: "",
+          status: "To Do",
+          flags: createEmptyLampiranScenarioFlags(),
+        };
+      }
+
+      function createEmptyLampiranFeature() {
+        return {
+          title: "",
+          flags: createEmptyLampiranFeatureFlags(),
+          scenarios: [createEmptyLampiranScenario()],
+        };
+      }
+
+      function createEmptyLampiranDateGroup() {
+        return {
+          date: "",
+          flags: createEmptyLampiranDateFlags(),
+          features: [createEmptyLampiranFeature()],
+        };
+      }
+
+      // =====================================================
+      // FORMATTERS AND HTML HELPERS
+      // =====================================================
 
       function escapeHtml(value) {
         return String(value ?? "")
@@ -2355,6 +2541,43 @@
         const range = parseDateRangeValue(value);
         const start = formatDateForDisplay(range.start);
         const end = formatDateForDisplay(range.end);
+
+        if (start && end && start !== end) {
+          return `${start} - ${end}`;
+        }
+
+        return start || end;
+      }
+
+      function formatDateIndonesian(value) {
+        const formatted = formatDateForDisplay(value);
+        const match = formatted.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (!match) {
+          return formatted;
+        }
+
+        const months = [
+          "Januari",
+          "Februari",
+          "Maret",
+          "April",
+          "Mei",
+          "Juni",
+          "Juli",
+          "Agustus",
+          "September",
+          "Oktober",
+          "November",
+          "Desember",
+        ];
+        const monthIndex = Number(match[2]) - 1;
+        return `${Number(match[1])} ${months[monthIndex] || match[2]} ${match[3]}`;
+      }
+
+      function formatDateRangeIndonesian(value) {
+        const range = parseDateRangeValue(value);
+        const start = formatDateIndonesian(range.start);
+        const end = formatDateIndonesian(range.end);
 
         if (start && end && start !== end) {
           return `${start} - ${end}`;
@@ -2640,6 +2863,10 @@
         activeDatePicker?.picker?.remove();
         activeDatePicker = null;
       }
+
+      // =====================================================
+      // DATE PICKER
+      // =====================================================
 
       function positionDateRangePicker(picker, displayInput) {
         const rect = displayInput.getBoundingClientRect();
@@ -3094,6 +3321,23 @@
         control?.focus();
       }
 
+      function focusLampiranField(dateIndex = 0, featureIndex = 0, scenarioIndex = 0, field = "date") {
+        const dateGroup = elements.lampiranRows.querySelector(
+          `.lampiran-date-card[data-lampiran-date-index="${dateIndex}"]`
+        );
+        const feature = dateGroup?.querySelector(
+          `.lampiran-feature-card[data-lampiran-feature-index="${featureIndex}"]`
+        );
+        const scenario = feature?.querySelector(
+          `[data-lampiran-scenario-index="${scenarioIndex}"]`
+        );
+        const scope = field === "date" ? dateGroup : field === "title" ? feature : scenario;
+        const control = scope?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        scope?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
       // DUAL ACTION RELEASE PATCH
       function scrollToNewRelationPackage(projectIndex, packageIndex) {
         window.requestAnimationFrame(() => {
@@ -3139,6 +3383,10 @@
           scrollToNewRelationPackage(safeProjectIndex, newPackageIndex);
         }
       }
+
+      // =====================================================
+      // TABLE 1 - SERTIFIKASI
+      // =====================================================
 
       function readDetailRowFromDom(detailRowElement, previousRow = null) {
         const valueOf = (field) => detailRowElement.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
@@ -3195,6 +3443,10 @@
           detailRows: detailRows.length ? detailRows : [createEmptyDetailRow()],
         };
       }
+
+      // =====================================================
+      // SMART IMPORT
+      // =====================================================
 
       function setSmartImportModalOpen(open) {
         elements.smartImportModal.classList.toggle("open", open);
@@ -3285,13 +3537,266 @@
         return `${value || ""}`.replace(/\s+/g, " ").trim();
       }
 
+      function normalizeSmartImportToken(token) {
+        return `${token || ""}`.trim().replace(/^[,;:]+|[,;:]+$/g, "");
+      }
+
+      function isReleaseIdToken(token) {
+        return /^6\d+\b/.test(normalizeSmartImportToken(token));
+      }
+
+      function isChangeIdToken(token) {
+        return /^5\d+\b/.test(normalizeSmartImportToken(token));
+      }
+
+      function isBproIdToken(token) {
+        return /^(?:BPRO|GP)\d+\b/i.test(normalizeSmartImportToken(token));
+      }
+
+      function classifySmartImportToken(token) {
+        const normalized = normalizeSmartImportToken(token);
+        if (!normalized) {
+          return { type: "empty", token: "" };
+        }
+
+        if (isBproIdToken(normalized)) {
+          return { type: "bpro", token: normalized.match(/^(?:BPRO|GP)\d+\b/i)[0] };
+        }
+
+        if (isChangeIdToken(normalized)) {
+          return { type: "changes", token: normalized.match(/^5\d+\b/)[0] };
+        }
+
+        if (isReleaseIdToken(normalized)) {
+          return { type: "release", token: normalized.match(/^6\d+\b/)[0] };
+        }
+
+        return { type: "text", token: normalized };
+      }
+
+      function parseSmartImportLineFlexible(line, rowNumber, context = {}) {
+        const row = createFreeTextImportRow(rowNumber);
+        const buffers = {
+          bpro: [],
+          changes: [],
+          release: [],
+          preAnchor: [],
+        };
+        let currentField = "";
+
+        normalizeSmartImportName(line)
+          .split(" ")
+          .filter(Boolean)
+          .forEach((token) => {
+            const parsed = classifySmartImportToken(token);
+            if (parsed.type === "empty") {
+              return;
+            }
+
+            if (parsed.type !== "text") {
+              const idField =
+                parsed.type === "bpro"
+                  ? "bproNumber"
+                  : parsed.type === "changes"
+                  ? "changesId"
+                  : "releaseId";
+              if (row[idField]) {
+                row.warnings.push(
+                  parsed.type === "bpro"
+                    ? "Nomor BPRO duplikat diabaikan"
+                    : parsed.type === "changes"
+                    ? "Changes ID duplikat diabaikan"
+                    : "Release ID duplikat diabaikan"
+                );
+                currentField = "";
+                return;
+              }
+
+              row[idField] = parsed.token;
+              currentField = parsed.type;
+              return;
+            }
+
+            if (currentField && buffers[currentField]) {
+              buffers[currentField].push(parsed.token);
+              return;
+            }
+
+            buffers.preAnchor.push(parsed.token);
+          });
+
+        const preAnchorText = normalizeSmartImportName(buffers.preAnchor.join(" "));
+        row.bproName = normalizeSmartImportName(
+          row.bproNumber ? buffers.bpro.join(" ") : /^(?:BPRO|GP)\b/i.test(preAnchorText) ? preAnchorText : ""
+        );
+        row.changesName = normalizeSmartImportName(buffers.changes.join(" "));
+        row.releaseName = normalizeSmartImportName(buffers.release.join(" "));
+
+        if (preAnchorText && (row.bproNumber || !row.bproName)) {
+          row.warnings.push("Ada text yang tidak bisa dimapping");
+        }
+
+        return finalizeFreeTextImportRow(row, context);
+      }
+
+      function collectSmartImportAnchorItems(line) {
+        const text = normalizeSmartImportName(line);
+        if (!text) {
+          return [];
+        }
+
+        const items = [];
+        const preAnchorTokens = [];
+        let activeItem = null;
+
+        text
+          .split(" ")
+          .filter(Boolean)
+          .forEach((token, index) => {
+            const parsed = classifySmartImportToken(token);
+            if (parsed.type === "empty") {
+              return;
+            }
+
+            if (parsed.type !== "text") {
+              activeItem = {
+                type: parsed.type,
+                id: parsed.token,
+                nameTokens: [],
+                index,
+              };
+              items.push(activeItem);
+              return;
+            }
+
+            if (activeItem) {
+              activeItem.nameTokens.push(parsed.token);
+              return;
+            }
+
+            preAnchorTokens.push(parsed.token);
+          })
+          ;
+
+        const preAnchorText = normalizeSmartImportName(preAnchorTokens.join(" "));
+        return items.map((item) => ({
+          ...item,
+          name: normalizeSmartImportName(item.nameTokens.join(" ")),
+          preAnchorText,
+        }));
+      }
+
+      function createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, changesItem, fallbackBproName = "") {
+        const row = createFreeTextImportRow(rowNumber);
+        if (releaseItem) {
+          row.releaseId = releaseItem.id;
+          row.releaseName = releaseItem.name;
+        }
+        if (bproItem) {
+          row.bproNumber = bproItem.id;
+          row.bproName = bproItem.name;
+        } else if (/^(?:BPRO|GP)\b/i.test(fallbackBproName)) {
+          row.bproName = fallbackBproName;
+          row.warnings.push("Ada text yang tidak bisa dimapping");
+        }
+        if (changesItem) {
+          row.changesId = changesItem.id;
+          row.changesName = changesItem.name;
+        }
+        return row;
+      }
+
+      function findBproForChanges(changesItem, bproItems) {
+        const previousBpro = [...bproItems].reverse().find((bproItem) => bproItem.index < changesItem.index);
+        if (previousBpro) {
+          return previousBpro;
+        }
+
+        return bproItems.find((bproItem) => bproItem.index > changesItem.index) || null;
+      }
+
+      function splitAnchorItemsByReleaseContext(items) {
+        const releaseItems = items.filter((item) => item.type === "release");
+        if (releaseItems.length <= 1) {
+          return [
+            {
+              releaseItem: releaseItems[0] || null,
+              items,
+            },
+          ];
+        }
+
+        return releaseItems.map((releaseItem, releaseIndex) => {
+          const segmentStart = releaseIndex === 0 ? 0 : releaseItem.index;
+          const segmentEnd = releaseItems[releaseIndex + 1]?.index ?? Infinity;
+          return {
+            releaseItem,
+            items: items.filter((item) => item.index >= segmentStart && item.index < segmentEnd),
+          };
+        });
+      }
+
+      function parseSmartImportLineToRowsFlexible(line, rowNumber, context = {}) {
+        const items = collectSmartImportAnchorItems(line);
+        if (!items.length) {
+          const row = createFreeTextImportRow(rowNumber);
+          row.warnings.push("Ada text yang tidak bisa dimapping");
+          return [finalizeFreeTextImportRow(row, context)];
+        }
+
+        const rows = [];
+        splitAnchorItemsByReleaseContext(items).forEach((segment) => {
+          const releaseItem =
+            segment.releaseItem || segment.items.find((item) => item.type === "release") || null;
+          const bproItems = segment.items.filter((item) => item.type === "bpro");
+          const changesItems = segment.items.filter((item) => item.type === "changes");
+          const fallbackBproName = segment.items[0]?.preAnchorText || "";
+
+          if (!bproItems.length && !changesItems.length) {
+            if (releaseItem) {
+              finalizeFreeTextImportRow(createSmartImportRowFromItems(rowNumber, releaseItem), context);
+            }
+            return;
+          }
+
+          const usedBproItems = new Set();
+          if (changesItems.length) {
+            changesItems.forEach((changesItem) => {
+              const bproItem = findBproForChanges(changesItem, bproItems);
+              if (bproItem) {
+                usedBproItems.add(bproItem);
+              }
+              rows.push(
+                finalizeFreeTextImportRow(
+                  createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, changesItem, fallbackBproName),
+                  context
+                )
+              );
+            });
+          }
+
+          bproItems
+            .filter((bproItem) => !usedBproItems.has(bproItem))
+            .forEach((bproItem) => {
+              rows.push(
+                finalizeFreeTextImportRow(
+                  createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, null, fallbackBproName),
+                  context
+                )
+              );
+            });
+        });
+
+        return rows;
+      }
+
       function classifyImportCell(value) {
         const text = normalizeSmartImportName(value);
         if (!text) {
           return null;
         }
 
-        const bproMatch = text.match(/^((?:BPRO|GP)\S*)(?:\s+(.+))?$/i);
+        const bproMatch = text.match(/^(\b(?:BPRO|GP)\d+\b)(?:\s+(.+))?$/i);
         if (bproMatch) {
           return {
             type: "bpro",
@@ -3337,7 +3842,46 @@
       }
 
       function parseImportRow(cells, rowNumber, context) {
-        const result = {
+        return parseSmartImportLineToRowsFlexible(cells.join(" "), rowNumber, context)[0] || createFreeTextImportRow(rowNumber);
+      }
+
+      function parseImportRowToRows(cells, rowNumber, context) {
+        return parseSmartImportLineToRowsFlexible(cells.join(" "), rowNumber, context);
+      }
+
+      function isLikelyDelimitedImport(raw) {
+        const text = `${raw || ""}`;
+        if (!text.trim()) {
+          return true;
+        }
+
+        const rows = parseDelimitedRawData(text);
+        const tabCount = countDelimiterOutsideQuotes(text, "\t");
+        if (tabCount > 0 && rows.some((row) => row.length > 1)) {
+          return true;
+        }
+
+        const commaCount = countDelimiterOutsideQuotes(text, ",");
+        const markerCellCount = rows
+          .flat()
+          .filter((cell) => {
+            const parsed = classifyImportCell(cell);
+            return parsed && parsed.type !== "text";
+          }).length;
+        if (commaCount > 0 && rows.length === 1 && rows[0].length >= 3 && markerCellCount >= 2) {
+          return true;
+        }
+
+        if (rows.length < 2) {
+          return false;
+        }
+
+        const multiCellRows = rows.filter((row) => row.length > 1);
+        return multiCellRows.length >= Math.max(2, Math.ceil(rows.length * 0.6));
+      }
+
+      function createFreeTextImportRow(rowNumber) {
+        return {
           no: rowNumber,
           bproNumber: "",
           bproName: "",
@@ -3348,79 +3892,71 @@
           status: "OK",
           warnings: [],
         };
-        const usedIndexes = new Set();
+      }
 
-        cells.forEach((cell, index) => {
-          if (usedIndexes.has(index)) {
-            return;
-          }
-
-          const parsed = classifyImportCell(cell);
-          if (!parsed || parsed.type === "text") {
-            return;
-          }
-
-          if (parsed.type === "bpro") {
-            if (result.bproNumber) {
-              result.warnings.push("Nomor BPRO duplikat diabaikan");
-              return;
-            }
-            result.bproNumber = parsed.id;
-            result.bproName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
-            return;
-          }
-
-          if (parsed.type === "changes") {
-            if (result.changesId) {
-              result.warnings.push("Changes ID duplikat diabaikan");
-              return;
-            }
-            result.changesId = parsed.id;
-            result.changesName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
-            return;
-          }
-
-          if (parsed.type === "release") {
-            if (result.releaseId) {
-              result.warnings.push("Release ID duplikat diabaikan");
-              return;
-            }
-            result.releaseId = parsed.id;
-            result.releaseName = parsed.name || consumeImportNameFromNextCell(cells, index, usedIndexes);
-          }
-        });
-
-        if (!result.releaseId && !result.releaseName && context.useLastRelease && context.lastRelease) {
-          result.releaseId = context.lastRelease.releaseId;
-          result.releaseName = context.lastRelease.releaseName;
-          result.warnings.push("Release kosong memakai release terakhir");
+      function finalizeFreeTextImportRow(row, context) {
+        if (!row.releaseId && !row.releaseName && context.useLastRelease && context.lastRelease) {
+          row.releaseId = context.lastRelease.releaseId;
+          row.releaseName = context.lastRelease.releaseName;
+          row.warnings.push("Release kosong memakai release terakhir");
         }
 
-        if (result.releaseId || result.releaseName) {
+        if (row.releaseId || row.releaseName) {
           context.lastRelease = {
-            releaseId: result.releaseId,
-            releaseName: result.releaseName,
+            releaseId: row.releaseId,
+            releaseName: row.releaseName,
           };
         }
 
-        if (!result.bproNumber && !result.changesId && !result.releaseId && !result.releaseName) {
-          result.status = "Warning";
-          result.warnings.push("Tidak ada data yang bisa dimapping");
-        } else if (result.warnings.length) {
-          result.status = "Warning";
+        if (!row.bproNumber && !row.changesId) {
+          row.status = "Warning";
+        } else if (row.warnings.length) {
+          row.status = "Warning";
         }
 
-        return result;
+        return row;
+      }
+
+      function renumberSmartImportRows(rows) {
+        return rows.map((row, index) => ({
+          ...row,
+          no: index + 1,
+        }));
+      }
+
+      function parseFreeTextRawData(raw, options = {}) {
+        const context = {
+          useLastRelease: Boolean(options.useLastRelease),
+          lastRelease: null,
+        };
+        const sourceLines = `${raw || ""}`
+          .split(/\r?\n/)
+          .map((line) => normalizeSmartImportName(line))
+          .filter(Boolean);
+
+        if (!sourceLines.length) {
+          return [];
+        }
+
+        const parsedRows = sourceLines.flatMap((line, index) =>
+          parseSmartImportLineToRowsFlexible(line, index + 1, context)
+        );
+        return renumberSmartImportRows(parsedRows);
       }
 
       function parseSmartImportRawData(raw, options = {}) {
+        if (!isLikelyDelimitedImport(raw)) {
+          return parseFreeTextRawData(raw, options);
+        }
+
         const rows = parseDelimitedRawData(raw);
         const context = {
           useLastRelease: Boolean(options.useLastRelease),
           lastRelease: null,
         };
 
-        return rows.map((row, index) => parseImportRow(row, index + 1, context));
+        const parsedRows = rows.flatMap((row, index) => parseImportRowToRows(row, index + 1, context));
+        return renumberSmartImportRows(parsedRows);
       }
 
       function renderSmartImportPreview(rows) {
@@ -3846,6 +4382,10 @@
         upgradeFreeTextInputsToTextarea(elements.table1Projects);
       }
 
+      // =====================================================
+      // TABLE 2 - CHECKLIST
+      // =====================================================
+
       function renderTable2Rows() {
         const rowMarkup = checklistStructure
           .map((item) => {
@@ -3980,6 +4520,10 @@
         refreshChecklistRowsState();
       }
 
+      // =====================================================
+      // TABLE 3 - STRATEGI IMPLEMENTASI
+      // =====================================================
+
       function renderTable3Rows() {
         elements.table3Rows.innerHTML = table3State
           .map(
@@ -4081,6 +4625,201 @@
         upgradeFreeTextInputsToTextarea(elements.table3Rows);
       }
 
+      // =====================================================
+      // LAMPIRAN SKENARIO VERIF IMPLEMENTASI
+      // =====================================================
+
+      function syncLampiranEnabledControls() {
+        elements.lampiranEnabledControls.forEach((control) => {
+          control.checked = lampiranEnabled ? control.value === "yes" : control.value === "no";
+        });
+      }
+
+      function renderLampiranSection() {
+        syncLampiranEnabledControls();
+        elements.lampiranInputSection.hidden = !lampiranEnabled;
+
+        if (!lampiranEnabled) {
+          elements.lampiranRows.innerHTML = "";
+          return;
+        }
+
+        lampiranState = normalizeLampiranState(lampiranState, { keepBlank: true });
+
+        elements.lampiranRows.innerHTML = lampiranState
+          .map(
+            (dateGroup, dateIndex) => `
+              <article class="dynamic-card lampiran-date-card" data-lampiran-date-index="${dateIndex}">
+                <div class="dynamic-card-header">
+                  <h3 class="dynamic-card-title">Tanggal ${dateIndex + 1}</h3>
+                  <div class="row-header-actions">
+                    ${renderIconButton({
+                      action: "remove-lampiran-date",
+                      label: "Hapus Tanggal Lampiran",
+                      icon: "trash",
+                      variantClass: "icon-btn-danger",
+                      slim: true,
+                    })}
+                  </div>
+                </div>
+                <div class="field-grid">
+                  <label class="field span-4">
+                    <span>${requiredLabel("Tanggal")}</span>
+                    ${renderDateField({
+                      field: "date",
+                      value: dateGroup.date,
+                      placeholder: "DD-MM-YYYY - DD-MM-YYYY",
+                      flagged: dateGroup.flags?.date,
+                      ariaLabel: `Pilih tanggal lampiran ${dateIndex + 1}`,
+                      flagLabel: "Flag Tanggal",
+                    })}
+                  </label>
+                </div>
+                <div class="rows-stack">
+                  ${dateGroup.features
+                    .map(
+                      (feature, featureIndex) => `
+                        <article class="dynamic-card lampiran-feature-card" data-lampiran-feature-index="${featureIndex}">
+                          <div class="dynamic-card-header">
+                            <h4 class="dynamic-card-title">Fitur ${String.fromCharCode(65 + featureIndex)}</h4>
+                            <div class="row-header-actions">
+                              ${
+                                featureIndex > 0
+                                  ? `<button type="button" class="btn-move" data-action="move-lampiran-feature-up" aria-label="Naikkan fitur ${featureIndex + 1}">&#8593;</button>`
+                                  : ""
+                              }
+                              ${
+                                featureIndex < dateGroup.features.length - 1
+                                  ? `<button type="button" class="btn-move" data-action="move-lampiran-feature-down" aria-label="Turunkan fitur ${featureIndex + 1}">&#8595;</button>`
+                                  : ""
+                              }
+                              ${renderIconButton({
+                                action: "remove-lampiran-feature",
+                                label: "Hapus Fitur Lampiran",
+                                icon: "trash",
+                                variantClass: "icon-btn-danger",
+                                slim: true,
+                              })}
+                            </div>
+                          </div>
+                          <div class="field-grid">
+                            <label class="field span-12">
+                              <span>${requiredLabel("Judul Fitur")}</span>
+                              ${renderFlagField(
+                                `
+                                  <div class="field-body">
+                                    <input type="text" data-field="title" value="${escapeHtml(feature.title)}" placeholder="Judul fitur" />
+                                  </div>
+                                `,
+                                { flagged: feature.flags?.title, flagLabel: "Flag Judul Fitur" }
+                              )}
+                            </label>
+                          </div>
+                          <div class="rows-stack">
+                            ${feature.scenarios
+                              .map(
+                                (scenario, scenarioIndex) => `
+                                  <div class="dynamic-card lampiran-scenario-card" data-lampiran-scenario-index="${scenarioIndex}">
+                                    <div class="dynamic-card-header">
+                                      <h5 class="dynamic-card-title">Skenario ${scenarioIndex + 1}</h5>
+                                      <div class="row-header-actions">
+                                        ${
+                                          scenarioIndex > 0
+                                            ? `<button type="button" class="btn-move" data-action="move-lampiran-scenario-up" aria-label="Naikkan skenario ${scenarioIndex + 1}">&#8593;</button>`
+                                            : ""
+                                        }
+                                        ${
+                                          scenarioIndex < feature.scenarios.length - 1
+                                            ? `<button type="button" class="btn-move" data-action="move-lampiran-scenario-down" aria-label="Turunkan skenario ${scenarioIndex + 1}">&#8595;</button>`
+                                            : ""
+                                        }
+                                        ${renderIconButton({
+                                          action: "remove-lampiran-scenario",
+                                          label: "Hapus Skenario Lampiran",
+                                          icon: "trash",
+                                          variantClass: "icon-btn-danger",
+                                          slim: true,
+                                        })}
+                                      </div>
+                                    </div>
+                                    <div class="field-grid">
+                                      <label class="field span-6">
+                                        <span>${requiredLabel("Aktivitas")}</span>
+                                        ${renderFlagField(
+                                          `
+                                            <div class="field-body">
+                                              <textarea data-field="activity" placeholder="Aktivitas skenario">${escapeHtml(
+                                                scenario.activity
+                                              )}</textarea>
+                                            </div>
+                                          `,
+                                          { flagged: scenario.flags?.activity, flagLabel: "Flag Aktivitas" }
+                                        )}
+                                      </label>
+                                      <label class="field span-6">
+                                        <span>Hasil/Keterangan</span>
+                                        ${renderFlagField(
+                                          `
+                                            <div class="field-body">
+                                              <textarea data-field="result" placeholder="Hasil atau keterangan">${escapeHtml(
+                                                scenario.result
+                                              )}</textarea>
+                                            </div>
+                                          `,
+                                          { flagged: scenario.flags?.result, flagLabel: "Flag Hasil/Keterangan" }
+                                        )}
+                                      </label>
+                                      <label class="field span-3">
+                                        <span>${requiredLabel("Status")}</span>
+                                        ${renderFlagField(
+                                          `
+                                            <div class="field-body">
+                                              <select data-field="status">
+                                                <option value="To Do" ${scenario.status === "To Do" ? "selected" : ""}>To Do</option>
+                                                <option value="Ongoing" ${scenario.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
+                                                <option value="Done" ${scenario.status === "Done" ? "selected" : ""}>Done</option>
+                                              </select>
+                                            </div>
+                                          `,
+                                          { flagged: scenario.flags?.status, flagLabel: "Flag Status" }
+                                        )}
+                                      </label>
+                                    </div>
+                                  </div>
+                                `
+                              )
+                              .join("")}
+                          </div>
+                          <div class="action-row lampiran-card-actions">
+                            ${renderIconButton({
+                              action: "add-lampiran-scenario",
+                              label: "Tambah Skenario Lampiran",
+                              icon: "addRow",
+                              variantClass: "icon-btn-secondary",
+                              slim: true,
+                            })}
+                          </div>
+                        </article>
+                      `
+                    )
+                    .join("")}
+                </div>
+                <div class="action-row lampiran-card-actions">
+                  ${renderIconButton({
+                    action: "add-lampiran-feature",
+                    label: "Tambah Fitur Lampiran",
+                    icon: "addRow",
+                    variantClass: "icon-btn-secondary",
+                    slim: true,
+                  })}
+                </div>
+              </article>
+            `
+          )
+          .join("");
+        upgradeFreeTextInputsToTextarea(elements.lampiranRows);
+      }
+
       function syncTable1ProjectsStateFromDom() {
         const projects = [...elements.table1Projects.querySelectorAll(".table1-project")].map((projectElement) => {
           const projectIndex = Number(projectElement.dataset.projectIndex);
@@ -4134,6 +4873,58 @@
         table3State = rows.length ? rows : [createEmptyTable3Row()];
       }
 
+      function syncLampiranStateFromDom() {
+        if (!lampiranEnabled) {
+          return;
+        }
+
+        const dateGroups = [...elements.lampiranRows.querySelectorAll(".lampiran-date-card")].map(
+          (dateElement) => {
+            const dateInput = dateElement.querySelector('[data-field="date"]');
+            const features = [...dateElement.querySelectorAll(".lampiran-feature-card")].map(
+              (featureElement) => {
+                const titleInput = featureElement.querySelector('[data-field="title"]');
+                const scenarios = [...featureElement.querySelectorAll("[data-lampiran-scenario-index]")].map(
+                  (scenarioElement) => {
+                    const valueOf = (field) =>
+                      scenarioElement.querySelector(`[data-field="${field}"]`)?.value.trim() || "";
+
+                    return {
+                      activity: valueOf("activity"),
+                      result: valueOf("result"),
+                      status: valueOf("status") || "To Do",
+                      flags: {
+                        activity: isFieldFlagged(scenarioElement.querySelector('[data-field="activity"]')),
+                        result: isFieldFlagged(scenarioElement.querySelector('[data-field="result"]')),
+                        status: isFieldFlagged(scenarioElement.querySelector('[data-field="status"]')),
+                      },
+                    };
+                  }
+                );
+
+                return {
+                  title: titleInput?.value.trim() || "",
+                  flags: {
+                    title: isFieldFlagged(titleInput),
+                  },
+                  scenarios: scenarios.length ? scenarios : [createEmptyLampiranScenario()],
+                };
+              }
+            );
+
+            return {
+              date: dateInput?.value.trim() || "",
+              flags: {
+                date: isFieldFlagged(dateInput),
+              },
+              features: features.length ? features : [createEmptyLampiranFeature()],
+            };
+          }
+        );
+
+        lampiranState = normalizeLampiranState(dateGroups, { keepBlank: true });
+      }
+
       function collectChecklistValues() {
         return [...elements.table2Rows.querySelectorAll("tr[data-checklist-id]")].map((row) => {
           const config = findChecklistConfig(row.dataset.checklistId);
@@ -4184,6 +4975,10 @@
         return { id, no: "", label: "", kind: "item" };
       }
 
+      // =====================================================
+      // VALIDATION
+      // =====================================================
+
       function isBlankDetailRow(detailRow) {
         return ![
           detailRow.bproNumber,
@@ -4220,10 +5015,78 @@
         );
       }
 
+      function isBlankLampiranScenario(scenario) {
+        return ![scenario.activity, scenario.result, scenario.status].some(
+          (value) => `${value}`.trim() !== ""
+        );
+      }
+
+      function isBlankLampiranFeature(feature) {
+        return (
+          !`${feature.title || ""}`.trim() &&
+          (feature.scenarios || []).every((scenario) => isBlankLampiranScenario(scenario))
+        );
+      }
+
+      function isBlankLampiranDateGroup(dateGroup) {
+        return (
+          !`${dateGroup.date || ""}`.trim() &&
+          (dateGroup.features || []).every((feature) => isBlankLampiranFeature(feature))
+        );
+      }
+
+      function normalizeLampiranStatus(status) {
+        return ["To Do", "Ongoing", "Done"].includes(status) ? status : "To Do";
+      }
+
+      function normalizeLampiranState(groups, options = {}) {
+        const keepBlank = Boolean(options.keepBlank);
+        const normalized = (Array.isArray(groups) ? groups : [])
+          .filter((dateGroup) => keepBlank || !isBlankLampiranDateGroup(dateGroup || {}))
+          .map((dateGroup) => {
+            const features = (Array.isArray(dateGroup?.features) ? dateGroup.features : [])
+              .filter((feature) => keepBlank || !isBlankLampiranFeature(feature || {}))
+              .map((feature) => {
+                const scenarios = (Array.isArray(feature?.scenarios) ? feature.scenarios : [])
+                  .filter((scenario) => keepBlank || !isBlankLampiranScenario(scenario || {}))
+                  .map((scenario) => ({
+                    activity: `${scenario?.activity || ""}`.trim(),
+                    result: `${scenario?.result || ""}`.trim(),
+                    status: normalizeLampiranStatus(`${scenario?.status || ""}`.trim()),
+                    flags: {
+                      ...createEmptyLampiranScenarioFlags(),
+                      ...(scenario?.flags || {}),
+                    },
+                  }));
+
+                return {
+                  title: `${feature?.title || ""}`.trim(),
+                  flags: {
+                    ...createEmptyLampiranFeatureFlags(),
+                    ...(feature?.flags || {}),
+                  },
+                  scenarios: scenarios.length ? scenarios : [createEmptyLampiranScenario()],
+                };
+              });
+
+            return {
+              date: `${dateGroup?.date || ""}`.trim(),
+              flags: {
+                ...createEmptyLampiranDateFlags(),
+                ...(dateGroup?.flags || {}),
+              },
+              features: features.length ? features : [createEmptyLampiranFeature()],
+            };
+          });
+
+        return normalized.length ? normalized : [createEmptyLampiranDateGroup()];
+      }
+
       function validateForm() {
         setPreviewJumpVisible(false);
         syncTable1ProjectsStateFromDom();
         syncTable3StateFromDom();
+        syncLampiranStateFromDom();
 
         const activeProjects = table1ProjectsState
           .map((project, index) => ({ project, index }))
@@ -4313,6 +5176,37 @@
           return "Setiap row aktif pada Tabel Strategi Implementasi wajib memiliki tanggal format DD-MM-YYYY atau DD-MM-YYYY - DD-MM-YYYY, aktivitas, dan PIC.";
         }
 
+        if (lampiranEnabled) {
+          for (let dateIndex = 0; dateIndex < lampiranState.length; dateIndex += 1) {
+            const dateGroup = lampiranState[dateIndex];
+            if (!dateGroup.date || !isValidDateDisplayValue(dateGroup.date)) {
+              focusLampiranField(dateIndex, 0, 0, "date");
+              return "Setiap tanggal pada Lampiran Skenario Verif Implementasi wajib format DD-MM-YYYY atau DD-MM-YYYY - DD-MM-YYYY.";
+            }
+
+            for (let featureIndex = 0; featureIndex < dateGroup.features.length; featureIndex += 1) {
+              const feature = dateGroup.features[featureIndex];
+              if (!feature.title) {
+                focusLampiranField(dateIndex, featureIndex, 0, "title");
+                return "Setiap fitur pada Lampiran Skenario Verif Implementasi wajib memiliki judul fitur.";
+              }
+
+              for (let scenarioIndex = 0; scenarioIndex < feature.scenarios.length; scenarioIndex += 1) {
+                const scenario = feature.scenarios[scenarioIndex];
+                if (!scenario.activity || !scenario.status) {
+                  focusLampiranField(
+                    dateIndex,
+                    featureIndex,
+                    scenarioIndex,
+                    !scenario.activity ? "activity" : "status"
+                  );
+                  return "Setiap skenario pada Lampiran Skenario Verif Implementasi wajib memiliki aktivitas dan status.";
+                }
+              }
+            }
+          }
+        }
+
         return "";
       }
 
@@ -4376,6 +5270,10 @@
       function normalizeTable3Rows(rows) {
         return rows.filter((row) => !isBlankTable3Row(row));
       }
+
+      // =====================================================
+      // PREVIEW RENDERING
+      // =====================================================
 
       function renderTable1Result(project, tableIndex) {
         const rows = flattenTable1ProjectRows(project);
@@ -4699,6 +5597,87 @@
         `;
       }
 
+      function getAlphabetLabel(index) {
+        let value = index + 1;
+        let label = "";
+        while (value > 0) {
+          const remainder = (value - 1) % 26;
+          label = String.fromCharCode(65 + remainder) + label;
+          value = Math.floor((value - 1) / 26);
+        }
+        return label;
+      }
+
+      function renderLampiranResult(groups) {
+        const bodyMarkup = groups
+          .map((dateGroup) => {
+            const dateFlagged = Boolean(dateGroup.flags?.date);
+            return `
+              <tr class="lampiran-date-row">
+                <td colspan="4" class="${buildResultCellClass("", dateFlagged)}">${renderResultCellContent(
+                  escapeHtml(formatDateRangeIndonesian(dateGroup.date)),
+                  dateFlagged
+                )}</td>
+              </tr>
+              ${dateGroup.features
+                .map((feature, featureIndex) => {
+                  const featureFlagged = Boolean(feature.flags?.title);
+                  return `
+                    <tr class="lampiran-feature-row">
+                      <td colspan="4" class="${buildResultCellClass("", featureFlagged)}">${renderResultCellContent(
+                        `${getAlphabetLabel(featureIndex)}. ${escapeHtml(feature.title)}`,
+                        featureFlagged
+                      )}</td>
+                    </tr>
+                    ${feature.scenarios
+                      .map((scenario, scenarioIndex) => {
+                        const scenarioFlags = scenario.flags || createEmptyLampiranScenarioFlags();
+                        return `
+                          <tr>
+                            <td class="center">${scenarioIndex + 1}</td>
+                            <td class="${buildResultCellClass("", scenarioFlags.activity)}">${renderResultCellContent(
+                              formatMultiline(scenario.activity),
+                              scenarioFlags.activity
+                            )}</td>
+                            <td class="${buildResultCellClass("", scenarioFlags.result)}">${renderResultCellContent(
+                              formatMultiline(scenario.result || "-"),
+                              scenarioFlags.result
+                            )}</td>
+                            <td class="${buildResultCellClass("center", scenarioFlags.status)}">${renderResultCellContent(
+                              `<span class="status-pill ${getStatusClass(scenario.status)}">${escapeHtml(
+                                scenario.status
+                              )}</span>`,
+                              scenarioFlags.status
+                            )}</td>
+                          </tr>
+                        `;
+                      })
+                      .join("")}
+                  `;
+                })
+                .join("")}
+            `;
+          })
+          .join("");
+
+        return `
+          <section class="doc-block">
+            <h3 class="doc-title">Lampiran Skenario Verif Implementasi</h3>
+            <table class="doc-table lampiran-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px">No.</th>
+                  <th style="width: 430px">Aktivitas</th>
+                  <th style="width: 430px">Hasil/Keterangan</th>
+                  <th style="width: 130px">Status</th>
+                </tr>
+              </thead>
+              <tbody>${bodyMarkup}</tbody>
+            </table>
+          </section>
+        `;
+      }
+
       function renderMeetingMemoResult(note) {
         return `
           <section class="doc-block meeting-memo-result-block">
@@ -4727,6 +5706,7 @@
         const table1Projects = normalizeTable1Projects(table1ProjectsState);
         const checklistRows = collectChecklistValues();
         const table3Rows = normalizeTable3Rows(table3State);
+        const lampiranRows = lampiranEnabled ? normalizeLampiranState(lampiranState, { keepBlank: true }) : [];
         const memoValue = elements.memoTextarea.value.trim();
         const table1Blocks = table1Projects.map((project, index) => renderTable1Result(project, index));
 
@@ -4736,6 +5716,7 @@
               ...table1Blocks,
               renderChecklistResult(checklistRows),
               renderTable3Result(table3Rows),
+              lampiranEnabled ? renderLampiranResult(lampiranRows) : "",
               memoValue ? renderMeetingMemoResult(memoValue) : "",
             ])}
           </div>
@@ -4746,6 +5727,10 @@
         showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
         elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+
+      // =====================================================
+      // EXPORT ENGINE
+      // =====================================================
 
       function applyExcelMemoLayout(clonedRoot) {
         const rootStyle = clonedRoot.getAttribute("style") || "";
@@ -4896,6 +5881,10 @@
           return ["230px", "130px", "300px", "170px", "130px", "245px"];
         }
 
+        if (table.classList.contains("lampiran-table")) {
+          return ["70px", "430px", "430px", "130px"];
+        }
+
         return [...table.querySelectorAll("thead th")]
           .map((heading) => heading.style.width)
           .filter(Boolean);
@@ -4912,6 +5901,10 @@
 
         if (table.classList.contains("table3")) {
           return "1205px";
+        }
+
+        if (table.classList.contains("lampiran-table")) {
+          return "1060px";
         }
 
         return "1180px";
@@ -5039,6 +6032,11 @@
               appendInlineStyle(cell, "background:#d7e3f7;");
               cell.setAttribute("bgcolor", "#d7e3f7");
             }
+
+            if (cell.closest(".lampiran-table")) {
+              appendInlineStyle(cell, "background:#e9edf3;");
+              cell.setAttribute("bgcolor", "#e9edf3");
+            }
           }
 
           if (cell.closest(".procedure-group")) {
@@ -5049,6 +6047,16 @@
           if (cell.closest(".muted-status")) {
             appendInlineStyle(cell, "background:#808080;color:#fff;");
             cell.setAttribute("bgcolor", "#808080");
+          }
+
+          if (cell.closest(".lampiran-date-row")) {
+            appendInlineStyle(cell, "background:#d7dbe2;font-weight:700;");
+            cell.setAttribute("bgcolor", "#d7dbe2");
+          }
+
+          if (cell.closest(".lampiran-feature-row")) {
+            appendInlineStyle(cell, "background:#f0f2f5;font-weight:700;");
+            cell.setAttribute("bgcolor", "#f0f2f5");
           }
         });
 
@@ -5129,6 +6137,30 @@
           clonedNode.setAttribute("style", inlineStyle);
         });
 
+        if (!lampiranEnabled) {
+          const lampiranSections = new Set(
+            [...clonedRoot.querySelectorAll(".lampiran-table")]
+              .map((table) => table.closest(".doc-block"))
+              .filter(Boolean)
+          );
+          lampiranSections.forEach((lampiranSection) => {
+            const previousSpacer = lampiranSection.previousElementSibling?.classList.contains("doc-table-spacer")
+              ? lampiranSection.previousElementSibling
+              : null;
+            const nextSpacer = lampiranSection.nextElementSibling?.classList.contains("doc-table-spacer")
+              ? lampiranSection.nextElementSibling
+              : null;
+
+            if (previousSpacer) {
+              previousSpacer.remove();
+            } else {
+              nextSpacer?.remove();
+            }
+
+            lampiranSection.remove();
+          });
+        }
+
         if (options.includeMemo === false) {
           const memoSections = new Set([
             ...clonedRoot.querySelectorAll(".meeting-memo-result-block"),
@@ -5160,7 +6192,7 @@
 
         if (options.forExcel) {
           const excelChecklistAndStrategyCells = clonedRoot.querySelectorAll(
-            ".table1 th, .table1 td, .table2 th, .table2 td, .table3 th, .table3 td"
+            ".table1 th, .table1 td, .table2 th, .table2 td, .table3 th, .table3 td, .lampiran-table th, .lampiran-table td"
           );
           excelChecklistAndStrategyCells.forEach((cell) => {
             const currentStyle = cell.getAttribute("style") || "";
@@ -5171,7 +6203,7 @@
           });
 
           const keteranganCells = clonedRoot.querySelectorAll(
-            ".table2 tbody tr td:last-child, .table3 tbody tr td:last-child"
+            ".table2 tbody tr td:last-child, .table3 tbody tr td:last-child, .lampiran-table tbody tr td:nth-child(3)"
           );
 
           keteranganCells.forEach((cell) => {
@@ -5185,7 +6217,7 @@
           const flaggedCells = clonedRoot.querySelectorAll(".flagged-cell");
           flaggedCells.forEach((cell) => {
             const currentStyle = cell.getAttribute("style") || "";
-            const isExportTableCell = cell.closest(".table1, .table2, .table3");
+            const isExportTableCell = cell.closest(".table1, .table2, .table3, .lampiran-table");
             cell.setAttribute(
               "style",
               `${currentStyle};background:#f8fc46;color:#111;border-top:1px solid #111;border-right:1px solid #111;border-bottom:1px solid #111;border-left:1px solid #111;mso-border-top-alt:solid #111 1.0pt;mso-border-right-alt:solid #111 1.0pt;mso-border-bottom-alt:solid #111 1.0pt;mso-border-left-alt:solid #111 1.0pt;mso-pattern:auto none;display:table-cell;`
@@ -5199,7 +6231,8 @@
           const flaggedContentBlocks = clonedRoot.querySelectorAll(".flagged-content");
           flaggedContentBlocks.forEach((block) => {
             const isExportTableBlock = block.closest(".table1, .table2, .table3");
-            if (isExportTableBlock) {
+            const isLampiranTableBlock = block.closest(".lampiran-table");
+            if (isExportTableBlock || isLampiranTableBlock) {
               const fragment = document.createDocumentFragment();
               [...block.childNodes].forEach((node) => {
                 if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "DIV") {
@@ -5236,8 +6269,18 @@
         return clonedRoot.outerHTML;
       }
 
+      function buildExportMarkup(target = "html") {
+        const optionsByTarget = {
+          html: {},
+          excel: { forExcel: true },
+          outlook: { forOutlook: true, includeMemo: false },
+        };
+
+        return buildInlineStyledResultMarkup(optionsByTarget[target] || {});
+      }
+
       function buildStandaloneDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup();
+        const styledMarkup = buildExportMarkup("html");
         return `
           <html>
             <head>
@@ -5253,7 +6296,7 @@
       }
 
       function buildExcelDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup({ forExcel: true });
+        const styledMarkup = buildExportMarkup("excel");
         return `
           <html xmlns:o="urn:schemas-microsoft-com:office:office"
                 xmlns:x="urn:schemas-microsoft-com:office:excel"
@@ -5277,7 +6320,7 @@
           return;
         }
 
-        const html = buildInlineStyledResultMarkup();
+        const html = buildExportMarkup("html");
         const text = elements.resultArea.innerText.trim();
 
         try {
@@ -5356,7 +6399,7 @@
       }
 
       function buildOutlookEmailDocument() {
-        const styledMarkup = buildInlineStyledResultMarkup({ forOutlook: true, includeMemo: false });
+        const styledMarkup = buildExportMarkup("outlook");
         const projectName = escapeHtml(getPrimaryProjectName());
         const today = escapeHtml(formatTodayIndonesian());
 
@@ -5413,9 +6456,14 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
+      // =====================================================
+      // DRAFT SAVE / LOAD
+      // =====================================================
+
       function collectDraftData() {
         syncTable1ProjectsStateFromDom();
         syncTable3StateFromDom();
+        syncLampiranStateFromDom();
 
         return {
           version: "mom-generator-draft-v1",
@@ -5424,6 +6472,8 @@
           table1ProjectsState,
           checklistRows: collectChecklistValues(),
           table3State,
+          lampiranEnabled,
+          lampiranState,
           memo: elements.memoTextarea.value,
         };
       }
@@ -5559,12 +6609,17 @@
           ? draft.table1ProjectsState
           : [createEmptyTable1Project()];
         table3State = draft.table3State.length ? draft.table3State : [createEmptyTable3Row()];
+        lampiranEnabled = draft.lampiranEnabled === true;
+        lampiranState = lampiranEnabled
+          ? normalizeLampiranState(draft.lampiranState, { keepBlank: true })
+          : [createEmptyLampiranDateGroup()];
 
         syncBlueprintLevelControls();
         renderTable1Projects();
         renderTable2Rows();
         applyChecklistValues(draft.checklistRows);
         renderTable3Rows();
+        renderLampiranSection();
         elements.memoTextarea.value = draft.memo || "";
         refreshMemoState();
         clearPreviewResult();
@@ -5598,16 +6653,23 @@
         table1ProjectsState = [createEmptyTable1Project()];
         table1BlueprintLevel = "release";
         table3State = [createEmptyTable3Row()];
+        lampiranEnabled = false;
+        lampiranState = [createEmptyLampiranDateGroup()];
         syncBlueprintLevelControls();
         renderTable1Projects();
         renderTable2Rows();
         renderTable3Rows();
+        renderLampiranSection();
         elements.memoTextarea.value = "";
         refreshMemoState();
         setMemoPanelOpen(false);
         clearPreviewResult();
         clearFeedback();
       }
+
+      // =====================================================
+      // EVENT HANDLERS
+      // =====================================================
 
       elements.blueprintLevelControls.forEach((control) => {
         control.addEventListener("change", (event) => {
@@ -5760,6 +6822,134 @@
         renderTable3Rows();
       });
 
+      elements.lampiranEnabledControls.forEach((control) => {
+        control.addEventListener("change", (event) => {
+          if (!event.target.checked) {
+            return;
+          }
+
+          if (lampiranEnabled) {
+            syncLampiranStateFromDom();
+          }
+
+          lampiranEnabled = event.target.value === "yes";
+          if (lampiranEnabled) {
+            lampiranState = normalizeLampiranState(lampiranState, { keepBlank: true });
+          }
+          renderLampiranSection();
+          clearFeedback();
+        });
+      });
+
+      elements.addLampiranDateGroup.addEventListener("click", () => {
+        syncLampiranStateFromDom();
+        lampiranState.push(createEmptyLampiranDateGroup());
+        renderLampiranSection();
+      });
+
+      elements.lampiranRows.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-action]");
+        if (!button || button.dataset.action === "toggle-flag") {
+          return;
+        }
+
+        const dateElement = button.closest(".lampiran-date-card");
+        if (!dateElement) {
+          return;
+        }
+
+        const dateIndex = Number(dateElement.dataset.lampiranDateIndex);
+        syncLampiranStateFromDom();
+
+        if (button.dataset.action === "add-lampiran-feature") {
+          lampiranState[dateIndex].features.push(createEmptyLampiranFeature());
+          renderLampiranSection();
+          return;
+        }
+
+        if (button.dataset.action === "remove-lampiran-date") {
+          lampiranState.splice(dateIndex, 1);
+          if (!lampiranState.length) {
+            lampiranState = [createEmptyLampiranDateGroup()];
+          }
+          renderLampiranSection();
+          return;
+        }
+
+        const featureElement = button.closest(".lampiran-feature-card");
+        if (!featureElement) {
+          return;
+        }
+
+        const featureIndex = Number(featureElement.dataset.lampiranFeatureIndex);
+        const features = lampiranState[dateIndex].features;
+
+        if (
+          button.dataset.action === "move-lampiran-feature-up" ||
+          button.dataset.action === "move-lampiran-feature-down"
+        ) {
+          const targetIndex =
+            button.dataset.action === "move-lampiran-feature-up"
+              ? featureIndex - 1
+              : featureIndex + 1;
+          if (targetIndex < 0 || targetIndex >= features.length) {
+            return;
+          }
+
+          const [movedFeature] = features.splice(featureIndex, 1);
+          features.splice(targetIndex, 0, movedFeature);
+          renderLampiranSection();
+          return;
+        }
+
+        if (button.dataset.action === "add-lampiran-scenario") {
+          features[featureIndex].scenarios.push(createEmptyLampiranScenario());
+          renderLampiranSection();
+          return;
+        }
+
+        if (button.dataset.action === "remove-lampiran-feature") {
+          features.splice(featureIndex, 1);
+          if (!features.length) {
+            lampiranState[dateIndex].features = [createEmptyLampiranFeature()];
+          }
+          renderLampiranSection();
+          return;
+        }
+
+        const scenarioElement = button.closest("[data-lampiran-scenario-index]");
+        const scenarioIndex = Number(scenarioElement.dataset.lampiranScenarioIndex);
+        const scenarios = features[featureIndex].scenarios;
+
+        if (
+          button.dataset.action === "move-lampiran-scenario-up" ||
+          button.dataset.action === "move-lampiran-scenario-down"
+        ) {
+          const targetIndex =
+            button.dataset.action === "move-lampiran-scenario-up"
+              ? scenarioIndex - 1
+              : scenarioIndex + 1;
+          if (targetIndex < 0 || targetIndex >= scenarios.length) {
+            return;
+          }
+
+          const [movedScenario] = scenarios.splice(scenarioIndex, 1);
+          scenarios.splice(targetIndex, 0, movedScenario);
+          renderLampiranSection();
+          return;
+        }
+
+        if (button.dataset.action !== "remove-lampiran-scenario") {
+          return;
+        }
+
+        scenarios.splice(scenarioIndex, 1);
+        if (!scenarios.length) {
+          features[featureIndex].scenarios = [createEmptyLampiranScenario()];
+        }
+        renderLampiranSection();
+      });
+
       elements.table2Rows.addEventListener("input", (event) => {
         refreshTextareaScrollState(event.target);
 
@@ -5870,6 +7060,7 @@
       renderTable1Projects();
       renderTable2Rows();
       renderTable3Rows();
+      renderLampiranSection();
       refreshMemoState();
     </script>
   </body>
