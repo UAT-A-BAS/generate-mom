@@ -3754,7 +3754,7 @@
 
           if (!bproItems.length && !changesItems.length) {
             if (releaseItem) {
-              finalizeFreeTextImportRow(createSmartImportRowFromItems(rowNumber, releaseItem), context);
+              rows.push(finalizeFreeTextImportRow(createSmartImportRowFromItems(rowNumber, releaseItem), context));
             }
             return;
           }
@@ -3986,7 +3986,7 @@
           )
           .join("");
 
-        const applyCount = rows.filter((row) => row.bproNumber || row.changesId).length;
+        const applyCount = rows.filter((row) => isActionableSmartImportRow(row)).length;
         elements.smartImportSummary.textContent = `${rows.length} row terdeteksi, ${applyCount} row siap masuk detail Tabel 1.`;
         elements.smartImportApplyBtn.disabled = applyCount === 0;
       }
@@ -4017,6 +4017,78 @@
         };
       }
 
+      function isActionableSmartImportRow(row) {
+        return [
+          row.bproNumber,
+          row.bproName,
+          row.changesId,
+          row.changesName,
+          row.releaseId,
+          row.releaseName,
+        ].some((value) => `${value || ""}`.trim() !== "");
+      }
+
+      function isBlankImportDetailRow(row) {
+        return ![row.bproNumber, row.bproName, row.changesId, row.changesName].some(
+          (value) => `${value || ""}`.trim() !== ""
+        );
+      }
+
+      function isBlankRelationPackageForImport(relationPackage) {
+        if (!relationPackage) {
+          return false;
+        }
+
+        const hasRelease = [relationPackage.releaseId, relationPackage.releaseName].some(
+          (value) => `${value || ""}`.trim() !== ""
+        );
+        return !hasRelease && (relationPackage.detailRows || []).every((detailRow) => isBlankDetailRow(detailRow));
+      }
+
+      function canCompleteActivePackage(activePackage, row) {
+        if (!activePackage || !(row.releaseId || row.releaseName)) {
+          return false;
+        }
+
+        const activeReleaseId = `${activePackage.releaseId || ""}`.trim();
+        const activeReleaseName = `${activePackage.releaseName || ""}`.trim();
+        if (!activeReleaseId && !activeReleaseName) {
+          return true;
+        }
+
+        return Boolean(row.releaseId && activeReleaseId && activeReleaseId === `${row.releaseId}`.trim());
+      }
+
+      function completeActivePackageFromImport(activePackage, row) {
+        if (!activePackage) {
+          return;
+        }
+
+        if (!activePackage.releaseId && row.releaseId) {
+          activePackage.releaseId = row.releaseId;
+        }
+        if (!activePackage.releaseName && row.releaseName) {
+          activePackage.releaseName = row.releaseName;
+        }
+      }
+
+      function appendOrReplaceImportDetailRow(relationPackage, detailRow, targetMode, activePackage, touchedPackages) {
+        if (targetMode === "replace" && relationPackage === activePackage && !touchedPackages.has(relationPackage)) {
+          relationPackage.detailRows = [];
+          touchedPackages.add(relationPackage);
+        }
+
+        if (
+          relationPackage.detailRows.length === 1 &&
+          isBlankDetailRow(relationPackage.detailRows[0])
+        ) {
+          relationPackage.detailRows = [detailRow];
+          return;
+        }
+
+        relationPackage.detailRows.push(detailRow);
+      }
+
       function createRelationPackageFromImport(row) {
         return {
           ...createEmptyRelationPackage(),
@@ -4034,7 +4106,7 @@
         }
 
         return project.relationPackages.find(
-          (relationPackage) => relationPackage.releaseId.trim() === releaseId.trim()
+          (relationPackage) => `${relationPackage.releaseId || ""}`.trim() === `${releaseId}`.trim()
         );
       }
 
@@ -4059,7 +4131,7 @@
           previewSmartImportRawData();
         }
 
-        const importRows = smartImportPreviewState.filter((row) => row.bproNumber || row.changesId);
+        const importRows = smartImportPreviewState.filter((row) => isActionableSmartImportRow(row));
         if (!importRows.length) {
           showFeedback("Tidak ada row import yang bisa dimasukkan ke Tabel 1.", "error");
           return;
@@ -4072,25 +4144,35 @@
         const activePackageTouched = new Set();
 
         importRows.forEach((row) => {
-          const detailRow = createDetailRowFromImport(row);
+          const hasDetailRow = !isBlankImportDetailRow(row);
+          let relationPackage = activePackage;
 
           if (row.releaseId || row.releaseName) {
-            let relationPackage = findRelationPackageByRelease(project, row.releaseId);
+            if (canCompleteActivePackage(activePackage, row)) {
+              completeActivePackageFromImport(activePackage, row);
+            } else {
+              relationPackage = findRelationPackageByRelease(project, row.releaseId);
+            }
+
             if (!relationPackage) {
               relationPackage = createRelationPackageFromImport(row);
               project.relationPackages.push(relationPackage);
             } else if (!relationPackage.releaseName && row.releaseName) {
               relationPackage.releaseName = row.releaseName;
             }
-            relationPackage.detailRows.push(detailRow);
+          }
+
+          if (!hasDetailRow) {
             return;
           }
 
-          if (targetMode === "replace" && !activePackageTouched.has(activePackage)) {
-            activePackage.detailRows = [];
-            activePackageTouched.add(activePackage);
-          }
-          activePackage.detailRows.push(detailRow);
+          appendOrReplaceImportDetailRow(
+            relationPackage,
+            createDetailRowFromImport(row),
+            targetMode,
+            activePackage,
+            activePackageTouched
+          );
         });
 
         project.relationPackages.forEach((relationPackage) => {
