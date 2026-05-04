@@ -1002,6 +1002,13 @@
         pointer-events: none;
       }
 
+      #smartImportCloseBtn:hover {
+        background: #fdeeed;
+        color: var(--danger);
+        border-color: rgba(196, 65, 57, 0.42);
+        box-shadow: 0 8px 18px rgba(196, 65, 57, 0.14);
+      }
+
       .icon-btn-secondary {
         background: #eef4fa;
         color: var(--accent);
@@ -2082,7 +2089,18 @@
             <h3 id="smartImportTitle" class="smart-import-title">Smart Import Raw Data</h3>
             <p class="hint">Paste raw data BPRO, Changes, dan Release dari Excel.</p>
           </div>
-          <button id="smartImportCloseBtn" type="button" class="btn-ghost">Tutup</button>
+          <button
+            id="smartImportCloseBtn"
+            type="button"
+            class="btn-ghost icon-btn"
+            aria-label="Tutup Smart Import"
+            title="Tutup"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M18 6 6 18"></path>
+              <path d="m6 6 12 12"></path>
+            </svg>
+          </button>
         </div>
         <div class="smart-import-body">
           <div class="smart-import-pane">
