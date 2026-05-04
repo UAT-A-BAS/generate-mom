@@ -1,4 +1,4 @@
-MOM Generator dapat diakses dengan link https://uat-a-bas.github.io/generate-mom/
+MOM Generator dapat diakses dengan link https://generate-mom.pages.dev/
 
 Download ExportMOMToDraft.bas untuk dapat mengintegrasikan flow dengan outlook
 
