@@ -1688,6 +1688,21 @@
         text-align: left;
       }
 
+      .smart-import-preview-table input {
+        width: 100%;
+        min-width: 110px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 5px 6px;
+        background: #fff;
+        font: inherit;
+      }
+
+      .smart-import-preview-table input:focus {
+        border-color: var(--brand);
+        outline: 2px solid rgba(42, 114, 229, 0.18);
+      }
+
       .smart-import-warning {
         color: #8a5b00;
         font-weight: 700;
@@ -2142,12 +2157,13 @@
                     <th>Changes Name</th>
                     <th>Release ID</th>
                     <th>Release Name</th>
+                    <th>Confidence</th>
                     <th>Status / Warning</th>
                   </tr>
                 </thead>
                 <tbody id="smartImportPreviewRows">
                   <tr>
-                    <td colspan="8">Belum ada preview.</td>
+                    <td colspan="9">Belum ada preview.</td>
                   </tr>
                 </tbody>
               </table>
@@ -2255,6 +2271,7 @@
       let lampiranState = [createEmptyLampiranDateGroup()];
       let activeDatePicker = null;
       let smartImportPreviewState = [];
+      let smartImportSourceRowCount = 0;
 
       // =====================================================
       // FACTORY FUNCTIONS
@@ -3592,75 +3609,144 @@
         return { type: "text", token: normalized };
       }
 
-      function parseSmartImportLineFlexible(line, rowNumber, context = {}) {
-        const row = createFreeTextImportRow(rowNumber);
-        const buffers = {
-          bpro: [],
-          changes: [],
-          release: [],
-          preAnchor: [],
+      const smartImportLabelAliases = [
+        "Release Name",
+        "Release ID",
+        "Nomor BPRO",
+        "BPRO Name",
+        "Nama BPRO",
+        "Nama Fitur",
+        "BPRO ID",
+        "Changes Name",
+        "Change Name",
+        "Nama Changes",
+        "Changes ID",
+        "Change ID",
+        "Changes",
+        "Change",
+        "BPRO",
+        "GP",
+      ];
+
+      function escapeSmartImportRegex(value) {
+        return `${value}`.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function normalizeSmartImportLabel(label) {
+        return normalizeSmartImportName(label).toLowerCase();
+      }
+
+      function createSmartImportLabelRegex() {
+        const labels = smartImportLabelAliases
+          .slice()
+          .sort((left, right) => right.length - left.length)
+          .map(escapeSmartImportRegex)
+          .join("|");
+        return new RegExp(`(^|\\b)(${labels})\\s*:`, "gi");
+      }
+
+      function getSmartImportLabelKind(label) {
+        const normalized = normalizeSmartImportLabel(label);
+        if (normalized === "release id") {
+          return { type: "release", valueKind: "id" };
+        }
+        if (normalized === "release name") {
+          return { type: "release", valueKind: "name" };
+        }
+        if (["bpro id", "nomor bpro"].includes(normalized)) {
+          return { type: "bpro", valueKind: "id" };
+        }
+        if (["bpro name", "nama bpro", "nama fitur"].includes(normalized)) {
+          return { type: "bpro", valueKind: "name" };
+        }
+        if (["bpro", "gp"].includes(normalized)) {
+          return { type: "bpro", valueKind: "pair" };
+        }
+        if (["changes id", "change id"].includes(normalized)) {
+          return { type: "changes", valueKind: "id" };
+        }
+        if (["changes name", "change name", "nama changes"].includes(normalized)) {
+          return { type: "changes", valueKind: "name" };
+        }
+        return { type: "changes", valueKind: "pair" };
+      }
+
+      function createSmartImportItem(type, id = "", name = "", index = 0, options = {}) {
+        return {
+          type,
+          id: normalizeSmartImportToken(id),
+          name: normalizeSmartImportName(name),
+          index,
+          preAnchorText: normalizeSmartImportName(options.preAnchorText),
+          orphanText: Boolean(options.orphanText),
         };
-        let currentField = "";
+      }
 
-        normalizeSmartImportName(line)
-          .split(" ")
-          .filter(Boolean)
-          .forEach((token) => {
-            const parsed = classifySmartImportToken(token);
-            if (parsed.type === "empty") {
-              return;
-            }
-
-            if (parsed.type !== "text") {
-              const idField =
-                parsed.type === "bpro"
-                  ? "bproNumber"
-                  : parsed.type === "changes"
-                  ? "changesId"
-                  : "releaseId";
-              if (row[idField]) {
-                row.warnings.push(
-                  parsed.type === "bpro"
-                    ? "Nomor BPRO duplikat diabaikan"
-                    : parsed.type === "changes"
-                    ? "Changes ID duplikat diabaikan"
-                    : "Release ID duplikat diabaikan"
-                );
-                currentField = "";
-                return;
-              }
-
-              row[idField] = parsed.token;
-              currentField = parsed.type;
-              return;
-            }
-
-            if (currentField && buffers[currentField]) {
-              buffers[currentField].push(parsed.token);
-              return;
-            }
-
-            buffers.preAnchor.push(parsed.token);
-          });
-
-        const preAnchorText = normalizeSmartImportName(buffers.preAnchor.join(" "));
-        row.bproName = normalizeSmartImportName(
-          row.bproNumber ? buffers.bpro.join(" ") : /^(?:BPRO|GP)\b/i.test(preAnchorText) ? preAnchorText : ""
-        );
-        row.changesName = normalizeSmartImportName(buffers.changes.join(" "));
-        row.releaseName = normalizeSmartImportName(buffers.release.join(" "));
-
-        if (preAnchorText && (row.bproNumber || !row.bproName)) {
-          row.warnings.push("Ada text yang tidak bisa dimapping");
+      function splitSmartImportIdAndName(value, type, valueKind) {
+        const text = normalizeSmartImportName(value);
+        if (!text) {
+          return { id: "", name: "" };
         }
 
-        return finalizeFreeTextImportRow(row, context);
+        const idRegex =
+          type === "release"
+            ? /\b6\d+\b/i
+            : type === "changes"
+            ? /\b5\d+\b/i
+            : /\b(?:BPRO|GP)\d+\b/i;
+        const idMatch = text.match(idRegex);
+        if (valueKind === "name") {
+          return { id: "", name: text };
+        }
+        if (!idMatch) {
+          return { id: "", name: text };
+        }
+
+        const id = idMatch[0];
+        const before = text.slice(0, idMatch.index).trim();
+        const after = text.slice(idMatch.index + id.length).trim();
+        const name = normalizeSmartImportName([before, after].filter(Boolean).join(" "));
+        return { id, name };
+      }
+
+      function collectSmartImportLabelItems(line) {
+        const text = normalizeSmartImportName(line);
+        const regex = createSmartImportLabelRegex();
+        const matches = [];
+        let match = regex.exec(text);
+        while (match) {
+          matches.push({
+            label: match[2],
+            valueStart: regex.lastIndex,
+            index: match.index,
+          });
+          match = regex.exec(text);
+        }
+
+        if (!matches.length) {
+          return [];
+        }
+
+        return matches
+          .map((entry, entryIndex) => {
+            const valueEnd = matches[entryIndex + 1]?.index ?? text.length;
+            const value = normalizeSmartImportName(text.slice(entry.valueStart, valueEnd));
+            const labelKind = getSmartImportLabelKind(entry.label);
+            const parsed = splitSmartImportIdAndName(value, labelKind.type, labelKind.valueKind);
+            return createSmartImportItem(labelKind.type, parsed.id, parsed.name, entry.index);
+          })
+          .filter((item) => item.id || item.name);
       }
 
       function collectSmartImportAnchorItems(line) {
         const text = normalizeSmartImportName(line);
         if (!text) {
           return [];
+        }
+
+        const labelItems = collectSmartImportLabelItems(text);
+        if (labelItems.length) {
+          return labelItems;
         }
 
         const items = [];
@@ -3693,33 +3779,51 @@
             }
 
             preAnchorTokens.push(parsed.token);
-          })
-          ;
+          });
 
         const preAnchorText = normalizeSmartImportName(preAnchorTokens.join(" "));
-        return items.map((item) => ({
-          ...item,
-          name: normalizeSmartImportName(item.nameTokens.join(" ")),
-          preAnchorText,
-        }));
+        if (!items.length && /^(?:BPRO|GP)\b/i.test(preAnchorText)) {
+          return [createSmartImportItem("bpro", "", preAnchorText, 0, { orphanText: true })];
+        }
+
+        return items.map((item) =>
+          createSmartImportItem(item.type, item.id, item.nameTokens.join(" "), item.index, {
+            preAnchorText,
+          })
+        );
       }
 
-      function createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, changesItem, fallbackBproName = "") {
+      function addSmartImportSourceWarning(row, warning) {
+        if (!warning || row.sourceWarnings.includes(warning)) {
+          return;
+        }
+        row.sourceWarnings.push(warning);
+      }
+
+      function mergeSmartImportRelease(baseRelease, releaseItem) {
+        return {
+          releaseId: normalizeSmartImportToken(releaseItem?.id || baseRelease?.releaseId || ""),
+          releaseName: normalizeSmartImportName(releaseItem?.name || baseRelease?.releaseName || ""),
+        };
+      }
+
+      function createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, changesItem) {
         const row = createFreeTextImportRow(rowNumber);
         if (releaseItem) {
-          row.releaseId = releaseItem.id;
-          row.releaseName = releaseItem.name;
+          row.releaseId = releaseItem.releaseId ?? releaseItem.id ?? "";
+          row.releaseName = releaseItem.releaseName ?? releaseItem.name ?? "";
         }
         if (bproItem) {
-          row.bproNumber = bproItem.id;
-          row.bproName = bproItem.name;
-        } else if (/^(?:BPRO|GP)\b/i.test(fallbackBproName)) {
-          row.bproName = fallbackBproName;
-          row.warnings.push("Ada text yang tidak bisa dimapping");
+          row.bproNumber = bproItem.id || "";
+          row.bproName = bproItem.name || "";
+          if (bproItem.orphanText) {
+            row.hasOrphanText = true;
+            addSmartImportSourceWarning(row, "BPRO/GP tanpa nomor diperlakukan sebagai nama/text");
+          }
         }
         if (changesItem) {
-          row.changesId = changesItem.id;
-          row.changesName = changesItem.name;
+          row.changesId = changesItem.id || "";
+          row.changesName = changesItem.name || "";
         }
         return row;
       }
@@ -3734,75 +3838,203 @@
       }
 
       function splitAnchorItemsByReleaseContext(items) {
-        const releaseItems = items.filter((item) => item.type === "release");
-        if (releaseItems.length <= 1) {
-          return [
-            {
-              releaseItem: releaseItems[0] || null,
-              items,
-            },
-          ];
+        const segments = [];
+        let activeSegment = { releaseItem: null, items: [] };
+
+        items.forEach((item) => {
+          if (item.type === "release") {
+            if (activeSegment.items.length) {
+              segments.push(activeSegment);
+            }
+            activeSegment = { releaseItem: item, items: [] };
+            return;
+          }
+          activeSegment.items.push(item);
+        });
+
+        if (activeSegment.releaseItem || activeSegment.items.length) {
+          segments.push(activeSegment);
         }
 
-        return releaseItems.map((releaseItem, releaseIndex) => {
-          const segmentStart = releaseIndex === 0 ? 0 : releaseItem.index;
-          const segmentEnd = releaseItems[releaseIndex + 1]?.index ?? Infinity;
-          return {
-            releaseItem,
-            items: items.filter((item) => item.index >= segmentStart && item.index < segmentEnd),
-          };
-        });
+        return segments;
       }
 
+      function finalizeFreeTextImportRow(row, context) {
+        if (!row.releaseId && !row.releaseName && context.useLastRelease && context.lastRelease) {
+          row.releaseId = context.lastRelease.releaseId;
+          row.releaseName = context.lastRelease.releaseName;
+          addSmartImportSourceWarning(row, "Release kosong memakai release terakhir");
+        }
+
+        if (row.releaseId || row.releaseName) {
+          context.lastRelease = {
+            releaseId: row.releaseId,
+            releaseName: row.releaseName,
+          };
+        }
+
+        return row;
+      }
+
+      function flushPendingSmartImportBpro(context, rowNumber) {
+        if (!context.pendingBpro) {
+          return [];
+        }
+
+        const pending = context.pendingBpro;
+        context.pendingBpro = null;
+        const row = createSmartImportRowFromItems(
+          pending.rowNumber || rowNumber,
+          pending.release,
+          pending.bproItem,
+          null
+        );
+        addSmartImportSourceWarning(row, "Changes kosong untuk BPRO ini");
+        return [finalizeFreeTextImportRow(row, context)];
+      }
+
+      function pairSmartImportItems(rowNumber, releaseForRows, bproItems, changesItems, context) {
+        const rows = [];
+        const bproCount = bproItems.length;
+        const changesCount = changesItems.length;
+
+        if (!bproCount && !changesCount) {
+          return rows;
+        }
+
+        if (bproCount === 1 && changesCount === 0) {
+          context.pendingBpro = {
+            rowNumber,
+            release: releaseForRows,
+            bproItem: bproItems[0],
+          };
+          return rows;
+        }
+
+        if (!bproCount && changesCount) {
+          if (context.pendingBpro) {
+            const pending = context.pendingBpro;
+            context.pendingBpro = null;
+            changesItems.forEach((changesItem, index) => {
+              const row = createSmartImportRowFromItems(rowNumber, pending.release, pending.bproItem, changesItem);
+              if (changesItems.length > 1) {
+                row.hasAmbiguousPairing = true;
+                addSmartImportSourceWarning(row, "1 BPRO dipakai untuk beberapa Changes");
+              }
+              if (index > 0) {
+                row.hasAmbiguousPairing = true;
+              }
+              rows.push(finalizeFreeTextImportRow(row, context));
+            });
+            return rows;
+          }
+
+          changesItems.forEach((changesItem) => {
+            const row = createSmartImportRowFromItems(rowNumber, releaseForRows, null, changesItem);
+            addSmartImportSourceWarning(row, "BPRO kosong untuk Changes ini");
+            rows.push(finalizeFreeTextImportRow(row, context));
+          });
+          return rows;
+        }
+
+        rows.push(...flushPendingSmartImportBpro(context, rowNumber));
+
+        if (bproCount === changesCount) {
+          bproItems.forEach((bproItem, index) => {
+            rows.push(
+              finalizeFreeTextImportRow(
+                createSmartImportRowFromItems(rowNumber, releaseForRows, bproItem, changesItems[index]),
+                context
+              )
+            );
+          });
+          return rows;
+        }
+
+        if (bproCount === 1 && changesCount > 1) {
+          changesItems.forEach((changesItem) => {
+            const row = createSmartImportRowFromItems(rowNumber, releaseForRows, bproItems[0], changesItem);
+            row.hasAmbiguousPairing = true;
+            addSmartImportSourceWarning(row, "1 BPRO dipakai untuk beberapa Changes");
+            rows.push(finalizeFreeTextImportRow(row, context));
+          });
+          return rows;
+        }
+
+        if (bproCount > 1 && changesCount === 1) {
+          const matchedBpro = findBproForChanges(changesItems[0], bproItems);
+          bproItems.forEach((bproItem) => {
+            const row = createSmartImportRowFromItems(
+              rowNumber,
+              releaseForRows,
+              bproItem,
+              bproItem === matchedBpro ? changesItems[0] : null
+            );
+            row.hasAmbiguousPairing = true;
+            addSmartImportSourceWarning(row, "1 Changes dipasangkan ke BPRO terdekat");
+            if (bproItem !== matchedBpro) {
+              addSmartImportSourceWarning(row, "Changes kosong untuk BPRO ini");
+            }
+            rows.push(finalizeFreeTextImportRow(row, context));
+          });
+          return rows;
+        }
+
+        const maxCount = Math.max(bproCount, changesCount);
+        for (let index = 0; index < maxCount; index += 1) {
+          const row = createSmartImportRowFromItems(rowNumber, releaseForRows, bproItems[index], changesItems[index]);
+          row.hasAmbiguousPairing = true;
+          row.hasUnmatchedCount = true;
+          addSmartImportSourceWarning(row, "Jumlah BPRO dan Changes tidak sama");
+          rows.push(finalizeFreeTextImportRow(row, context));
+        }
+        return rows;
+      }
+
+      function parseSmartImportLineFlexible(line, rowNumber, context = {}) {
+        return parseSmartImportLineToRowsFlexible(line, rowNumber, context)[0] || createFreeTextImportRow(rowNumber);
+      }
+
+      /*
+        Parser cases covered:
+        - 1 Release with many BPRO + Changes pairs
+        - BPRO count equals Changes count, pair by order
+        - 1 BPRO with many Changes
+        - many BPRO with 1 Changes
+        - many Release IDs in one line
+        - only BPRO without Changes
+        - only Changes without BPRO
+        - missing Release ID with fallback checked
+        - missing Release ID with fallback unchecked
+        - same BPRO under different Release IDs
+        - same Changes under different Release IDs
+        - label-based input
+        - BPRO/GP without number treated as name/text
+      */
       function parseSmartImportLineToRowsFlexible(line, rowNumber, context = {}) {
         const items = collectSmartImportAnchorItems(line);
         if (!items.length) {
           const row = createFreeTextImportRow(rowNumber);
-          row.warnings.push("Ada text yang tidak bisa dimapping");
+          row.hasOrphanText = true;
+          addSmartImportSourceWarning(row, "Ada text yang tidak bisa dimapping");
           return [finalizeFreeTextImportRow(row, context)];
         }
 
         const rows = [];
         splitAnchorItemsByReleaseContext(items).forEach((segment) => {
-          const releaseItem =
-            segment.releaseItem || segment.items.find((item) => item.type === "release") || null;
+          if (segment.releaseItem) {
+            context.lastRelease = mergeSmartImportRelease(context.lastRelease, segment.releaseItem);
+          }
+
+          const releaseForRows = context.lastRelease || null;
           const bproItems = segment.items.filter((item) => item.type === "bpro");
           const changesItems = segment.items.filter((item) => item.type === "changes");
-          const fallbackBproName = segment.items[0]?.preAnchorText || "";
 
           if (!bproItems.length && !changesItems.length) {
-            if (releaseItem) {
-              rows.push(finalizeFreeTextImportRow(createSmartImportRowFromItems(rowNumber, releaseItem), context));
-            }
             return;
           }
 
-          const usedBproItems = new Set();
-          if (changesItems.length) {
-            changesItems.forEach((changesItem) => {
-              const bproItem = findBproForChanges(changesItem, bproItems);
-              if (bproItem) {
-                usedBproItems.add(bproItem);
-              }
-              rows.push(
-                finalizeFreeTextImportRow(
-                  createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, changesItem, fallbackBproName),
-                  context
-                )
-              );
-            });
-          }
-
-          bproItems
-            .filter((bproItem) => !usedBproItems.has(bproItem))
-            .forEach((bproItem) => {
-              rows.push(
-                finalizeFreeTextImportRow(
-                  createSmartImportRowFromItems(rowNumber, releaseItem, bproItem, null, fallbackBproName),
-                  context
-                )
-              );
-            });
+          rows.push(...pairSmartImportItems(rowNumber, releaseForRows, bproItems, changesItems, context));
         });
 
         return rows;
@@ -3859,12 +4091,44 @@
         return normalizeSmartImportName(cells[nextIndex]);
       }
 
+      function isSmartImportLabelCell(value) {
+        const normalized = normalizeSmartImportLabel(value).replace(/:$/, "");
+        return smartImportLabelAliases.some((label) => normalizeSmartImportLabel(label) === normalized);
+      }
+
+      function normalizeSmartImportCellsToLine(cells) {
+        const chunks = [];
+        for (let index = 0; index < cells.length; index += 1) {
+          const cell = normalizeSmartImportName(cells[index]);
+          if (!cell) {
+            continue;
+          }
+
+          if (!isSmartImportLabelCell(cell)) {
+            chunks.push(cell);
+            continue;
+          }
+
+          const values = [];
+          index += 1;
+          while (index < cells.length && !isSmartImportLabelCell(cells[index])) {
+            if (normalizeSmartImportName(cells[index])) {
+              values.push(cells[index]);
+            }
+            index += 1;
+          }
+          index -= 1;
+          chunks.push(`${cell.replace(/:$/, "")}: ${values.join(" ")}`);
+        }
+        return normalizeSmartImportName(chunks.join(" "));
+      }
+
       function parseImportRow(cells, rowNumber, context) {
-        return parseSmartImportLineToRowsFlexible(cells.join(" "), rowNumber, context)[0] || createFreeTextImportRow(rowNumber);
+        return parseSmartImportLineToRowsFlexible(normalizeSmartImportCellsToLine(cells), rowNumber, context)[0] || createFreeTextImportRow(rowNumber);
       }
 
       function parseImportRowToRows(cells, rowNumber, context) {
-        return parseSmartImportLineToRowsFlexible(cells.join(" "), rowNumber, context);
+        return parseSmartImportLineToRowsFlexible(normalizeSmartImportCellsToLine(cells), rowNumber, context);
       }
 
       function isLikelyDelimitedImport(raw) {
@@ -3907,32 +4171,17 @@
           changesName: "",
           releaseId: "",
           releaseName: "",
+          confidence: "Low",
           status: "OK",
+          sourceWarnings: [],
           warnings: [],
+          hasAmbiguousPairing: false,
+          hasUnmatchedCount: false,
+          hasOrphanText: false,
+          hasCrossReleaseDuplicate: false,
+          hasBproCrossReleaseDuplicate: false,
+          hasChangesCrossReleaseDuplicate: false,
         };
-      }
-
-      function finalizeFreeTextImportRow(row, context) {
-        if (!row.releaseId && !row.releaseName && context.useLastRelease && context.lastRelease) {
-          row.releaseId = context.lastRelease.releaseId;
-          row.releaseName = context.lastRelease.releaseName;
-          row.warnings.push("Release kosong memakai release terakhir");
-        }
-
-        if (row.releaseId || row.releaseName) {
-          context.lastRelease = {
-            releaseId: row.releaseId,
-            releaseName: row.releaseName,
-          };
-        }
-
-        if (!row.bproNumber && !row.changesId) {
-          row.status = "Warning";
-        } else if (row.warnings.length) {
-          row.status = "Warning";
-        }
-
-        return row;
       }
 
       function renumberSmartImportRows(rows) {
@@ -3942,10 +4191,121 @@
         }));
       }
 
+      function normalizeSmartImportPreviewRow(row) {
+        return {
+          ...row,
+          bproNumber: normalizeSmartImportToken(row.bproNumber),
+          bproName: normalizeSmartImportName(row.bproName),
+          changesId: normalizeSmartImportToken(row.changesId),
+          changesName: normalizeSmartImportName(row.changesName),
+          releaseId: normalizeSmartImportToken(row.releaseId),
+          releaseName: normalizeSmartImportName(row.releaseName),
+          sourceWarnings: [...(row.sourceWarnings || [])],
+          warnings: [],
+        };
+      }
+
+      function addSmartImportWarning(row, warning) {
+        if (!warning || row.warnings.includes(warning)) {
+          return;
+        }
+        row.warnings.push(warning);
+      }
+
+      function markSmartImportCrossReleaseDuplicates(rows) {
+        const bproReleaseMap = new Map();
+        const changesReleaseMap = new Map();
+
+        rows.forEach((row) => {
+          if (row.releaseId && row.bproNumber) {
+            const releases = bproReleaseMap.get(row.bproNumber) || new Set();
+            releases.add(row.releaseId);
+            bproReleaseMap.set(row.bproNumber, releases);
+          }
+          if (row.releaseId && row.changesId) {
+            const releases = changesReleaseMap.get(row.changesId) || new Set();
+            releases.add(row.releaseId);
+            changesReleaseMap.set(row.changesId, releases);
+          }
+        });
+
+        rows.forEach((row) => {
+          row.hasCrossReleaseDuplicate = false;
+          row.hasBproCrossReleaseDuplicate = false;
+          row.hasChangesCrossReleaseDuplicate = false;
+          if (row.bproNumber && (bproReleaseMap.get(row.bproNumber)?.size || 0) > 1) {
+            row.hasCrossReleaseDuplicate = true;
+            row.hasBproCrossReleaseDuplicate = true;
+          }
+          if (row.changesId && (changesReleaseMap.get(row.changesId)?.size || 0) > 1) {
+            row.hasCrossReleaseDuplicate = true;
+            row.hasChangesCrossReleaseDuplicate = true;
+          }
+        });
+      }
+
+      function refreshSmartImportRowConfidence(row) {
+        row.warnings = [...(row.sourceWarnings || [])];
+
+        if (!row.releaseId) {
+          addSmartImportWarning(row, "Release ID kosong");
+        }
+        if (!row.releaseName) {
+          addSmartImportWarning(row, "Release Name kosong");
+        }
+        if (!row.bproNumber) {
+          addSmartImportWarning(row, "Nomor BPRO kosong");
+        }
+        if (!row.bproName) {
+          addSmartImportWarning(row, "Nama BPRO kosong");
+        }
+        if (!row.changesId) {
+          addSmartImportWarning(row, "Changes ID kosong");
+        }
+        if (!row.changesName) {
+          addSmartImportWarning(row, "Changes Name kosong");
+        }
+        if (row.hasBproCrossReleaseDuplicate) {
+          addSmartImportWarning(row, "BPRO terdeteksi muncul di lebih dari satu release");
+        }
+        if (row.hasChangesCrossReleaseDuplicate) {
+          addSmartImportWarning(row, "Changes terdeteksi muncul di lebih dari satu release");
+        }
+
+        const lowConfidence =
+          !row.releaseId ||
+          !row.bproNumber ||
+          !row.changesId ||
+          row.hasCrossReleaseDuplicate ||
+          row.hasAmbiguousPairing ||
+          row.hasUnmatchedCount ||
+          row.hasOrphanText;
+
+        if (lowConfidence) {
+          row.confidence = "Low";
+        } else if (!row.releaseName || !row.bproName || !row.changesName) {
+          row.confidence = "Medium";
+        } else {
+          row.confidence = "High";
+        }
+
+        row.status = row.warnings.length || row.confidence === "Low" ? "Warning" : "OK";
+        return row;
+      }
+
+      function finalizeSmartImportParsedRows(rows) {
+        const normalizedRows = renumberSmartImportRows(rows.map(normalizeSmartImportPreviewRow));
+        normalizedRows.forEach(refreshSmartImportRowConfidence);
+        markSmartImportCrossReleaseDuplicates(normalizedRows);
+        normalizedRows.forEach(refreshSmartImportRowConfidence);
+        return normalizedRows;
+      }
+
       function parseFreeTextRawData(raw, options = {}) {
         const context = {
           useLastRelease: Boolean(options.useLastRelease),
           lastRelease: null,
+          pendingBpro: null,
         };
         const sourceLines = `${raw || ""}`
           .split(/\r?\n/)
@@ -3959,7 +4319,18 @@
         const parsedRows = sourceLines.flatMap((line, index) =>
           parseSmartImportLineToRowsFlexible(line, index + 1, context)
         );
-        return renumberSmartImportRows(parsedRows);
+        parsedRows.push(...flushPendingSmartImportBpro(context, sourceLines.length + 1));
+
+        if (!parsedRows.length && context.lastRelease) {
+          parsedRows.push(
+            finalizeFreeTextImportRow(
+              createSmartImportRowFromItems(sourceLines.length, context.lastRelease, null, null),
+              context
+            )
+          );
+        }
+
+        return finalizeSmartImportParsedRows(parsedRows);
       }
 
       function parseSmartImportRawData(raw, options = {}) {
@@ -3971,15 +4342,82 @@
         const context = {
           useLastRelease: Boolean(options.useLastRelease),
           lastRelease: null,
+          pendingBpro: null,
         };
 
         const parsedRows = rows.flatMap((row, index) => parseImportRowToRows(row, index + 1, context));
-        return renumberSmartImportRows(parsedRows);
+        parsedRows.push(...flushPendingSmartImportBpro(context, rows.length + 1));
+        return finalizeSmartImportParsedRows(parsedRows);
+      }
+
+      function countSmartImportSourceRows(raw) {
+        const text = `${raw || ""}`;
+        if (!text.trim()) {
+          return 0;
+        }
+        return isLikelyDelimitedImport(text)
+          ? parseDelimitedRawData(text).length
+          : text.split(/\r?\n/).filter((line) => normalizeSmartImportName(line)).length;
+      }
+
+      function renderSmartImportPreviewInput(rowIndex, field, value) {
+        return `<input type="text" data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" value="${escapeHtml(
+          value
+        )}" />`;
+      }
+
+      function getUniqueSmartImportValueCount(rows, field) {
+        return new Set(
+          rows
+            .map((row) => normalizeSmartImportName(row[field]))
+            .filter(Boolean)
+        ).size;
+      }
+
+      function getSmartImportSummaryText(rows) {
+        const applyCount = rows.filter((row) => isActionableSmartImportRow(row)).length;
+        const releaseCount = getUniqueSmartImportValueCount(rows, "releaseId");
+        const bproCount = getUniqueSmartImportValueCount(rows, "bproNumber");
+        const changesCount = getUniqueSmartImportValueCount(rows, "changesId");
+        const warningCount = rows.filter((row) => row.warnings.length || row.confidence === "Low").length;
+        const largeDataHint =
+          smartImportSourceRowCount > 1000
+            ? " Data cukup besar, preview mungkin membutuhkan waktu lebih lama."
+            : "";
+        return `${rows.length} row terdeteksi, ${applyCount} row siap apply, ${releaseCount} release, ${bproCount} BPRO, ${changesCount} changes, ${warningCount} warning.${largeDataHint}`;
+      }
+
+      function refreshSmartImportSummary() {
+        const applyCount = smartImportPreviewState.filter((row) => isActionableSmartImportRow(row)).length;
+        elements.smartImportSummary.textContent = smartImportPreviewState.length
+          ? getSmartImportSummaryText(smartImportPreviewState)
+          : "Tidak ada data untuk di-apply.";
+        elements.smartImportApplyBtn.disabled = applyCount === 0;
+      }
+
+      function syncSmartImportPreviewStateFromDom() {
+        if (!smartImportPreviewState.length) {
+          return [];
+        }
+
+        elements.smartImportPreviewRows
+          .querySelectorAll("[data-smart-import-field]")
+          .forEach((input) => {
+            const rowIndex = Number(input.dataset.smartImportIndex);
+            const field = input.dataset.smartImportField;
+            if (!Number.isInteger(rowIndex) || !smartImportPreviewState[rowIndex] || !field) {
+              return;
+            }
+            smartImportPreviewState[rowIndex][field] = input.value;
+          });
+
+        smartImportPreviewState = finalizeSmartImportParsedRows(smartImportPreviewState);
+        return smartImportPreviewState;
       }
 
       function renderSmartImportPreview(rows) {
         if (!rows.length) {
-          elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="8">Belum ada data valid.</td></tr>';
+          elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="9">Belum ada data valid.</td></tr>';
           elements.smartImportSummary.textContent = "Tidak ada data untuk di-apply.";
           elements.smartImportApplyBtn.disabled = true;
           return;
@@ -3987,15 +4425,16 @@
 
         elements.smartImportPreviewRows.innerHTML = rows
           .map(
-            (row) => `
+            (row, rowIndex) => `
               <tr>
                 <td>${row.no}</td>
-                <td>${escapeHtml(row.bproNumber)}</td>
-                <td>${escapeHtml(row.bproName)}</td>
-                <td>${escapeHtml(row.changesId)}</td>
-                <td>${escapeHtml(row.changesName)}</td>
-                <td>${escapeHtml(row.releaseId)}</td>
-                <td>${escapeHtml(row.releaseName)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "bproNumber", row.bproNumber)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "bproName", row.bproName)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "changesId", row.changesId)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "changesName", row.changesName)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "releaseId", row.releaseId)}</td>
+                <td>${renderSmartImportPreviewInput(rowIndex, "releaseName", row.releaseName)}</td>
+                <td class="${row.confidence === "Low" ? "smart-import-warning" : ""}">${escapeHtml(row.confidence)}</td>
                 <td class="${row.status === "Warning" ? "smart-import-warning" : ""}">${escapeHtml(
                   row.warnings.length ? row.warnings.join("; ") : row.status
                 )}</td>
@@ -4004,12 +4443,11 @@
           )
           .join("");
 
-        const applyCount = rows.filter((row) => isActionableSmartImportRow(row)).length;
-        elements.smartImportSummary.textContent = `${rows.length} row terdeteksi, ${applyCount} row siap masuk detail Tabel 1.`;
-        elements.smartImportApplyBtn.disabled = applyCount === 0;
+        refreshSmartImportSummary();
       }
 
       function previewSmartImportRawData() {
+        smartImportSourceRowCount = countSmartImportSourceRows(elements.smartImportRawTextarea.value);
         smartImportPreviewState = parseSmartImportRawData(elements.smartImportRawTextarea.value, {
           useLastRelease: elements.smartImportUseLastRelease.checked,
         });
@@ -4149,6 +4587,7 @@
           previewSmartImportRawData();
         }
 
+        syncSmartImportPreviewStateFromDom();
         const importRows = smartImportPreviewState.filter((row) => isActionableSmartImportRow(row));
         if (!importRows.length) {
           showFeedback("Tidak ada row import yang bisa dimasukkan ke Tabel 1.", "error");
@@ -7181,8 +7620,17 @@
       });
       elements.smartImportRawTextarea.addEventListener("input", () => {
         smartImportPreviewState = [];
+        smartImportSourceRowCount = 0;
         elements.smartImportApplyBtn.disabled = true;
         elements.smartImportSummary.textContent = "Preview mapping sebelum apply.";
+      });
+      elements.smartImportPreviewRows.addEventListener("input", () => {
+        syncSmartImportPreviewStateFromDom();
+        refreshSmartImportSummary();
+      });
+      elements.smartImportPreviewRows.addEventListener("change", () => {
+        syncSmartImportPreviewStateFromDom();
+        renderSmartImportPreview(smartImportPreviewState);
       });
       elements.smartImportPreviewBtn.addEventListener("click", previewSmartImportRawData);
       elements.smartImportApplyBtn.addEventListener("click", applySmartImportToTable1);
