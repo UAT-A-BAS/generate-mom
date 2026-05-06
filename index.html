@@ -1174,19 +1174,19 @@
         right: 88px;
         bottom: 22px;
         z-index: 38;
-        display: none;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         width: 56px;
         height: 56px;
+        border: 0;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2a7de1, #0f4caa);
-        color: #fff;
-        box-shadow: 0 18px 34px rgba(27, 77, 120, 0.24);
-      }
-
-      .preview-jump-btn.show {
-        display: inline-flex;
+        background: rgba(255, 255, 255, 0.88);
+        color: #1d1d1f;
+        cursor: pointer;
+        border: 1px solid rgba(210, 210, 215, 0.9);
+        box-shadow: 0 10px 28px rgba(29, 29, 31, 0.14);
+        backdrop-filter: blur(18px);
       }
 
       .preview-jump-btn svg {
@@ -1197,6 +1197,87 @@
         stroke-width: 2;
         stroke-linecap: round;
         stroke-linejoin: round;
+        transition: transform 0.18s ease;
+      }
+
+      .preview-jump-btn:hover,
+      .floating-action-toggle:hover,
+      .memo-fab:hover {
+        background: rgba(245, 245, 247, 0.96);
+        border-color: rgba(134, 134, 139, 0.34);
+        box-shadow: 0 12px 30px rgba(29, 29, 31, 0.16);
+      }
+
+      .preview-jump-btn:active,
+      .floating-action-toggle:active,
+      .memo-fab:active {
+        background: rgba(235, 235, 240, 0.96);
+        box-shadow: 0 8px 22px rgba(29, 29, 31, 0.12);
+      }
+
+      .preview-jump-btn.is-up svg {
+        transform: rotate(180deg);
+      }
+
+      .floating-action-menu {
+        position: fixed;
+        left: 22px;
+        bottom: 22px;
+        z-index: 39;
+        display: grid;
+        gap: 8px;
+        justify-items: start;
+      }
+
+      .floating-action-toggle {
+        width: 52px;
+        height: 52px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(210, 210, 215, 0.9);
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.9);
+        color: #1d1d1f;
+        cursor: pointer;
+        box-shadow: 0 10px 28px rgba(29, 29, 31, 0.14);
+        backdrop-filter: blur(18px);
+      }
+
+      .floating-action-toggle svg,
+      .floating-action-panel svg {
+        width: 19px;
+        height: 19px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .floating-action-panel {
+        display: none;
+        min-width: 188px;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 18px 38px rgba(28, 39, 52, 0.18);
+      }
+
+      .floating-action-menu.open .floating-action-panel {
+        display: grid;
+        gap: 6px;
+      }
+
+      .floating-action-panel button {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+        min-height: 38px;
+        padding: 8px 10px;
+        border-radius: 10px;
       }
 
       .procedure-header {
@@ -1250,6 +1331,11 @@
         color: #176438;
       }
 
+      .feedback.warning {
+        background: #fff7df;
+        color: #8a5b00;
+      }
+
       .result-placeholder {
         padding: 20px;
         color: var(--ink-soft);
@@ -1271,6 +1357,124 @@
       .result-document {
         display: grid;
         gap: 0;
+      }
+
+      .preview-drawer-shell {
+        position: fixed;
+        inset: 0;
+        z-index: 58;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .preview-drawer-shell.open {
+        visibility: visible;
+      }
+
+      .preview-drawer-panel {
+        width: min(52vw, 780px);
+        min-width: min(92vw, 520px);
+        max-width: calc(100vw - 24px);
+        height: 100%;
+        margin-left: auto;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        border-left: 1px solid rgba(210, 210, 215, 0.88);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: -18px 0 50px rgba(29, 29, 31, 0.14);
+        backdrop-filter: blur(18px);
+        transform: translateX(100%);
+        transition: transform 0.22s ease;
+        pointer-events: auto;
+      }
+
+      .preview-drawer-resize-handle {
+        position: absolute;
+        left: -8px;
+        top: 0;
+        bottom: 0;
+        width: 16px;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: ew-resize;
+      }
+
+      .preview-drawer-resize-handle::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: 50%;
+        width: 3px;
+        height: 54px;
+        border-radius: 999px;
+        background: rgba(134, 134, 139, 0.34);
+        transform: translateY(-50%);
+      }
+
+      .preview-drawer-shell.open .preview-drawer-panel {
+        transform: translateX(0);
+      }
+
+      .preview-drawer-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(210, 210, 215, 0.88);
+      }
+
+      .preview-drawer-title {
+        margin: 0;
+        font-size: 1.04rem;
+        font-weight: 800;
+        color: #1d1d1f;
+      }
+
+      .preview-drawer-close {
+        width: 34px;
+        min-height: 34px;
+        padding: 0;
+        border-radius: 50%;
+      }
+
+      .preview-drawer-close:hover {
+        background: #fdeeed;
+        color: var(--danger);
+        border-color: rgba(196, 65, 57, 0.42);
+      }
+
+      .preview-drawer-body {
+        min-height: 0;
+        overflow: auto;
+        padding: 14px;
+      }
+
+      .preview-drawer-body .result-table-wrap {
+        min-height: 100%;
+        overflow: auto;
+        padding: 10px;
+        background: #fff;
+        box-sizing: border-box;
+      }
+
+      .preview-drawer-body .result-document {
+        min-width: 980px;
+      }
+
+      .preview-drawer-empty {
+        min-height: 180px;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        border: 1px dashed rgba(134, 134, 139, 0.38);
+        border-radius: 18px;
+        background: rgba(245, 245, 247, 0.72);
+        color: #6e6e73;
+        text-align: center;
+        font-weight: 700;
+        line-height: 1.5;
       }
 
       .doc-table-spacer {
@@ -1472,9 +1676,11 @@
         width: 58px;
         height: 58px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #2a7de1, #0f4caa);
-        color: #fff;
-        box-shadow: 0 18px 34px rgba(27, 77, 120, 0.3);
+        background: rgba(255, 255, 255, 0.9);
+        color: #1d1d1f;
+        border: 1px solid rgba(210, 210, 215, 0.9);
+        box-shadow: 0 10px 28px rgba(29, 29, 31, 0.14);
+        backdrop-filter: blur(18px);
         line-height: 0;
       }
 
@@ -1489,7 +1695,7 @@
       }
 
       .memo-fab.has-note {
-        background: linear-gradient(135deg, #2a7de1, #0f4caa);
+        background: rgba(255, 255, 255, 0.94);
       }
 
       .memo-fab.has-note::after {
@@ -1500,8 +1706,8 @@
         width: 9px;
         height: 9px;
         border-radius: 50%;
-        background: #ffd76d;
-        box-shadow: 0 0 0 3px rgba(15, 76, 170, 0.24);
+        background: #0071e3;
+        box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.14);
       }
 
       .memo-panel {
@@ -1587,10 +1793,10 @@
       }
 
       .smart-import-modal {
-        width: min(1180px, calc(100vw - 28px));
+        width: min(1480px, calc(100vw - 28px));
         max-height: min(86vh, 820px);
         display: grid;
-        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto auto;
         border: 1px solid rgba(201, 211, 223, 0.92);
         border-radius: 22px;
         background: #fff;
@@ -1620,11 +1826,11 @@
 
       .smart-import-body {
         display: grid;
-        grid-template-columns: minmax(280px, 0.42fr) minmax(360px, 0.58fr);
+        grid-template-columns: minmax(280px, 0.35fr) minmax(620px, 0.65fr);
         gap: 14px;
         min-height: 0;
         padding: 16px;
-        overflow: auto;
+        overflow: visible;
       }
 
       .smart-import-pane {
@@ -1646,6 +1852,17 @@
       .smart-import-options {
         display: grid;
         gap: 8px;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #f8fbff;
+      }
+
+      .smart-import-options-title {
+        margin: 0;
+        font-size: 0.86rem;
+        font-weight: 800;
+        color: var(--ink);
       }
 
       .smart-import-option {
@@ -1664,16 +1881,43 @@
 
       .smart-import-preview-wrap {
         min-height: 280px;
+        height: 280px;
+        max-height: 280px;
         border: 1px solid var(--line);
         border-radius: 14px;
-        overflow: auto;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        scrollbar-gutter: stable;
+        scrollbar-color: #b6c3d4 #eef3f8;
+        scrollbar-width: thin;
+        -ms-overflow-style: auto;
+      }
+
+      .smart-import-preview-wrap::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      .smart-import-preview-wrap::-webkit-scrollbar-track {
+        background: #eef3f8;
+        border-radius: 999px;
+      }
+
+      .smart-import-preview-wrap::-webkit-scrollbar-thumb {
+        background: #b6c3d4;
+        border: 2px solid #eef3f8;
+        border-radius: 999px;
+      }
+
+      .smart-import-preview-wrap::-webkit-scrollbar-thumb:hover {
+        background: #8fa0b6;
       }
 
       .smart-import-preview-table {
         width: 100%;
-        min-width: 860px;
+        min-width: 0;
         border-collapse: collapse;
-        font-size: 0.88rem;
+        table-layout: fixed;
+        font-size: 0.84rem;
       }
 
       .smart-import-preview-table th,
@@ -1688,24 +1932,72 @@
         text-align: left;
       }
 
-      .smart-import-preview-table input {
+      .smart-import-preview-table input,
+      .smart-import-preview-table textarea {
         width: 100%;
-        min-width: 110px;
+        min-width: 0;
         border: 1px solid transparent;
         border-radius: 6px;
-        padding: 5px 6px;
+        padding: 4px 6px;
         background: #fff;
         font: inherit;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
-      .smart-import-preview-table input:focus {
+      .smart-import-preview-table textarea {
+        display: block;
+        min-height: 28px;
+        overflow: hidden !important;
+        resize: none;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      .smart-import-preview-table textarea::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
+
+      .smart-import-cell-stack {
+        display: grid;
+        gap: 5px;
+      }
+
+      .smart-import-cell-stack [data-smart-import-field] + [data-smart-import-field] {
+        border-top-color: rgba(201, 211, 223, 0.55);
+      }
+
+      .smart-import-preview-table input:focus,
+      .smart-import-preview-table textarea:focus {
         border-color: var(--brand);
         outline: 2px solid rgba(42, 114, 229, 0.18);
       }
 
-      .smart-import-warning {
-        color: #8a5b00;
-        font-weight: 700;
+      .smart-import-preview-table td {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .smart-import-row-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .smart-import-move-select {
+        width: 100%;
+        min-width: 120px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 5px 8px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
       }
 
       @media (max-width: 980px) {
@@ -1777,9 +2069,30 @@
           bottom: 14px;
         }
 
+        .floating-action-menu {
+          left: 14px;
+          bottom: 14px;
+        }
+
         .memo-panel {
           right: 10px;
           bottom: 88px;
+        }
+
+        .preview-drawer-shell.open {
+          pointer-events: auto;
+          background: rgba(29, 29, 31, 0.18);
+        }
+
+        .preview-drawer-panel {
+          width: 100vw;
+          max-width: none;
+          min-width: 0;
+          border-left: 0;
+        }
+
+        .preview-drawer-resize-handle {
+          display: none;
         }
       }
 
@@ -1804,6 +2117,7 @@
         .sticky-actions,
         #feedbackBox,
         .preview-jump-btn,
+        .preview-drawer-shell,
         .memo-fab,
         .memo-panel {
           display: none !important;
@@ -2024,6 +2338,14 @@
 
         <section class="sticky-actions" aria-label="Action buttons">
           <button id="generateBtn" type="button" class="btn-primary">Preview Table</button>
+          <button id="previewDrawerBtn" type="button" class="btn-secondary btn-inline-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4.5 5.5h15"></path>
+              <path d="M4.5 12h15"></path>
+              <path d="M4.5 18.5h9"></path>
+            </svg>
+            Preview Result
+          </button>
           <button id="exportXlsBtn" type="button" class="btn-ghost">Export XLS</button>
           <button id="exportOutlookBtn" type="button" class="btn-ghost">Export to Outlook</button>
           <button id="saveDraftBtn" type="button" class="btn-ghost">Save Draft Data</button>
@@ -2045,6 +2367,66 @@
             <path d="M5 20h14"></path>
           </svg>
         </button>
+
+        <div id="floatingActionMenu" class="floating-action-menu">
+          <div id="floatingActionPanel" class="floating-action-panel" aria-label="Shortcut actions">
+            <button type="button" class="btn-ghost" data-floating-action="preview">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4.5 5.5h15"></path>
+                <path d="M4.5 12h15"></path>
+                <path d="M4.5 18.5h9"></path>
+              </svg>
+              Preview Table
+            </button>
+            <button type="button" class="btn-ghost" data-floating-action="previewDrawer">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <rect x="4.5" y="5.5" width="15" height="13" rx="2"></rect>
+                <path d="M8 9h8"></path>
+                <path d="M8 12h8"></path>
+                <path d="M8 15h5"></path>
+              </svg>
+              Preview Result
+            </button>
+            <button type="button" class="btn-ghost" data-floating-action="xls">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 3.5h8l4 4v13H6z"></path>
+                <path d="M14 3.5v4h4"></path>
+                <path d="m8.5 15.5 3-3"></path>
+                <path d="m11.5 15.5-3-3"></path>
+              </svg>
+              Export XLS
+            </button>
+            <button type="button" class="btn-ghost" data-floating-action="outlook">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4.5 6.5h15v11h-15z"></path>
+                <path d="m5 7 7 6 7-6"></path>
+              </svg>
+              Export to Outlook
+            </button>
+            <button type="button" class="btn-ghost" data-floating-action="save">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M5 4.5h12.5L19 6v13.5H5z"></path>
+                <path d="M8 4.5v5h7v-5"></path>
+                <path d="M8 16h8"></path>
+              </svg>
+              Save Draft Data
+            </button>
+          </div>
+          <button
+            id="floatingActionToggle"
+            type="button"
+            class="floating-action-toggle"
+            aria-expanded="false"
+            aria-controls="floatingActionPanel"
+            aria-label="Shortcut actions"
+            title="Shortcut actions"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 5v14"></path>
+              <path d="M5 12h14"></path>
+            </svg>
+          </button>
+        </div>
 
         <section class="panel print-panel">
           <div class="panel-header">
@@ -2069,6 +2451,38 @@
     <footer class="app-credit-footer" aria-label="Kredit aplikasi">
       Developed by Alex Surya Marcelo (UAT - A) &bull; MOM Generator
     </footer>
+
+    <aside
+      id="previewDrawer"
+      class="preview-drawer-shell"
+      aria-hidden="true"
+      aria-labelledby="previewDrawerTitle"
+    >
+      <section class="preview-drawer-panel" tabindex="-1">
+        <button
+          id="previewDrawerResizeHandle"
+          type="button"
+          class="preview-drawer-resize-handle"
+          aria-label="Ubah lebar Preview Result"
+          title="Tarik untuk ubah lebar"
+        ></button>
+        <div class="preview-drawer-header">
+          <h3 id="previewDrawerTitle" class="preview-drawer-title">Preview Result</h3>
+          <button
+            id="previewDrawerCloseBtn"
+            type="button"
+            class="btn-ghost preview-drawer-close"
+            aria-label="Tutup Preview Result"
+            title="Tutup"
+          >
+            X
+          </button>
+        </div>
+        <div id="previewDrawerContent" class="preview-drawer-body">
+          <div class="preview-drawer-empty">Preview belum tersedia. Isi data MOM terlebih dahulu.</div>
+        </div>
+      </section>
+    </aside>
 
     <button
       id="memoFab"
@@ -2128,17 +2542,15 @@
               ></textarea>
             </label>
             <div class="smart-import-options">
+              <p class="smart-import-options-title">Import sebagai</p>
+              <p class="hint">Preview hanya menampilkan hasil parsing. Opsi di bawah digunakan saat Apply ke Tabel.</p>
               <label class="smart-import-option">
-                <input id="smartImportUseLastRelease" type="checkbox" checked />
-                Gunakan release terakhir untuk baris yang release-nya kosong
+                <input id="smartImportCreateProject" type="checkbox" />
+                Buat Project Baru
               </label>
               <label class="smart-import-option">
-                <input type="radio" name="smartImportTargetMode" value="append" checked />
-                Append ke release aktif
-              </label>
-              <label class="smart-import-option">
-                <input type="radio" name="smartImportTargetMode" value="replace" />
-                Replace detail rows pada release aktif
+                <input id="smartImportCreateRelease" type="checkbox" />
+                Buat Release Baru
               </label>
             </div>
             <div class="action-row">
@@ -2151,19 +2563,15 @@
                 <thead>
                   <tr>
                     <th style="width: 56px">No</th>
-                    <th>Nomor BPRO</th>
-                    <th>Nama BPRO</th>
-                    <th>Changes ID</th>
-                    <th>Changes Name</th>
-                    <th>Release ID</th>
-                    <th>Release Name</th>
-                    <th>Confidence</th>
-                    <th>Status / Warning</th>
+                    <th>BPRO</th>
+                    <th>Changes</th>
+                    <th>Release</th>
+                    <th style="width: 170px">Move</th>
                   </tr>
                 </thead>
                 <tbody id="smartImportPreviewRows">
                   <tr>
-                    <td colspan="9">Belum ada preview.</td>
+                    <td colspan="5">Belum ada preview.</td>
                   </tr>
                 </tbody>
               </table>
@@ -2238,6 +2646,14 @@
         resultArea: document.querySelector("#resultArea"),
         feedbackBox: document.querySelector("#feedbackBox"),
         previewJumpBtn: document.querySelector("#previewJumpBtn"),
+        previewDrawerBtn: document.querySelector("#previewDrawerBtn"),
+        previewDrawer: document.querySelector("#previewDrawer"),
+        previewDrawerCloseBtn: document.querySelector("#previewDrawerCloseBtn"),
+        previewDrawerContent: document.querySelector("#previewDrawerContent"),
+        previewDrawerResizeHandle: document.querySelector("#previewDrawerResizeHandle"),
+        floatingActionMenu: document.querySelector("#floatingActionMenu"),
+        floatingActionToggle: document.querySelector("#floatingActionToggle"),
+        floatingActionPanel: document.querySelector("#floatingActionPanel"),
         blueprintLevelControls: document.querySelectorAll('[name="table1BlueprintLevel"]'),
         addTable1Project: document.querySelector("#addTable1Project"),
         addTable3Row: document.querySelector("#addTable3Row"),
@@ -2260,8 +2676,8 @@
         smartImportPreviewRows: document.querySelector("#smartImportPreviewRows"),
         smartImportSummary: document.querySelector("#smartImportSummary"),
         smartImportApplyBtn: document.querySelector("#smartImportApplyBtn"),
-        smartImportUseLastRelease: document.querySelector("#smartImportUseLastRelease"),
-        smartImportTargetModeControls: document.querySelectorAll('[name="smartImportTargetMode"]'),
+        smartImportCreateProject: document.querySelector("#smartImportCreateProject"),
+        smartImportCreateRelease: document.querySelector("#smartImportCreateRelease"),
       };
 
       let table1ProjectsState = [createEmptyTable1Project()];
@@ -2272,6 +2688,10 @@
       let activeDatePicker = null;
       let smartImportPreviewState = [];
       let smartImportSourceRowCount = 0;
+      let previewJumpReturnY = null;
+      let previewDrawerRefreshTimer = null;
+      let previewDrawerWidth = null;
+      let previewDrawerResizeState = null;
 
       // =====================================================
       // FACTORY FUNCTIONS
@@ -2373,7 +2793,6 @@
         return {
           activity: false,
           result: false,
-          status: false,
         };
       }
 
@@ -2393,7 +2812,6 @@
         return {
           activity: "",
           result: "",
-          status: "To Do",
           flags: createEmptyLampiranScenarioFlags(),
         };
       }
@@ -3322,12 +3740,61 @@
       }
 
       function setPreviewJumpVisible(visible) {
-        elements.previewJumpBtn.classList.toggle("show", visible);
+        if (!visible) {
+          previewJumpReturnY = null;
+        }
+        updatePreviewJumpButton();
       }
 
-      function scrollToPreviewResult() {
-        elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
-        setPreviewJumpVisible(false);
+      function hasGeneratedPreviewResult() {
+        return Boolean(elements.resultArea.querySelector(".result-document"));
+      }
+
+      function isViewportNearResultArea() {
+        const resultTop = elements.resultArea.getBoundingClientRect().top;
+        return resultTop < Math.min(window.innerHeight * 0.45, 360);
+      }
+
+      function hasPreviewJumpReturnTarget() {
+        return Number.isFinite(previewJumpReturnY);
+      }
+
+      function updatePreviewJumpButton() {
+        const shouldGoUp = hasPreviewJumpReturnTarget() || isViewportNearResultArea();
+        elements.previewJumpBtn.classList.toggle("is-up", shouldGoUp);
+        const label = shouldGoUp
+          ? "Kembali ke posisi sebelumnya"
+          : hasGeneratedPreviewResult()
+          ? "Scroll ke hasil preview"
+          : "Scroll ke tombol Preview Table";
+        elements.previewJumpBtn.setAttribute("aria-label", label);
+        elements.previewJumpBtn.setAttribute("title", label);
+      }
+
+      function scrollPreviewShortcut() {
+        if (hasPreviewJumpReturnTarget()) {
+          const returnY = previewJumpReturnY;
+          previewJumpReturnY = null;
+          window.scrollTo({ top: returnY, behavior: "smooth" });
+          updatePreviewJumpButton();
+          return;
+        }
+
+        if (isViewportNearResultArea()) {
+          document.querySelector("main")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        previewJumpReturnY = window.scrollY;
+        updatePreviewJumpButton();
+
+        if (hasGeneratedPreviewResult()) {
+          elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        elements.generateBtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        elements.generateBtn.focus();
       }
 
       function focusChecklistControl(checklistId, field = "status") {
@@ -3345,6 +3812,35 @@
         const control = project?.querySelector(`[data-field="${field}"]`);
         setPreviewJumpVisible(true);
         project?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
+      function focusTable1PackageField(projectIndex = 0, packageIndex = 0, field = "releaseId") {
+        const project = elements.table1Projects.querySelector(
+          `.table1-project[data-project-index="${projectIndex}"]`
+        );
+        const relationPackage = project?.querySelector(
+          `.table1-package[data-package-index="${packageIndex}"]`
+        );
+        const control = relationPackage?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        relationPackage?.scrollIntoView({ behavior: "smooth", block: "center" });
+        control?.focus();
+      }
+
+      function focusTable1DetailField(projectIndex = 0, packageIndex = 0, detailIndex = 0, field = "bproNumber") {
+        const project = elements.table1Projects.querySelector(
+          `.table1-project[data-project-index="${projectIndex}"]`
+        );
+        const relationPackage = project?.querySelector(
+          `.table1-package[data-package-index="${packageIndex}"]`
+        );
+        const detailRow = relationPackage?.querySelector(
+          `.table1-detail-row[data-detail-row-index="${detailIndex}"]`
+        );
+        const control = detailRow?.querySelector(`[data-field="${field}"]`);
+        setPreviewJumpVisible(true);
+        detailRow?.scrollIntoView({ behavior: "smooth", block: "center" });
         control?.focus();
       }
 
@@ -3568,12 +4064,22 @@
           .filter((entry) => entry.some(Boolean));
       }
 
+      function isSmartImportSeparatorToken(token) {
+        return /^[-–—]+$/.test(`${token || ""}`.trim());
+      }
+
       function normalizeSmartImportName(value) {
-        return `${value || ""}`.replace(/\s+/g, " ").trim();
+        return `${value || ""}`
+          .replace(/\s+/g, " ")
+          .trim()
+          .split(" ")
+          .filter((token) => !isSmartImportSeparatorToken(token))
+          .join(" ");
       }
 
       function normalizeSmartImportToken(token) {
-        return `${token || ""}`.trim().replace(/^[,;:]+|[,;:]+$/g, "");
+        const normalized = `${token || ""}`.trim().replace(/^[,;:]+|[,;:]+$/g, "");
+        return isSmartImportSeparatorToken(normalized) ? "" : normalized;
       }
 
       function isReleaseIdToken(token) {
@@ -3860,7 +4366,7 @@
       }
 
       function finalizeFreeTextImportRow(row, context) {
-        if (!row.releaseId && !row.releaseName && context.useLastRelease && context.lastRelease) {
+        if (!row.releaseId && !row.releaseName && context.lastRelease) {
           row.releaseId = context.lastRelease.releaseId;
           row.releaseName = context.lastRelease.releaseName;
           addSmartImportSourceWarning(row, "Release kosong memakai release terakhir");
@@ -3903,11 +4409,9 @@
         }
 
         if (bproCount === 1 && changesCount === 0) {
-          context.pendingBpro = {
-            rowNumber,
-            release: releaseForRows,
-            bproItem: bproItems[0],
-          };
+          const row = createSmartImportRowFromItems(rowNumber, releaseForRows, bproItems[0], null);
+          addSmartImportSourceWarning(row, "Changes kosong untuk BPRO ini");
+          rows.push(finalizeFreeTextImportRow(row, context));
           return rows;
         }
 
@@ -4004,8 +4508,7 @@
         - many Release IDs in one line
         - only BPRO without Changes
         - only Changes without BPRO
-        - missing Release ID with fallback checked
-        - missing Release ID with fallback unchecked
+        - missing Release ID using last Release fallback
         - same BPRO under different Release IDs
         - same Changes under different Release IDs
         - label-based input
@@ -4027,6 +4530,7 @@
           }
 
           const releaseForRows = context.lastRelease || null;
+          const usesLastReleaseFallback = !segment.releaseItem && Boolean(releaseForRows);
           const bproItems = segment.items.filter((item) => item.type === "bpro");
           const changesItems = segment.items.filter((item) => item.type === "changes");
 
@@ -4034,7 +4538,11 @@
             return;
           }
 
-          rows.push(...pairSmartImportItems(rowNumber, releaseForRows, bproItems, changesItems, context));
+          const pairedRows = pairSmartImportItems(rowNumber, releaseForRows, bproItems, changesItems, context);
+          if (usesLastReleaseFallback) {
+            pairedRows.forEach((row) => addSmartImportSourceWarning(row, "Release kosong memakai release terakhir"));
+          }
+          rows.push(...pairedRows);
         });
 
         return rows;
@@ -4212,6 +4720,19 @@
         row.warnings.push(warning);
       }
 
+      function hasSmartImportDetailValue(row) {
+        return [row.bproNumber, row.bproName, row.changesId, row.changesName].some(
+          (value) => `${value || ""}`.trim() !== ""
+        );
+      }
+
+      function annotateSmartImportDuplicateLocation(row) {
+        row.duplicateLocation = findSmartImportDuplicateLocation(row);
+        row.duplicateLocationText = row.duplicateLocation
+          ? formatSmartImportDuplicateLocation(row.duplicateLocation)
+          : "";
+      }
+
       function markSmartImportCrossReleaseDuplicates(rows) {
         const bproReleaseMap = new Map();
         const changesReleaseMap = new Map();
@@ -4271,11 +4792,15 @@
         if (row.hasChangesCrossReleaseDuplicate) {
           addSmartImportWarning(row, "Changes terdeteksi muncul di lebih dari satu release");
         }
+        if (row.duplicateLocationText) {
+          addSmartImportWarning(row, row.duplicateLocationText);
+        }
 
         const lowConfidence =
           !row.releaseId ||
           !row.bproNumber ||
           !row.changesId ||
+          Boolean(row.duplicateLocationText) ||
           row.hasCrossReleaseDuplicate ||
           row.hasAmbiguousPairing ||
           row.hasUnmatchedCount ||
@@ -4289,21 +4814,24 @@
           row.confidence = "High";
         }
 
-        row.status = row.warnings.length || row.confidence === "Low" ? "Warning" : "OK";
+        row.status = row.duplicateLocationText
+          ? "Duplicate"
+          : row.warnings.length || row.confidence === "Low"
+          ? "Warning"
+          : "OK";
         return row;
       }
 
       function finalizeSmartImportParsedRows(rows) {
         const normalizedRows = renumberSmartImportRows(rows.map(normalizeSmartImportPreviewRow));
-        normalizedRows.forEach(refreshSmartImportRowConfidence);
         markSmartImportCrossReleaseDuplicates(normalizedRows);
+        normalizedRows.forEach(annotateSmartImportDuplicateLocation);
         normalizedRows.forEach(refreshSmartImportRowConfidence);
         return normalizedRows;
       }
 
-      function parseFreeTextRawData(raw, options = {}) {
+      function parseFreeTextRawData(raw) {
         const context = {
-          useLastRelease: Boolean(options.useLastRelease),
           lastRelease: null,
           pendingBpro: null,
         };
@@ -4333,14 +4861,13 @@
         return finalizeSmartImportParsedRows(parsedRows);
       }
 
-      function parseSmartImportRawData(raw, options = {}) {
+      function parseSmartImportRawData(raw) {
         if (!isLikelyDelimitedImport(raw)) {
-          return parseFreeTextRawData(raw, options);
+          return parseFreeTextRawData(raw);
         }
 
         const rows = parseDelimitedRawData(raw);
         const context = {
-          useLastRelease: Boolean(options.useLastRelease),
           lastRelease: null,
           pendingBpro: null,
         };
@@ -4360,10 +4887,125 @@
           : text.split(/\r?\n/).filter((line) => normalizeSmartImportName(line)).length;
       }
 
+      function isLongSmartImportPreviewField(field) {
+        return ["bproName", "changesName", "releaseName"].includes(field);
+      }
+
+      function autoResizeSmartImportTextarea(textarea) {
+        if (!textarea) {
+          return;
+        }
+        textarea.style.height = "auto";
+        textarea.style.height = `${textarea.scrollHeight}px`;
+      }
+
+      function autoResizeSmartImportPreviewTextareas() {
+        elements.smartImportPreviewRows
+          .querySelectorAll("textarea[data-smart-import-field]")
+          .forEach(autoResizeSmartImportTextarea);
+      }
+
       function renderSmartImportPreviewInput(rowIndex, field, value) {
-        return `<input type="text" data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" value="${escapeHtml(
-          value
+        const normalizedValue = `${value ?? ""}`;
+        if (isLongSmartImportPreviewField(field)) {
+          return `<textarea data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
+            field
+          )}" rows="1">${escapeHtml(normalizedValue)}</textarea>`;
+        }
+
+        return `<input type="text" data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
+          field
+        )}" value="${escapeHtml(
+          normalizedValue
         )}" />`;
+      }
+
+      function renderSmartImportPreviewStack(rowIndex, fields) {
+        return `
+          <div class="smart-import-cell-stack">
+            ${fields
+              .map(({ field, value }) => renderSmartImportPreviewInput(rowIndex, field, value))
+              .join("")}
+          </div>
+        `;
+      }
+
+      function getSmartImportTargetReleaseValue(releaseId, releaseName) {
+        return `${releaseId || ""}\t${releaseName || ""}`;
+      }
+
+      function parseSmartImportTargetReleaseValue(value) {
+        const [releaseId = "", releaseName = ""] = `${value || ""}`.split("\t");
+        return {
+          releaseId: normalizeSmartImportToken(releaseId),
+          releaseName: normalizeSmartImportName(releaseName),
+        };
+      }
+
+      function collectSmartImportReleaseTargets(rows) {
+        const targetMap = new Map();
+        const addTarget = (releaseId, releaseName, labelPrefix = "") => {
+          const normalizedReleaseId = normalizeSmartImportToken(releaseId);
+          const normalizedReleaseName = normalizeSmartImportName(releaseName);
+          if (!normalizedReleaseId && !normalizedReleaseName) {
+            return;
+          }
+
+          const value = getSmartImportTargetReleaseValue(normalizedReleaseId, normalizedReleaseName);
+          if (targetMap.has(value)) {
+            return;
+          }
+
+          const releaseLabel = [normalizedReleaseId, normalizedReleaseName].filter(Boolean).join(" / ");
+          targetMap.set(value, {
+            value,
+            releaseId: normalizedReleaseId,
+            releaseName: normalizedReleaseName,
+            label: labelPrefix ? `${labelPrefix}: ${releaseLabel}` : releaseLabel,
+          });
+        };
+
+        rows.forEach((row) => addTarget(row.releaseId, row.releaseName, "Preview"));
+
+        table1ProjectsState.forEach((project, projectIndex) => {
+          (project.relationPackages || []).forEach((relationPackage, packageIndex) => {
+            const projectLabel = project.projectName
+              ? `Project ${projectIndex + 1} - ${project.projectName}`
+              : `Project ${projectIndex + 1}`;
+            addTarget(
+              relationPackage.releaseId,
+              relationPackage.releaseName,
+              `${projectLabel} > Release ${packageIndex + 1}`
+            );
+          });
+        });
+
+        return [...targetMap.values()];
+      }
+
+      function renderSmartImportMoveSelect(rowIndex, row, releaseTargets) {
+        const currentValue = getSmartImportTargetReleaseValue(row.releaseId, row.releaseName);
+        const options = releaseTargets
+          .filter((target) => target.value !== currentValue)
+          .map(
+            (target) =>
+              `<option value="${escapeHtml(target.value)}">${escapeHtml(target.label)}</option>`
+          )
+          .join("");
+        const label = "Move";
+
+        return `
+          <div class="smart-import-row-actions">
+            <select
+              class="smart-import-move-select"
+              data-smart-import-move-index="${rowIndex}"
+              aria-label="${escapeHtml(label)} row ${row.no}"
+            >
+              <option value="">${escapeHtml(label)}</option>
+              ${options}
+            </select>
+          </div>
+        `;
       }
 
       function getUniqueSmartImportValueCount(rows, field) {
@@ -4380,11 +5022,12 @@
         const bproCount = getUniqueSmartImportValueCount(rows, "bproNumber");
         const changesCount = getUniqueSmartImportValueCount(rows, "changesId");
         const warningCount = rows.filter((row) => row.warnings.length || row.confidence === "Low").length;
+        const duplicateCount = rows.filter((row) => row.status === "Duplicate").length;
         const largeDataHint =
           smartImportSourceRowCount > 1000
             ? " Data cukup besar, preview mungkin membutuhkan waktu lebih lama."
             : "";
-        return `${rows.length} row terdeteksi, ${applyCount} row siap apply, ${releaseCount} release, ${bproCount} BPRO, ${changesCount} changes, ${warningCount} warning.${largeDataHint}`;
+        return `${rows.length} row terdeteksi, ${applyCount} row siap apply, ${releaseCount} release, ${bproCount} BPRO, ${changesCount} changes, ${warningCount} warning, ${duplicateCount} duplicate.${largeDataHint}`;
       }
 
       function refreshSmartImportSummary() {
@@ -4415,50 +5058,67 @@
         return smartImportPreviewState;
       }
 
+      function moveSmartImportPreviewRow(rowIndex, targetValue) {
+        if (!Number.isInteger(rowIndex) || !smartImportPreviewState[rowIndex] || !targetValue) {
+          return;
+        }
+
+        syncSmartImportPreviewStateFromDom();
+        const targetRelease = parseSmartImportTargetReleaseValue(targetValue);
+        smartImportPreviewState[rowIndex].releaseId = targetRelease.releaseId;
+        smartImportPreviewState[rowIndex].releaseName = targetRelease.releaseName;
+        smartImportPreviewState = finalizeSmartImportParsedRows(smartImportPreviewState);
+        renderSmartImportPreview(smartImportPreviewState);
+      }
+
       function renderSmartImportPreview(rows) {
         if (!rows.length) {
-          elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="9">Belum ada data valid.</td></tr>';
+          elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="5">Belum ada data valid.</td></tr>';
           elements.smartImportSummary.textContent = "Tidak ada data untuk di-apply.";
           elements.smartImportApplyBtn.disabled = true;
           return;
         }
 
+        const releaseTargets = collectSmartImportReleaseTargets(rows);
         elements.smartImportPreviewRows.innerHTML = rows
           .map(
             (row, rowIndex) => `
               <tr>
                 <td>${row.no}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "bproNumber", row.bproNumber)}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "bproName", row.bproName)}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "changesId", row.changesId)}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "changesName", row.changesName)}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "releaseId", row.releaseId)}</td>
-                <td>${renderSmartImportPreviewInput(rowIndex, "releaseName", row.releaseName)}</td>
-                <td class="${row.confidence === "Low" ? "smart-import-warning" : ""}">${escapeHtml(row.confidence)}</td>
-                <td class="${row.status === "Warning" ? "smart-import-warning" : ""}">${escapeHtml(
-                  row.warnings.length ? row.warnings.join("; ") : row.status
-                )}</td>
+                <td>${renderSmartImportPreviewStack(rowIndex, [
+                  { field: "bproNumber", value: row.bproNumber },
+                  { field: "bproName", value: row.bproName },
+                ])}</td>
+                <td>${renderSmartImportPreviewStack(rowIndex, [
+                  { field: "changesId", value: row.changesId },
+                  { field: "changesName", value: row.changesName },
+                ])}</td>
+                <td>${renderSmartImportPreviewStack(rowIndex, [
+                  { field: "releaseId", value: row.releaseId },
+                  { field: "releaseName", value: row.releaseName },
+                ])}</td>
+                <td>${renderSmartImportMoveSelect(rowIndex, row, releaseTargets)}</td>
               </tr>
             `
           )
           .join("");
 
         refreshSmartImportSummary();
+        autoResizeSmartImportPreviewTextareas();
       }
 
       function previewSmartImportRawData() {
+        syncTable1ProjectsStateFromDom();
         smartImportSourceRowCount = countSmartImportSourceRows(elements.smartImportRawTextarea.value);
-        smartImportPreviewState = parseSmartImportRawData(elements.smartImportRawTextarea.value, {
-          useLastRelease: elements.smartImportUseLastRelease.checked,
-        });
+        smartImportPreviewState = parseSmartImportRawData(elements.smartImportRawTextarea.value);
         renderSmartImportPreview(smartImportPreviewState);
       }
 
-      function getSmartImportTargetMode() {
-        return (
-          [...elements.smartImportTargetModeControls].find((control) => control.checked)?.value ||
-          "append"
-        );
+      function getSmartImportApplyOptions() {
+        return {
+          createProject: Boolean(elements.smartImportCreateProject?.checked),
+          createRelease: Boolean(elements.smartImportCreateRelease?.checked),
+        };
       }
 
       function createDetailRowFromImport(row) {
@@ -4528,16 +5188,17 @@
         }
       }
 
-      function appendOrReplaceImportDetailRow(relationPackage, detailRow, targetMode, activePackage, touchedPackages) {
-        if (targetMode === "replace" && relationPackage === activePackage && !touchedPackages.has(relationPackage)) {
-          relationPackage.detailRows = [];
-          touchedPackages.add(relationPackage);
+      function appendSmartImportDetailRow(relationPackage, detailRow) {
+        if (!relationPackage.detailRows.length) {
+          relationPackage.detailRows.push(detailRow);
+          return;
         }
 
-        if (
+        const hasSingleBlankDetailRow =
           relationPackage.detailRows.length === 1 &&
-          isBlankDetailRow(relationPackage.detailRows[0])
-        ) {
+          isBlankDetailRow(relationPackage.detailRows[0]);
+
+        if (hasSingleBlankDetailRow) {
           relationPackage.detailRows = [detailRow];
           return;
         }
@@ -4556,14 +5217,31 @@
         };
       }
 
-      function findRelationPackageByRelease(project, releaseId) {
-        if (!releaseId) {
+      function findRelationPackageByRelease(project, row) {
+        const releaseId = `${row.releaseId || ""}`.trim();
+        const releaseName = normalizeSmartImportName(row.releaseName).toLowerCase();
+        if (!releaseId && !releaseName) {
           return null;
         }
 
         return project.relationPackages.find(
-          (relationPackage) => `${relationPackage.releaseId || ""}`.trim() === `${releaseId}`.trim()
+          (relationPackage) =>
+            (releaseId && `${relationPackage.releaseId || ""}`.trim() === releaseId) ||
+            (!releaseId &&
+              releaseName &&
+              normalizeSmartImportName(relationPackage.releaseName).toLowerCase() === releaseName)
         );
+      }
+
+      function getSmartImportReleaseGroupKey(row) {
+        return [
+          normalizeSmartImportToken(row.releaseId).toLowerCase(),
+          normalizeSmartImportName(row.releaseName).toLowerCase(),
+        ].join("|");
+      }
+
+      function findReusableBlankRelationPackage(project) {
+        return project.relationPackages.find((relationPackage) => isBlankRelationPackageForImport(relationPackage));
       }
 
       function getActiveImportProjectAndPackage() {
@@ -4582,6 +5260,207 @@
         };
       }
 
+      function getSmartImportTargetProject(options) {
+        if (options.createProject) {
+          const project = createEmptyTable1Project();
+          table1ProjectsState.push(project);
+          return project;
+        }
+
+        if (!table1ProjectsState.length) {
+          table1ProjectsState = [createEmptyTable1Project()];
+        }
+
+        return table1ProjectsState[0];
+      }
+
+      function getSmartImportTargetPackage(project, activePackage, row, options, newReleaseMap) {
+        if (options.createRelease) {
+          const releaseKey = getSmartImportReleaseGroupKey(row);
+          if (newReleaseMap.has(releaseKey)) {
+            const relationPackage = newReleaseMap.get(releaseKey);
+            completeActivePackageFromImport(relationPackage, row);
+            return relationPackage;
+          }
+
+          const relationPackage = findReusableBlankRelationPackage(project) || createRelationPackageFromImport(row);
+          completeActivePackageFromImport(relationPackage, row);
+          if (!project.relationPackages.includes(relationPackage)) {
+            project.relationPackages.push(relationPackage);
+          }
+          newReleaseMap.set(releaseKey, relationPackage);
+          return relationPackage;
+        }
+
+        if (row.releaseId || row.releaseName) {
+          if (canCompleteActivePackage(activePackage, row)) {
+            completeActivePackageFromImport(activePackage, row);
+            return activePackage;
+          }
+
+          const existingPackage = findRelationPackageByRelease(project, row);
+          if (existingPackage) {
+            completeActivePackageFromImport(existingPackage, row);
+            return existingPackage;
+          }
+
+          const relationPackage = createRelationPackageFromImport(row);
+          project.relationPackages.push(relationPackage);
+          return relationPackage;
+        }
+
+        return activePackage;
+      }
+
+      function normalizeSmartImportDuplicatePart(value) {
+        return normalizeSmartImportName(value).toLowerCase();
+      }
+
+      function getSmartImportPrimaryDuplicateKey(releaseId, bproNumber, changesId) {
+        const normalizedReleaseId = normalizeSmartImportDuplicatePart(releaseId);
+        const normalizedBproNumber = normalizeSmartImportDuplicatePart(bproNumber);
+        const normalizedChangesId = normalizeSmartImportDuplicatePart(changesId);
+        if (!normalizedReleaseId || !normalizedBproNumber || !normalizedChangesId) {
+          return "";
+        }
+        return `id:${normalizedReleaseId}|${normalizedBproNumber}|${normalizedChangesId}`;
+      }
+
+      function getSmartImportFallbackDuplicateKey(releaseName, bproName, changesName) {
+        const normalizedReleaseName = normalizeSmartImportDuplicatePart(releaseName);
+        const normalizedBproName = normalizeSmartImportDuplicatePart(bproName);
+        const normalizedChangesName = normalizeSmartImportDuplicatePart(changesName);
+        if (!normalizedReleaseName || !normalizedBproName || !normalizedChangesName) {
+          return "";
+        }
+        return `name:${normalizedReleaseName}|${normalizedBproName}|${normalizedChangesName}`;
+      }
+
+      function getSmartImportDetailDuplicateKeys(releasePackage, detailRow) {
+        const primaryKey = getSmartImportPrimaryDuplicateKey(
+          releasePackage.releaseId,
+          detailRow.bproNumber,
+          detailRow.changesId
+        );
+        if (primaryKey) {
+          return [primaryKey];
+        }
+
+        const fallbackKey = getSmartImportFallbackDuplicateKey(
+          releasePackage.releaseName,
+          detailRow.bproName,
+          detailRow.changesName
+        );
+        return fallbackKey ? [fallbackKey] : [];
+      }
+
+      function buildSmartImportDuplicateKeySet(projects = table1ProjectsState) {
+        const duplicateKeys = new Set();
+        const sourceProjects = Array.isArray(projects) ? projects : [projects];
+        sourceProjects.forEach((project) => {
+          (project?.relationPackages || []).forEach((relationPackage) => {
+            (relationPackage.detailRows || [])
+              .filter((detailRow) => !isBlankDetailRow(detailRow))
+              .forEach((detailRow) => {
+                getSmartImportDetailDuplicateKeys(relationPackage, detailRow).forEach((key) =>
+                  duplicateKeys.add(key)
+                );
+              });
+            });
+        });
+        return duplicateKeys;
+      }
+
+      function findSmartImportDuplicateLocation(row) {
+        if (!hasSmartImportDetailValue(row)) {
+          return null;
+        }
+
+        const detailRow = createDetailRowFromImport(row);
+        const duplicateKeys = getSmartImportDetailDuplicateKeys(row, detailRow);
+        if (!duplicateKeys.length) {
+          return null;
+        }
+
+        for (let projectIndex = 0; projectIndex < table1ProjectsState.length; projectIndex += 1) {
+          const project = table1ProjectsState[projectIndex];
+          for (let packageIndex = 0; packageIndex < (project?.relationPackages || []).length; packageIndex += 1) {
+            const relationPackage = project.relationPackages[packageIndex];
+            for (let detailIndex = 0; detailIndex < (relationPackage.detailRows || []).length; detailIndex += 1) {
+              const detail = relationPackage.detailRows[detailIndex];
+              if (isBlankDetailRow(detail)) {
+                continue;
+              }
+
+              const existingKeys = getSmartImportDetailDuplicateKeys(relationPackage, detail);
+              if (existingKeys.some((key) => duplicateKeys.includes(key))) {
+                return {
+                  projectIndex,
+                  projectName: project?.projectName || "",
+                  packageIndex,
+                  releaseId: relationPackage.releaseId || "",
+                  releaseName: relationPackage.releaseName || "",
+                  detailIndex,
+                };
+              }
+            }
+          }
+        }
+
+        return null;
+      }
+
+      function formatSmartImportDuplicateLocation(location) {
+        const projectLabel = location.projectName
+          ? `Project ${location.projectIndex + 1} - ${location.projectName}`
+          : `Project ${location.projectIndex + 1}`;
+        const releaseValue = [location.releaseId, location.releaseName]
+          .map((value) => `${value || ""}`.trim())
+          .filter(Boolean)
+          .join(" / ");
+        const releaseLabel = releaseValue
+          ? `Release ${location.packageIndex + 1} - ${releaseValue}`
+          : `Release ${location.packageIndex + 1}`;
+        return `Sudah ada di ${projectLabel} > ${releaseLabel}`;
+      }
+
+      function getSmartImportReleaseDuplicateKey(relationPackage) {
+        const releaseId = normalizeSmartImportDuplicatePart(relationPackage.releaseId);
+        const releaseName = normalizeSmartImportDuplicatePart(relationPackage.releaseName);
+        if (releaseId) {
+          return `release-id:${releaseId}`;
+        }
+        if (releaseName) {
+          return `release-name:${releaseName}`;
+        }
+        return "";
+      }
+
+      function buildSmartImportReleaseKeySet(project) {
+        return new Set(
+          project.relationPackages
+            .map(getSmartImportReleaseDuplicateKey)
+            .filter(Boolean)
+        );
+      }
+
+      function hasSmartImportDuplicate(duplicateKeys, relationPackage, detailRow) {
+        const keys = getSmartImportDetailDuplicateKeys(relationPackage, detailRow);
+        return keys.length > 0 && keys.some((key) => duplicateKeys.has(key));
+      }
+
+      function registerSmartImportDuplicate(duplicateKeys, relationPackage, detailRow) {
+        getSmartImportDetailDuplicateKeys(relationPackage, detailRow).forEach((key) => duplicateKeys.add(key));
+      }
+
+      function formatSmartImportApplyFeedback(processedCount, addedCount, skippedDuplicateCount) {
+        if (processedCount > 0 && addedCount === 0 && skippedDuplicateCount > 0) {
+          return "Semua row sudah ada, tidak ada data baru yang ditambahkan.";
+        }
+
+        return `${processedCount} row diproses, ${addedCount} row berhasil ditambahkan, ${skippedDuplicateCount} row duplicate dilewati.`;
+      }
+
       function applySmartImportToTable1() {
         if (!smartImportPreviewState.length) {
           previewSmartImportRawData();
@@ -4596,40 +5475,66 @@
 
         syncTable1ProjectsStateFromDom();
 
-        const targetMode = getSmartImportTargetMode();
-        const { project, package: activePackage } = getActiveImportProjectAndPackage();
-        const activePackageTouched = new Set();
+        const applyOptions = getSmartImportApplyOptions();
+        const project = getSmartImportTargetProject(applyOptions);
+        if (!project.relationPackages?.length) {
+          project.relationPackages = [createEmptyRelationPackage()];
+        }
+        const activePackage = project.relationPackages[0];
+        const newReleaseMap = new Map();
+        const duplicateKeys = buildSmartImportDuplicateKeySet(table1ProjectsState);
+        const releaseDuplicateKeys = buildSmartImportReleaseKeySet(project);
+        let addedCount = 0;
+        let skippedDuplicateCount = 0;
 
         importRows.forEach((row) => {
           const hasDetailRow = !isBlankImportDetailRow(row);
-          let relationPackage = activePackage;
+          const detailRow = hasDetailRow ? createDetailRowFromImport(row) : null;
 
-          if (row.releaseId || row.releaseName) {
-            if (canCompleteActivePackage(activePackage, row)) {
-              completeActivePackageFromImport(activePackage, row);
-            } else {
-              relationPackage = findRelationPackageByRelease(project, row.releaseId);
-            }
-
-            if (!relationPackage) {
-              relationPackage = createRelationPackageFromImport(row);
-              project.relationPackages.push(relationPackage);
-            } else if (!relationPackage.releaseName && row.releaseName) {
-              relationPackage.releaseName = row.releaseName;
-            }
-          }
-
-          if (!hasDetailRow) {
+          if (
+            detailRow &&
+            applyOptions.createRelease &&
+            hasSmartImportDuplicate(duplicateKeys, row, detailRow)
+          ) {
+            skippedDuplicateCount += 1;
             return;
           }
 
-          appendOrReplaceImportDetailRow(
-            relationPackage,
-            createDetailRowFromImport(row),
-            targetMode,
+          if (!hasDetailRow) {
+            const releaseDuplicateKey = getSmartImportReleaseDuplicateKey(row);
+            if (releaseDuplicateKey && releaseDuplicateKeys.has(releaseDuplicateKey)) {
+              skippedDuplicateCount += 1;
+              return;
+            }
+          }
+
+          const relationPackage = getSmartImportTargetPackage(
+            project,
             activePackage,
-            activePackageTouched
+            row,
+            applyOptions,
+            newReleaseMap
           );
+
+          if (!hasDetailRow) {
+            if (row.releaseId || row.releaseName) {
+              const releaseDuplicateKey = getSmartImportReleaseDuplicateKey(relationPackage);
+              if (releaseDuplicateKey) {
+                releaseDuplicateKeys.add(releaseDuplicateKey);
+              }
+              addedCount += 1;
+            }
+            return;
+          }
+
+          if (hasSmartImportDuplicate(duplicateKeys, relationPackage, detailRow)) {
+            skippedDuplicateCount += 1;
+            return;
+          }
+
+          appendSmartImportDetailRow(relationPackage, detailRow);
+          registerSmartImportDuplicate(duplicateKeys, relationPackage, detailRow);
+          addedCount += 1;
         });
 
         project.relationPackages.forEach((relationPackage) => {
@@ -4641,7 +5546,7 @@
         renderTable1Projects();
         setSmartImportModalOpen(false);
         clearPreviewResult();
-        showFeedback(`${importRows.length} row raw data berhasil di-import ke Tabel 1.`, "success");
+        showFeedback(formatSmartImportApplyFeedback(importRows.length, addedCount, skippedDuplicateCount), "success");
       }
 
       function renderTable1Projects() {
@@ -5308,21 +6213,6 @@
                                           { flagged: scenario.flags?.result, flagLabel: "Flag Hasil/Keterangan" }
                                         )}
                                       </label>
-                                      <label class="field span-3">
-                                        <span>${requiredLabel("Status")}</span>
-                                        ${renderFlagField(
-                                          `
-                                            <div class="field-body">
-                                              <select data-field="status">
-                                                <option value="To Do" ${scenario.status === "To Do" ? "selected" : ""}>To Do</option>
-                                                <option value="Ongoing" ${scenario.status === "Ongoing" ? "selected" : ""}>Ongoing</option>
-                                                <option value="Done" ${scenario.status === "Done" ? "selected" : ""}>Done</option>
-                                              </select>
-                                            </div>
-                                          `,
-                                          { flagged: scenario.flags?.status, flagLabel: "Flag Status" }
-                                        )}
-                                      </label>
                                     </div>
                                   </div>
                                 `
@@ -5431,11 +6321,9 @@
                     return {
                       activity: valueOf("activity"),
                       result: valueOf("result"),
-                      status: valueOf("status") || "To Do",
                       flags: {
                         activity: isFieldFlagged(scenarioElement.querySelector('[data-field="activity"]')),
                         result: isFieldFlagged(scenarioElement.querySelector('[data-field="result"]')),
-                        status: isFieldFlagged(scenarioElement.querySelector('[data-field="status"]')),
                       },
                     };
                   }
@@ -5548,6 +6436,38 @@
         );
       }
 
+      function getMissingTable1ReleaseFields(relationPackage) {
+        const missingFields = [];
+        if (!relationPackage.releaseId) {
+          missingFields.push("Release ID");
+        }
+        if (!relationPackage.releaseName) {
+          missingFields.push("Release Name");
+        }
+        return missingFields;
+      }
+
+      function getMissingTable1DetailFields(detailRow) {
+        const missingFields = [];
+        if (!detailRow.bproNumber) {
+          missingFields.push("Nomor BPRO");
+        }
+        if (!detailRow.bproName) {
+          missingFields.push("Nama BPRO");
+        }
+        if (!detailRow.changesId) {
+          missingFields.push("Changes ID");
+        }
+        if (!detailRow.changesName) {
+          missingFields.push("Changes Name");
+        }
+        return missingFields;
+      }
+
+      function formatTable1IncompleteMessage(scope, missingFields) {
+        return `${scope} belum lengkap: ${missingFields.join(", ")}. Smart Import boleh berisi data parsial; lengkapi field ini sebelum generate MOM.`;
+      }
+
       function isBlankTable3Row(row) {
         return ![row.date, row.time, row.activity, row.pic, row.status, row.note].some(
           (value) => `${value}`.trim() !== ""
@@ -5555,7 +6475,7 @@
       }
 
       function isBlankLampiranScenario(scenario) {
-        return ![scenario.activity, scenario.result, scenario.status].some(
+        return ![scenario.activity, scenario.result].some(
           (value) => `${value}`.trim() !== ""
         );
       }
@@ -5574,10 +6494,6 @@
         );
       }
 
-      function normalizeLampiranStatus(status) {
-        return ["To Do", "Ongoing", "Done"].includes(status) ? status : "To Do";
-      }
-
       function normalizeLampiranState(groups, options = {}) {
         const keepBlank = Boolean(options.keepBlank);
         const normalized = (Array.isArray(groups) ? groups : [])
@@ -5591,10 +6507,9 @@
                   .map((scenario) => ({
                     activity: `${scenario?.activity || ""}`.trim(),
                     result: `${scenario?.result || ""}`.trim(),
-                    status: normalizeLampiranStatus(`${scenario?.status || ""}`.trim()),
                     flags: {
-                      ...createEmptyLampiranScenarioFlags(),
-                      ...(scenario?.flags || {}),
+                      activity: Boolean(scenario?.flags?.activity),
+                      result: Boolean(scenario?.flags?.result),
                     },
                   }));
 
@@ -5654,36 +6569,46 @@
         }
 
         for (const { project, index } of activeProjects) {
-          const activeRelationPackages = project.relationPackages.filter(
-            (relationPackage) => !isBlankRelationPackage(relationPackage)
-          );
+          const activeRelationPackages = project.relationPackages
+            .map((relationPackage, packageIndex) => ({ relationPackage, packageIndex }))
+            .filter(({ relationPackage }) => !isBlankRelationPackage(relationPackage));
 
-          for (const relationPackage of activeRelationPackages) {
-            if (!relationPackage.releaseId || !relationPackage.releaseName) {
-              focusProjectField(index, "projectName");
-              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+          for (const { relationPackage, packageIndex } of activeRelationPackages) {
+            const missingReleaseFields = getMissingTable1ReleaseFields(relationPackage);
+            if (missingReleaseFields.length) {
+              focusTable1PackageField(index, packageIndex, missingReleaseFields[0] === "Release ID" ? "releaseId" : "releaseName");
+              return formatTable1IncompleteMessage(
+                `Paket release ${packageIndex + 1} pada project "${project.projectName}"`,
+                missingReleaseFields
+              );
             }
 
-            const activeDetailRows = relationPackage.detailRows.filter(
-              (detailRow) => !isBlankDetailRow(detailRow)
-            );
+            const activeDetailRows = relationPackage.detailRows
+              .map((detailRow, detailIndex) => ({ detailRow, detailIndex }))
+              .filter(({ detailRow }) => !isBlankDetailRow(detailRow));
 
             if (!activeDetailRows.length) {
-              focusProjectField(index, "projectName");
-              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+              focusTable1DetailField(index, packageIndex, 0, "bproNumber");
+              return `Paket release ${packageIndex + 1} pada project "${project.projectName}" belum punya baris fitur / sertifikasi aktif. Tambahkan minimal satu detail sebelum generate MOM.`;
             }
 
             const invalidDetailRow = activeDetailRows.find(
-              (detailRow) =>
-                !detailRow.bproNumber ||
-                !detailRow.bproName ||
-                !detailRow.changesId ||
-                !detailRow.changesName
+              ({ detailRow }) => getMissingTable1DetailFields(detailRow).length
             );
 
             if (invalidDetailRow) {
-              focusProjectField(index, "projectName");
-              return "Setiap paket release aktif wajib punya Release ID, Release Name, dan minimal satu baris fitur / sertifikasi yang lengkap.";
+              const missingDetailFields = getMissingTable1DetailFields(invalidDetailRow.detailRow);
+              const firstMissingField = {
+                "Nomor BPRO": "bproNumber",
+                "Nama BPRO": "bproName",
+                "Changes ID": "changesId",
+                "Changes Name": "changesName",
+              }[missingDetailFields[0]];
+              focusTable1DetailField(index, packageIndex, invalidDetailRow.detailIndex, firstMissingField);
+              return formatTable1IncompleteMessage(
+                `Fitur ${invalidDetailRow.detailIndex + 1} pada paket release ${packageIndex + 1} project "${project.projectName}"`,
+                missingDetailFields
+              );
             }
           }
         }
@@ -5732,14 +6657,9 @@
 
               for (let scenarioIndex = 0; scenarioIndex < feature.scenarios.length; scenarioIndex += 1) {
                 const scenario = feature.scenarios[scenarioIndex];
-                if (!scenario.activity || !scenario.status) {
-                  focusLampiranField(
-                    dateIndex,
-                    featureIndex,
-                    scenarioIndex,
-                    !scenario.activity ? "activity" : "status"
-                  );
-                  return "Setiap skenario pada Lampiran Skenario Verifikasi Implementasi wajib memiliki aktivitas dan status.";
+                if (!scenario.activity) {
+                  focusLampiranField(dateIndex, featureIndex, scenarioIndex, "activity");
+                  return "Setiap skenario pada Lampiran Skenario Verifikasi Implementasi wajib memiliki aktivitas.";
                 }
               }
             }
@@ -6153,7 +7073,7 @@
             const dateFlagged = Boolean(dateGroup.flags?.date);
             return `
               <tr class="lampiran-date-row">
-                <td colspan="4" class="${buildResultCellClass("", dateFlagged)}">${renderResultCellContent(
+                <td colspan="3" class="${buildResultCellClass("", dateFlagged)}">${renderResultCellContent(
                   escapeHtml(formatDateRangeIndonesian(dateGroup.date)),
                   dateFlagged
                 )}</td>
@@ -6163,7 +7083,7 @@
                   const featureFlagged = Boolean(feature.flags?.title);
                   return `
                     <tr class="lampiran-feature-row">
-                      <td colspan="4" class="${buildResultCellClass("", featureFlagged)}">${renderResultCellContent(
+                      <td colspan="3" class="${buildResultCellClass("", featureFlagged)}">${renderResultCellContent(
                         `${getAlphabetLabel(featureIndex)}. ${escapeHtml(feature.title)}`,
                         featureFlagged
                       )}</td>
@@ -6181,12 +7101,6 @@
                             <td class="${buildResultCellClass("", scenarioFlags.result)}">${renderResultCellContent(
                               formatMultiline(scenario.result || "-"),
                               scenarioFlags.result
-                            )}</td>
-                            <td class="${buildResultCellClass("center", scenarioFlags.status)}">${renderResultCellContent(
-                              `<span class="status-pill ${getStatusClass(scenario.status)}">${escapeHtml(
-                                scenario.status
-                              )}</span>`,
-                              scenarioFlags.status
                             )}</td>
                           </tr>
                         `;
@@ -6206,9 +7120,8 @@
               <thead>
                 <tr>
                   <th style="width: 70px">No.</th>
-                  <th style="width: 430px">Aktivitas</th>
-                  <th style="width: 430px">Hasil/Keterangan</th>
-                  <th style="width: 130px">Status</th>
+                  <th style="width: 520px">Aktivitas</th>
+                  <th style="width: 520px">Hasil/Keterangan</th>
                 </tr>
               </thead>
               <tbody>${bodyMarkup}</tbody>
@@ -6232,6 +7145,85 @@
           .join('<div class="doc-table-spacer" aria-hidden="true"></div>');
       }
 
+      function syncResultSourceStateFromDom() {
+        syncTable1ProjectsStateFromDom();
+        syncTable3StateFromDom();
+        syncLampiranStateFromDom();
+      }
+
+      function collectResultPreviewData() {
+        return {
+          table1Projects: normalizeTable1Projects(table1ProjectsState),
+          checklistRows: collectChecklistValues(),
+          table3Rows: normalizeTable3PreviewRows(table3State),
+          lampiranRows: lampiranEnabled
+            ? normalizeLampiranState(lampiranState, { keepBlank: true })
+            : [],
+          memoValue: elements.memoTextarea.value.trim(),
+        };
+      }
+
+      function isBlankTable3PreviewRow(row) {
+        return ![row.date, row.time, row.activity, row.pic, row.note].some(
+          (value) => `${value || ""}`.trim()
+        );
+      }
+
+      function normalizeTable3PreviewRows(rows) {
+        return rows.filter((row) => !isBlankTable3PreviewRow(row));
+      }
+
+      function buildResultMarkup(data = collectResultPreviewData()) {
+        const table1Blocks = data.table1Projects.map((project, index) =>
+          renderTable1Result(project, index)
+        );
+
+        return `
+          <div class="result-document">
+            ${joinResultBlocks([
+              ...table1Blocks,
+              renderChecklistResult(data.checklistRows),
+              renderTable3Result(data.table3Rows),
+              lampiranEnabled ? renderLampiranResult(data.lampiranRows) : "",
+              data.memoValue ? renderMeetingMemoResult(data.memoValue) : "",
+            ])}
+          </div>
+        `;
+      }
+
+      function hasLampiranPreviewData(rows) {
+        return rows.some((dateGroup) =>
+          [
+            dateGroup.date,
+            ...(dateGroup.features || []).flatMap((feature) => [
+              feature.title,
+              ...(feature.scenarios || []).flatMap((scenario) => [
+                scenario.activity,
+                scenario.result,
+              ]),
+            ]),
+          ].some((value) => `${value || ""}`.trim())
+        );
+      }
+
+      function hasChecklistPreviewData(rows) {
+        return rows.some(
+          (row) =>
+            row.kind !== "group" &&
+            [row.status, row.pic, row.target, row.note].some((value) => `${value || ""}`.trim())
+        );
+      }
+
+      function hasResultPreviewData(data = collectResultPreviewData()) {
+        return (
+          data.table1Projects.length > 0 ||
+          hasChecklistPreviewData(data.checklistRows) ||
+          data.table3Rows.length > 0 ||
+          (lampiranEnabled && hasLampiranPreviewData(data.lampiranRows)) ||
+          Boolean(data.memoValue)
+        );
+      }
+
       function generateResult() {
         setPreviewJumpVisible(false);
         const validationMessage = validateForm();
@@ -6242,29 +7234,124 @@
 
         clearFeedback();
 
-        const table1Projects = normalizeTable1Projects(table1ProjectsState);
-        const checklistRows = collectChecklistValues();
-        const table3Rows = normalizeTable3Rows(table3State);
-        const lampiranRows = lampiranEnabled ? normalizeLampiranState(lampiranState, { keepBlank: true }) : [];
-        const memoValue = elements.memoTextarea.value.trim();
-        const table1Blocks = table1Projects.map((project, index) => renderTable1Result(project, index));
-
-        const resultMarkup = `
-          <div class="result-document">
-            ${joinResultBlocks([
-              ...table1Blocks,
-              renderChecklistResult(checklistRows),
-              renderTable3Result(table3Rows),
-              lampiranEnabled ? renderLampiranResult(lampiranRows) : "",
-              memoValue ? renderMeetingMemoResult(memoValue) : "",
-            ])}
-          </div>
-        `;
-
         elements.resultArea.className = "";
-        elements.resultArea.innerHTML = resultMarkup;
+        elements.resultArea.innerHTML = buildResultMarkup();
         showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
         elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+        schedulePreviewDrawerRefresh();
+      }
+
+      function isPreviewDrawerOpen() {
+        return elements.previewDrawer.classList.contains("open");
+      }
+
+      function renderPreviewDrawerEmpty() {
+        elements.previewDrawerContent.innerHTML =
+          '<div class="preview-drawer-empty">Preview belum tersedia. Isi data MOM terlebih dahulu.</div>';
+      }
+
+      function getPreviewDrawerPanel() {
+        return elements.previewDrawer.querySelector(".preview-drawer-panel");
+      }
+
+      function getPreviewDrawerWidthBounds() {
+        return {
+          min: Math.min(window.innerWidth - 24, 520),
+          max: Math.max(320, window.innerWidth - 24),
+        };
+      }
+
+      function applyPreviewDrawerWidth(width) {
+        const panel = getPreviewDrawerPanel();
+        if (!panel || window.matchMedia("(max-width: 980px)").matches) {
+          return;
+        }
+
+        const bounds = getPreviewDrawerWidthBounds();
+        const nextWidth = Math.min(Math.max(width, bounds.min), bounds.max);
+        previewDrawerWidth = nextWidth;
+        panel.style.width = `${nextWidth}px`;
+      }
+
+      function refreshPreviewDrawer() {
+        if (!isPreviewDrawerOpen()) {
+          return;
+        }
+
+        syncResultSourceStateFromDom();
+        const data = collectResultPreviewData();
+        if (!hasResultPreviewData(data)) {
+          renderPreviewDrawerEmpty();
+          return;
+        }
+
+        elements.previewDrawerContent.innerHTML = `
+          <div class="result-table-wrap">
+            ${buildResultMarkup(data)}
+          </div>
+        `;
+      }
+
+      function schedulePreviewDrawerRefresh() {
+        if (!isPreviewDrawerOpen()) {
+          return;
+        }
+
+        window.clearTimeout(previewDrawerRefreshTimer);
+        previewDrawerRefreshTimer = window.setTimeout(refreshPreviewDrawer, 400);
+      }
+
+      function setPreviewDrawerOpen(open) {
+        elements.previewDrawer.classList.toggle("open", open);
+        elements.previewDrawer.setAttribute("aria-hidden", open ? "false" : "true");
+        if (!open) {
+          window.clearTimeout(previewDrawerRefreshTimer);
+          return;
+        }
+
+        if (previewDrawerWidth) {
+          applyPreviewDrawerWidth(previewDrawerWidth);
+        }
+        refreshPreviewDrawer();
+        elements.previewDrawerCloseBtn.focus();
+      }
+
+      function startPreviewDrawerResize(event) {
+        if (window.matchMedia("(max-width: 980px)").matches) {
+          return;
+        }
+
+        const panel = getPreviewDrawerPanel();
+        if (!panel) {
+          return;
+        }
+
+        event.preventDefault();
+        previewDrawerResizeState = {
+          startX: event.clientX,
+          startWidth: panel.getBoundingClientRect().width,
+        };
+        document.body.style.cursor = "ew-resize";
+        document.body.style.userSelect = "none";
+      }
+
+      function resizePreviewDrawer(event) {
+        if (!previewDrawerResizeState) {
+          return;
+        }
+
+        const delta = previewDrawerResizeState.startX - event.clientX;
+        applyPreviewDrawerWidth(previewDrawerResizeState.startWidth + delta);
+      }
+
+      function stopPreviewDrawerResize() {
+        if (!previewDrawerResizeState) {
+          return;
+        }
+
+        previewDrawerResizeState = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
       }
 
       // =====================================================
@@ -7166,6 +8253,7 @@
         elements.resultArea.className = "result-placeholder";
         elements.resultArea.innerHTML =
           'Belum ada hasil. Isi form di atas lalu klik <strong>Preview Table</strong>.';
+        schedulePreviewDrawerRefresh();
       }
 
       function applyDraftDataFromJson(raw) {
@@ -7573,6 +8661,11 @@
           return;
         }
 
+        if (event.key === "Escape" && isPreviewDrawerOpen()) {
+          setPreviewDrawerOpen(false);
+          return;
+        }
+
         if (event.key === "Escape" && activeDatePicker) {
           closeDateRangePicker();
           return;
@@ -7592,10 +8685,27 @@
         if (event.target.matches(".native-date-input")) {
           syncDateDisplayFromNative(event.target);
         }
+
+        if (!event.target.closest("#previewDrawer")) {
+          schedulePreviewDrawerRefresh();
+        }
       });
 
       document.addEventListener("input", (event) => {
         refreshTextareaScrollState(event.target);
+        if (!event.target.closest("#previewDrawer")) {
+          schedulePreviewDrawerRefresh();
+        }
+      });
+
+      document.addEventListener("click", (event) => {
+        if (event.target.closest("#previewDrawer")) {
+          return;
+        }
+
+        if (event.target.closest("button, [data-action]")) {
+          schedulePreviewDrawerRefresh();
+        }
       });
 
       elements.memoFab.addEventListener("click", () => {
@@ -7607,6 +8717,13 @@
       });
 
       elements.memoTextarea.addEventListener("input", refreshMemoState);
+      elements.previewDrawerBtn.addEventListener("click", () => {
+        setPreviewDrawerOpen(true);
+      });
+      elements.previewDrawerCloseBtn.addEventListener("click", () => {
+        setPreviewDrawerOpen(false);
+      });
+      elements.previewDrawerResizeHandle.addEventListener("pointerdown", startPreviewDrawerResize);
       elements.smartImportBtn.addEventListener("click", () => {
         setSmartImportModalOpen(true);
       });
@@ -7624,11 +8741,20 @@
         elements.smartImportApplyBtn.disabled = true;
         elements.smartImportSummary.textContent = "Preview mapping sebelum apply.";
       });
-      elements.smartImportPreviewRows.addEventListener("input", () => {
+      elements.smartImportPreviewRows.addEventListener("input", (event) => {
+        if (event.target?.matches?.("textarea[data-smart-import-field]")) {
+          autoResizeSmartImportTextarea(event.target);
+        }
         syncSmartImportPreviewStateFromDom();
         refreshSmartImportSummary();
       });
-      elements.smartImportPreviewRows.addEventListener("change", () => {
+      elements.smartImportPreviewRows.addEventListener("change", (event) => {
+        const moveSelect = event.target?.closest?.("[data-smart-import-move-index]");
+        if (moveSelect) {
+          moveSmartImportPreviewRow(Number(moveSelect.dataset.smartImportMoveIndex), moveSelect.value);
+          return;
+        }
+
         syncSmartImportPreviewStateFromDom();
         renderSmartImportPreview(smartImportPreviewState);
       });
@@ -7636,7 +8762,38 @@
       elements.smartImportApplyBtn.addEventListener("click", applySmartImportToTable1);
 
       elements.generateBtn.addEventListener("click", generateResult);
-      elements.previewJumpBtn.addEventListener("click", scrollToPreviewResult);
+      elements.previewJumpBtn.addEventListener("click", scrollPreviewShortcut);
+      window.addEventListener("scroll", updatePreviewJumpButton, { passive: true });
+      window.addEventListener("resize", () => {
+        updatePreviewJumpButton();
+        if (previewDrawerWidth) {
+          applyPreviewDrawerWidth(previewDrawerWidth);
+        }
+      });
+      window.addEventListener("pointermove", resizePreviewDrawer);
+      window.addEventListener("pointerup", stopPreviewDrawerResize);
+      elements.floatingActionToggle.addEventListener("click", () => {
+        const open = !elements.floatingActionMenu.classList.contains("open");
+        elements.floatingActionMenu.classList.toggle("open", open);
+        elements.floatingActionToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+      elements.floatingActionPanel.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-floating-action]");
+        if (!button) {
+          return;
+        }
+
+        elements.floatingActionMenu.classList.remove("open");
+        elements.floatingActionToggle.setAttribute("aria-expanded", "false");
+        const actionMap = {
+          preview: generateResult,
+          previewDrawer: () => setPreviewDrawerOpen(true),
+          xls: exportXlsResult,
+          outlook: exportOutlookResult,
+          save: saveDraftData,
+        };
+        actionMap[button.dataset.floatingAction]?.();
+      });
       elements.saveDraftBtn.addEventListener("click", saveDraftData);
       elements.loadDraftBtn.addEventListener("click", loadDraftData);
       elements.draftFileInput.addEventListener("change", loadDraftFile);
@@ -7649,6 +8806,7 @@
       renderTable3Rows();
       renderLampiranSection();
       refreshMemoState();
+      updatePreviewJumpButton();
     </script>
   </body>
 </html>
