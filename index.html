@@ -1425,11 +1425,32 @@
         border-bottom: 1px solid rgba(210, 210, 215, 0.88);
       }
 
+      .preview-drawer-heading {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
       .preview-drawer-title {
         margin: 0;
         font-size: 1.04rem;
         font-weight: 800;
         color: #1d1d1f;
+      }
+
+      .preview-drawer-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .preview-drawer-actions button {
+        min-height: 34px;
+        padding: 7px 10px;
+        border-radius: 10px;
+        font-size: 0.84rem;
       }
 
       .preview-drawer-close {
@@ -2157,6 +2178,20 @@
           border-left: 0;
         }
 
+        .preview-drawer-header {
+          flex-wrap: wrap;
+        }
+
+        .preview-drawer-actions {
+          order: 3;
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .preview-drawer-actions button {
+          flex: 1 1 0;
+        }
+
         .preview-drawer-resize-handle {
           display: none;
         }
@@ -2534,7 +2569,13 @@
           title="Tarik untuk ubah lebar"
         ></button>
         <div class="preview-drawer-header">
-          <h3 id="previewDrawerTitle" class="preview-drawer-title">Preview Result</h3>
+          <div class="preview-drawer-heading">
+            <h3 id="previewDrawerTitle" class="preview-drawer-title">Preview Result</h3>
+          </div>
+          <div class="preview-drawer-actions" aria-label="Export Preview Result">
+            <button id="previewDrawerExportXlsBtn" type="button" class="btn-ghost">Export XLS</button>
+            <button id="previewDrawerExportOutlookBtn" type="button" class="btn-ghost">Export to Outlook</button>
+          </div>
           <button
             id="previewDrawerCloseBtn"
             type="button"
@@ -2717,6 +2758,8 @@
         previewDrawer: document.querySelector("#previewDrawer"),
         previewDrawerCloseBtn: document.querySelector("#previewDrawerCloseBtn"),
         previewDrawerContent: document.querySelector("#previewDrawerContent"),
+        previewDrawerExportXlsBtn: document.querySelector("#previewDrawerExportXlsBtn"),
+        previewDrawerExportOutlookBtn: document.querySelector("#previewDrawerExportOutlookBtn"),
         previewDrawerResizeHandle: document.querySelector("#previewDrawerResizeHandle"),
         floatingActionMenu: document.querySelector("#floatingActionMenu"),
         floatingActionToggle: document.querySelector("#floatingActionToggle"),
@@ -7471,21 +7514,40 @@
         );
       }
 
-      function generateResult() {
+      function renderResultPreview(options = {}) {
+        const { scroll = false, showSuccess = false, scheduleDrawer = true } = options;
         setPreviewJumpVisible(false);
         const validationMessage = validateForm();
         if (validationMessage) {
           showFeedback(validationMessage, "error");
-          return;
+          return false;
         }
-
-        clearFeedback();
 
         elements.resultArea.className = "";
         elements.resultArea.innerHTML = buildResultMarkup();
-        showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
-        elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
-        schedulePreviewDrawerRefresh();
+        if (showSuccess) {
+          showFeedback("Preview tabel berhasil dibuat. Anda bisa copy atau export hasilnya.", "success");
+        } else {
+          clearFeedback();
+        }
+        if (scroll) {
+          elements.resultArea.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        if (scheduleDrawer) {
+          schedulePreviewDrawerRefresh();
+        }
+        return true;
+      }
+
+      function generateResult() {
+        renderResultPreview({ scroll: true, showSuccess: true });
+      }
+
+      function ensureResultPreviewReady(options = {}) {
+        const { force = false, scheduleDrawer = false } = options;
+        return !force && elements.resultArea.querySelector(".result-document")
+          ? true
+          : renderResultPreview({ scroll: false, showSuccess: false, scheduleDrawer });
       }
 
       function isPreviewDrawerOpen() {
@@ -7525,16 +7587,14 @@
           return;
         }
 
-        syncResultSourceStateFromDom();
-        const data = collectResultPreviewData();
-        if (!hasResultPreviewData(data)) {
+        if (!ensureResultPreviewReady({ force: true, scheduleDrawer: false })) {
           renderPreviewDrawerEmpty();
           return;
         }
 
         elements.previewDrawerContent.innerHTML = `
           <div class="result-table-wrap">
-            ${buildResultMarkup(data)}
+            ${elements.resultArea.querySelector(".result-document").outerHTML}
           </div>
         `;
       }
@@ -8227,7 +8287,7 @@
       }
 
       async function copyResult() {
-        if (!elements.resultArea.querySelector(".result-document")) {
+        if (!ensureResultPreviewReady({ force: true, scheduleDrawer: false })) {
           showFeedback("Belum ada hasil untuk dicopy.", "error");
           return;
         }
@@ -8256,7 +8316,7 @@
       }
 
       function exportResult() {
-        if (!elements.resultArea.querySelector(".result-document")) {
+        if (!ensureResultPreviewReady({ force: true, scheduleDrawer: false })) {
           showFeedback("Preview tabel dulu sebelum export.", "error");
           return;
         }
@@ -8268,7 +8328,7 @@
       }
 
       function exportXlsResult() {
-        if (!elements.resultArea.querySelector(".result-document")) {
+        if (!ensureResultPreviewReady({ force: true, scheduleDrawer: false })) {
           showFeedback("Preview tabel dulu sebelum export XLS.", "error");
           return;
         }
@@ -8338,7 +8398,7 @@
       }
 
       function exportOutlookResult() {
-        if (!elements.resultArea.querySelector(".result-document")) {
+        if (!ensureResultPreviewReady({ force: true, scheduleDrawer: false })) {
           showFeedback("Preview tabel dulu sebelum export ke Outlook.", "error");
           return;
         }
@@ -8970,6 +9030,8 @@
       elements.previewDrawerCloseBtn.addEventListener("click", () => {
         setPreviewDrawerOpen(false);
       });
+      elements.previewDrawerExportXlsBtn.addEventListener("click", exportXlsResult);
+      elements.previewDrawerExportOutlookBtn.addEventListener("click", exportOutlookResult);
       elements.previewDrawerResizeHandle.addEventListener("pointerdown", startPreviewDrawerResize);
       elements.smartImportBtn.addEventListener("click", () => {
         setSmartImportModalOpen(true);
