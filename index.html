@@ -4180,18 +4180,22 @@
         return /^[-–—]+$/.test(`${token || ""}`.trim());
       }
 
-      function normalizeSmartImportName(value) {
+      function stripSmartImportBoundaryQuotes(value) {
         return `${value || ""}`
-          .replace(/\s+/g, " ")
           .trim()
-          .split(" ")
-          .filter((token) => !isSmartImportSeparatorToken(token))
-          .join(" ");
+          .replace(/^[\uFEFF"“”]+|["“”]+$/g, "")
+          .trim();
+      }
+
+      function normalizeSmartImportName(value) {
+        return stripSmartImportBoundaryQuotes(value)
+          .replace(/\s+/g, " ")
+          .trim();
       }
 
       function normalizeSmartImportToken(token) {
-        const normalized = `${token || ""}`.trim().replace(/^[,;:]+|[,;:]+$/g, "");
-        return isSmartImportSeparatorToken(normalized) ? "" : normalized;
+        const normalized = stripSmartImportBoundaryQuotes(token).replace(/^[,;:]+|[,;:]+$/g, "");
+        return normalized;
       }
 
       function isReleaseIdToken(token) {
@@ -4411,6 +4415,84 @@
         );
       }
 
+      function getSingleNamelessSmartImportAnchor(line) {
+        const text = normalizeSmartImportName(line);
+        if (!text || /\s/.test(text)) {
+          return null;
+        }
+
+        const items = collectSmartImportAnchorItems(text);
+        if (items.length !== 1 || !items[0].id || items[0].name) {
+          return null;
+        }
+
+        return ["bpro", "changes", "release"].includes(items[0].type) ? items[0] : null;
+      }
+
+      function hasSmartImportAnchor(line) {
+        return collectSmartImportAnchorItems(line).some((item) => item.id);
+      }
+
+      function normalizeSmartImportRawLines(raw) {
+        return `${raw || ""}`
+          .split(/\r?\n/)
+          .map((line) => normalizeSmartImportName(line.replace(/\t+/g, " ")))
+          .filter(Boolean);
+      }
+
+      function combineSmartImportMultilinePairs(lines) {
+        const combinedLines = [];
+
+        for (let index = 0; index < lines.length; index += 1) {
+          const line = lines[index];
+          const anchor = getSingleNamelessSmartImportAnchor(line);
+          const nextLine = lines[index + 1] || "";
+
+          if (anchor && nextLine && !hasSmartImportAnchor(nextLine)) {
+            combinedLines.push(normalizeSmartImportName(`${line} ${nextLine}`));
+            index += 1;
+            continue;
+          }
+
+          combinedLines.push(line);
+        }
+
+        return combinedLines;
+      }
+
+      function getOnlySmartImportReleaseFromLines(lines) {
+        const releaseItems = [];
+        lines.forEach((line) => {
+          collectSmartImportAnchorItems(line)
+            .filter((item) => item.type === "release" && item.id)
+            .forEach((item) => releaseItems.push(item));
+        });
+
+        if (releaseItems.length !== 1) {
+          return null;
+        }
+
+        return mergeSmartImportRelease(null, releaseItems[0]);
+      }
+
+      function applySingleSmartImportReleaseFallback(rows, release) {
+        if (!release) {
+          return rows;
+        }
+
+        return rows.map((row) => {
+          if (row.releaseId || row.releaseName) {
+            return row;
+          }
+
+          return {
+            ...row,
+            releaseId: release.releaseId,
+            releaseName: release.releaseName,
+          };
+        });
+      }
+
       function addSmartImportSourceWarning(row, warning) {
         if (!warning || row.sourceWarnings.includes(warning)) {
           return;
@@ -4453,6 +4535,196 @@
         }
 
         return bproItems.find((bproItem) => bproItem.index > changesItem.index) || null;
+      }
+
+      function getSmartImportItemPosition(item) {
+        return Number.isFinite(item?.index) ? item.index : 0;
+      }
+
+      function getSmartImportPairPosition(bproItem, changesItem) {
+        const positions = [bproItem, changesItem]
+          .filter(Boolean)
+          .map(getSmartImportItemPosition);
+        if (!positions.length) {
+          return 0;
+        }
+        return positions.reduce((total, position) => total + position, 0) / positions.length;
+      }
+
+      function findClosestSmartImportRelease(releaseItems, position) {
+        if (!releaseItems.length) {
+          return null;
+        }
+
+        return releaseItems.reduce((closest, releaseItem) => {
+          if (!closest) {
+            return releaseItem;
+          }
+
+          const currentDistance = Math.abs(getSmartImportItemPosition(releaseItem) - position);
+          const closestDistance = Math.abs(getSmartImportItemPosition(closest) - position);
+          if (currentDistance < closestDistance) {
+            return releaseItem;
+          }
+          if (currentDistance === closestDistance && getSmartImportItemPosition(releaseItem) < getSmartImportItemPosition(closest)) {
+            return releaseItem;
+          }
+          return closest;
+        }, null);
+      }
+
+      function createSmartImportPairDescriptor(bproItem, changesItem, options = {}) {
+        return {
+          bproItem: bproItem || null,
+          changesItem: changesItem || null,
+          position: getSmartImportPairPosition(bproItem, changesItem),
+          warnings: options.warnings || [],
+          ambiguous: Boolean(options.ambiguous),
+          unmatchedCount: Boolean(options.unmatchedCount),
+        };
+      }
+
+      function pairBproAndChangesByAnchorDistance(bproItems, changesItems) {
+        const bproCount = bproItems.length;
+        const changesCount = changesItems.length;
+
+        if (!bproCount && !changesCount) {
+          return [];
+        }
+
+        if (bproCount && !changesCount) {
+          return bproItems.map((bproItem) =>
+            createSmartImportPairDescriptor(bproItem, null, {
+              warnings: ["Changes kosong untuk BPRO ini"],
+            })
+          );
+        }
+
+        if (!bproCount && changesCount) {
+          return changesItems.map((changesItem) =>
+            createSmartImportPairDescriptor(null, changesItem, {
+              warnings: ["BPRO kosong untuk Changes ini"],
+            })
+          );
+        }
+
+        if (bproCount === 1 && changesCount > 1) {
+          return changesItems.map((changesItem) =>
+            createSmartImportPairDescriptor(bproItems[0], changesItem, {
+              ambiguous: true,
+              warnings: ["1 BPRO dipakai untuk beberapa Changes"],
+            })
+          );
+        }
+
+        if (bproCount > 1 && changesCount === 1) {
+          const matchedBpro = findBproForChanges(changesItems[0], bproItems);
+          return bproItems.map((bproItem) =>
+            createSmartImportPairDescriptor(bproItem, bproItem === matchedBpro ? changesItems[0] : null, {
+              ambiguous: true,
+              warnings:
+                bproItem === matchedBpro
+                  ? ["1 Changes dipasangkan ke BPRO terdekat"]
+                  : ["1 Changes dipasangkan ke BPRO terdekat", "Changes kosong untuk BPRO ini"],
+            })
+          );
+        }
+
+        const candidates = [];
+        bproItems.forEach((bproItem, bproIndex) => {
+          changesItems.forEach((changesItem, changesIndex) => {
+            candidates.push({
+              bproItem,
+              bproIndex,
+              changesItem,
+              changesIndex,
+              distance: Math.abs(getSmartImportItemPosition(bproItem) - getSmartImportItemPosition(changesItem)),
+            });
+          });
+        });
+
+        candidates.sort(
+          (left, right) =>
+            left.distance - right.distance ||
+            getSmartImportPairPosition(left.bproItem, left.changesItem) -
+              getSmartImportPairPosition(right.bproItem, right.changesItem) ||
+            left.bproIndex - right.bproIndex ||
+            left.changesIndex - right.changesIndex
+        );
+
+        const usedBproIndexes = new Set();
+        const usedChangesIndexes = new Set();
+        const descriptors = [];
+
+        candidates.forEach((candidate) => {
+          if (usedBproIndexes.has(candidate.bproIndex) || usedChangesIndexes.has(candidate.changesIndex)) {
+            return;
+          }
+          usedBproIndexes.add(candidate.bproIndex);
+          usedChangesIndexes.add(candidate.changesIndex);
+          descriptors.push(
+            createSmartImportPairDescriptor(candidate.bproItem, candidate.changesItem, {
+              ambiguous: bproCount !== changesCount,
+              unmatchedCount: bproCount !== changesCount,
+              warnings: bproCount !== changesCount ? ["Jumlah BPRO dan Changes tidak sama"] : [],
+            })
+          );
+        });
+
+        bproItems.forEach((bproItem, index) => {
+          if (usedBproIndexes.has(index)) {
+            return;
+          }
+          descriptors.push(
+            createSmartImportPairDescriptor(bproItem, null, {
+              ambiguous: true,
+              unmatchedCount: true,
+              warnings: ["Jumlah BPRO dan Changes tidak sama", "Changes kosong untuk BPRO ini"],
+            })
+          );
+        });
+
+        changesItems.forEach((changesItem, index) => {
+          if (usedChangesIndexes.has(index)) {
+            return;
+          }
+          descriptors.push(
+            createSmartImportPairDescriptor(null, changesItem, {
+              ambiguous: true,
+              unmatchedCount: true,
+              warnings: ["Jumlah BPRO dan Changes tidak sama", "BPRO kosong untuk Changes ini"],
+            })
+          );
+        });
+
+        return descriptors.sort((left, right) => left.position - right.position);
+      }
+
+      function pairSmartImportItemsByAnchorDistance(rowNumber, releaseItems, bproItems, changesItems, context) {
+        const descriptors = pairBproAndChangesByAnchorDistance(bproItems, changesItems);
+        const usesLineRelease = releaseItems.length > 0;
+
+        return descriptors.map((descriptor) => {
+          const closestRelease = findClosestSmartImportRelease(releaseItems, descriptor.position);
+          const releaseForRow = closestRelease
+            ? mergeSmartImportRelease(null, closestRelease)
+            : context.lastRelease || null;
+          const row = createSmartImportRowFromItems(
+            rowNumber,
+            releaseForRow,
+            descriptor.bproItem,
+            descriptor.changesItem
+          );
+
+          row.hasAmbiguousPairing = row.hasAmbiguousPairing || descriptor.ambiguous;
+          row.hasUnmatchedCount = row.hasUnmatchedCount || descriptor.unmatchedCount;
+          descriptor.warnings.forEach((warning) => addSmartImportSourceWarning(row, warning));
+          if (!usesLineRelease && releaseForRow) {
+            addSmartImportSourceWarning(row, "Release kosong memakai release terakhir");
+          }
+
+          return finalizeFreeTextImportRow(row, context);
+        });
       }
 
       function splitAnchorItemsByReleaseContext(items) {
@@ -4635,29 +4907,20 @@
           return [finalizeFreeTextImportRow(row, context)];
         }
 
-        const rows = [];
-        splitAnchorItemsByReleaseContext(items).forEach((segment) => {
-          if (segment.releaseItem) {
-            context.lastRelease = mergeSmartImportRelease(context.lastRelease, segment.releaseItem);
-          }
+        const releaseItems = items.filter((item) => item.type === "release");
+        const bproItems = items.filter((item) => item.type === "bpro");
+        const changesItems = items.filter((item) => item.type === "changes");
+        const lastReleaseInLine = releaseItems[releaseItems.length - 1];
 
-          const releaseForRows = context.lastRelease || null;
-          const usesLastReleaseFallback = !segment.releaseItem && Boolean(releaseForRows);
-          const bproItems = segment.items.filter((item) => item.type === "bpro");
-          const changesItems = segment.items.filter((item) => item.type === "changes");
+        if (lastReleaseInLine) {
+          context.lastRelease = mergeSmartImportRelease(context.lastRelease, lastReleaseInLine);
+        }
 
-          if (!bproItems.length && !changesItems.length) {
-            return;
-          }
+        if (!bproItems.length && !changesItems.length) {
+          return [];
+        }
 
-          const pairedRows = pairSmartImportItems(rowNumber, releaseForRows, bproItems, changesItems, context);
-          if (usesLastReleaseFallback) {
-            pairedRows.forEach((row) => addSmartImportSourceWarning(row, "Release kosong memakai release terakhir"));
-          }
-          rows.push(...pairedRows);
-        });
-
-        return rows;
+        return pairSmartImportItemsByAnchorDistance(rowNumber, releaseItems, bproItems, changesItems, context);
       }
 
       function classifyImportCell(value) {
@@ -4947,10 +5210,7 @@
           lastRelease: null,
           pendingBpro: null,
         };
-        const sourceLines = `${raw || ""}`
-          .split(/\r?\n/)
-          .map((line) => normalizeSmartImportName(line))
-          .filter(Boolean);
+        const sourceLines = combineSmartImportMultilinePairs(normalizeSmartImportRawLines(raw));
 
         if (!sourceLines.length) {
           return [];
@@ -4970,7 +5230,9 @@
           );
         }
 
-        return finalizeSmartImportParsedRows(parsedRows);
+        return finalizeSmartImportParsedRows(
+          applySingleSmartImportReleaseFallback(parsedRows, getOnlySmartImportReleaseFromLines(sourceLines))
+        );
       }
 
       function parseSmartImportRawData(raw) {
@@ -5626,6 +5888,21 @@
         return `name:${normalizedReleaseName}|${normalizedBproName}|${normalizedChangesName}`;
       }
 
+      function getSmartImportExactDuplicateKey(releasePackage, detailRow) {
+        const parts = [
+          releasePackage.releaseId,
+          releasePackage.releaseName,
+          detailRow.bproNumber,
+          detailRow.bproName,
+          detailRow.changesId,
+          detailRow.changesName,
+        ].map(normalizeSmartImportDuplicatePart);
+        if (!parts.some(Boolean)) {
+          return "";
+        }
+        return `exact:${parts.join("|")}`;
+      }
+
       function getSmartImportDetailDuplicateKeys(releasePackage, detailRow) {
         const primaryKey = getSmartImportPrimaryDuplicateKey(
           releasePackage.releaseId,
@@ -5641,7 +5918,8 @@
           detailRow.bproName,
           detailRow.changesName
         );
-        return fallbackKey ? [fallbackKey] : [];
+        const exactKey = getSmartImportExactDuplicateKey(releasePackage, detailRow);
+        return [fallbackKey, exactKey].filter(Boolean);
       }
 
       function buildSmartImportDuplicateKeySet(projects = table1ProjectsState) {
