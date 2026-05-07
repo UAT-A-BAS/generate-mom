@@ -1794,7 +1794,7 @@
 
       .smart-import-modal {
         width: min(1480px, calc(100vw - 28px));
-        max-height: min(86vh, 820px);
+        max-height: min(90vh, 880px);
         display: grid;
         grid-template-rows: auto auto auto;
         border: 1px solid rgba(201, 211, 223, 0.92);
@@ -1880,9 +1880,9 @@
       }
 
       .smart-import-preview-wrap {
-        min-height: 280px;
-        height: 280px;
-        max-height: 280px;
+        min-height: 420px;
+        height: clamp(420px, 52vh, 500px);
+        max-height: 500px;
         border: 1px solid var(--line);
         border-radius: 14px;
         overflow-x: hidden;
@@ -1923,7 +1923,7 @@
       .smart-import-preview-table th,
       .smart-import-preview-table td {
         border: 1px solid var(--line);
-        padding: 8px 10px;
+        padding: 5px 6px;
         vertical-align: top;
       }
 
@@ -1938,12 +1938,71 @@
         min-width: 0;
         border: 1px solid transparent;
         border-radius: 6px;
-        padding: 4px 6px;
+        padding: 3px 4px;
         background: #fff;
         font: inherit;
         white-space: pre-wrap;
         overflow-wrap: anywhere;
         word-break: break-word;
+      }
+
+      .smart-import-field-shell {
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: center;
+        gap: 3px;
+        border-radius: 8px;
+      }
+
+      .smart-import-drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        min-height: 0;
+        height: 24px;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: #7a8796;
+        cursor: grab;
+        line-height: 0;
+        transform: none;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .smart-import-drag-handle:hover {
+        background: rgba(122, 135, 150, 0.08);
+        border-color: rgba(122, 135, 150, 0.18);
+        transform: none;
+      }
+
+      .smart-import-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .smart-import-drag-handle svg {
+        width: 14px;
+        height: 14px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+
+      .smart-import-field-shell.is-smart-import-drop-target {
+        outline: 2px solid rgba(42, 114, 229, 0.28);
+        background: rgba(42, 114, 229, 0.06);
+      }
+
+      .smart-import-field-shell.is-smart-import-drag-source {
+        opacity: 0.58;
+      }
+
+      .smart-import-field-shell.is-smart-import-pick-source {
+        outline: 2px solid rgba(34, 137, 75, 0.34);
+        background: rgba(34, 137, 75, 0.07);
       }
 
       .smart-import-preview-table textarea {
@@ -1963,7 +2022,7 @@
 
       .smart-import-cell-stack {
         display: grid;
-        gap: 5px;
+        gap: 3px;
       }
 
       .smart-import-cell-stack [data-smart-import-field] + [data-smart-import-field] {
@@ -1994,7 +2053,7 @@
         min-width: 120px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        padding: 5px 8px;
+        padding: 4px 6px;
         background: #fff;
         color: var(--ink);
         font: inherit;
@@ -2003,6 +2062,13 @@
       @media (max-width: 980px) {
         .smart-import-body {
           grid-template-columns: 1fr;
+          overflow-y: auto;
+        }
+
+        .smart-import-preview-wrap {
+          min-height: 340px;
+          height: 42vh;
+          max-height: 420px;
         }
       }
 
@@ -2422,8 +2488,9 @@
             title="Shortcut actions"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M12 5v14"></path>
+              <path d="M5 7h14"></path>
               <path d="M5 12h14"></path>
+              <path d="M5 17h14"></path>
             </svg>
           </button>
         </div>
@@ -2688,6 +2755,8 @@
       let activeDatePicker = null;
       let smartImportPreviewState = [];
       let smartImportSourceRowCount = 0;
+      let smartImportDragSource = null;
+      let smartImportPickedSource = null;
       let previewJumpReturnY = null;
       let previewDrawerRefreshTimer = null;
       let previewDrawerWidth = null;
@@ -4907,17 +4976,41 @@
 
       function renderSmartImportPreviewInput(rowIndex, field, value) {
         const normalizedValue = `${value ?? ""}`;
-        if (isLongSmartImportPreviewField(field)) {
-          return `<textarea data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
-            field
-          )}" rows="1">${escapeHtml(normalizedValue)}</textarea>`;
-        }
+        const control = isLongSmartImportPreviewField(field)
+          ? `<textarea data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
+              field
+            )}" rows="1">${escapeHtml(normalizedValue)}</textarea>`
+          : `<input type="text" data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
+              field
+            )}" value="${escapeHtml(normalizedValue)}" />`;
 
-        return `<input type="text" data-smart-import-index="${rowIndex}" data-smart-import-field="${field}" aria-label="${escapeHtml(
-          field
-        )}" value="${escapeHtml(
-          normalizedValue
-        )}" />`;
+        return `
+          <div
+            class="smart-import-field-shell"
+            data-smart-import-dropzone
+            data-smart-import-index="${rowIndex}"
+            data-smart-import-field="${escapeHtml(field)}"
+          >
+            <button
+              type="button"
+              class="smart-import-drag-handle"
+              draggable="true"
+              data-smart-import-drag
+              aria-label="Pindahkan ${escapeHtml(field)} row ${rowIndex + 1}"
+              title="Drag untuk pindahkan"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 5h.01"></path>
+                <path d="M8 12h.01"></path>
+                <path d="M8 19h.01"></path>
+                <path d="M16 5h.01"></path>
+                <path d="M16 12h.01"></path>
+                <path d="M16 19h.01"></path>
+              </svg>
+            </button>
+            ${control}
+          </div>
+        `;
       }
 
       function renderSmartImportPreviewStack(rowIndex, fields) {
@@ -5021,13 +5114,12 @@
         const releaseCount = getUniqueSmartImportValueCount(rows, "releaseId");
         const bproCount = getUniqueSmartImportValueCount(rows, "bproNumber");
         const changesCount = getUniqueSmartImportValueCount(rows, "changesId");
-        const warningCount = rows.filter((row) => row.warnings.length || row.confidence === "Low").length;
         const duplicateCount = rows.filter((row) => row.status === "Duplicate").length;
         const largeDataHint =
           smartImportSourceRowCount > 1000
             ? " Data cukup besar, preview mungkin membutuhkan waktu lebih lama."
             : "";
-        return `${rows.length} row terdeteksi, ${applyCount} row siap apply, ${releaseCount} release, ${bproCount} BPRO, ${changesCount} changes, ${warningCount} warning, ${duplicateCount} duplicate.${largeDataHint}`;
+        return `${rows.length} row terdeteksi, ${applyCount} row siap apply, ${releaseCount} release, ${bproCount} BPRO, ${changesCount} changes, ${duplicateCount} duplicate.${largeDataHint}`;
       }
 
       function refreshSmartImportSummary() {
@@ -5044,7 +5136,7 @@
         }
 
         elements.smartImportPreviewRows
-          .querySelectorAll("[data-smart-import-field]")
+          .querySelectorAll("input[data-smart-import-field], textarea[data-smart-import-field]")
           .forEach((input) => {
             const rowIndex = Number(input.dataset.smartImportIndex);
             const field = input.dataset.smartImportField;
@@ -5056,6 +5148,159 @@
 
         smartImportPreviewState = finalizeSmartImportParsedRows(smartImportPreviewState);
         return smartImportPreviewState;
+      }
+
+      function getSmartImportDragDescriptor(zone) {
+        if (!zone) {
+          return null;
+        }
+
+        const rowIndex = Number(zone.dataset.smartImportIndex);
+        const field = zone.dataset.smartImportField;
+        if (!Number.isInteger(rowIndex) || !smartImportPreviewState[rowIndex] || !field) {
+          return null;
+        }
+
+        return { rowIndex, field };
+      }
+
+      function clearSmartImportDragClasses() {
+        elements.smartImportPreviewRows
+          .querySelectorAll(".is-smart-import-drag-source, .is-smart-import-drop-target")
+          .forEach((element) => {
+            element.classList.remove("is-smart-import-drag-source", "is-smart-import-drop-target");
+          });
+      }
+
+      function clearSmartImportPickedSource() {
+        smartImportPickedSource = null;
+        elements.smartImportPreviewRows
+          .querySelectorAll(".is-smart-import-pick-source")
+          .forEach((element) => element.classList.remove("is-smart-import-pick-source"));
+      }
+
+      function moveSmartImportFieldValue(source, target) {
+        if (
+          !source ||
+          !target ||
+          (source.rowIndex === target.rowIndex && source.field === target.field) ||
+          !smartImportPreviewState[source.rowIndex] ||
+          !smartImportPreviewState[target.rowIndex]
+        ) {
+          return;
+        }
+
+        syncSmartImportPreviewStateFromDom();
+        const sourceRow = smartImportPreviewState[source.rowIndex];
+        const targetRow = smartImportPreviewState[target.rowIndex];
+        const sourceValue = sourceRow[source.field] || "";
+        const targetValue = targetRow[target.field] || "";
+
+        sourceRow[source.field] = targetValue;
+        targetRow[target.field] = sourceValue;
+        smartImportPreviewState = finalizeSmartImportParsedRows(smartImportPreviewState);
+        renderSmartImportPreview(smartImportPreviewState);
+      }
+
+      function handleSmartImportPickClick(event) {
+        const handle = event.target?.closest?.("[data-smart-import-drag]");
+        if (!handle) {
+          return;
+        }
+
+        const zone = handle.closest("[data-smart-import-dropzone]");
+        const source = getSmartImportDragDescriptor(zone);
+        if (!source) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        if (
+          smartImportPickedSource &&
+          smartImportPickedSource.rowIndex === source.rowIndex &&
+          smartImportPickedSource.field === source.field
+        ) {
+          clearSmartImportPickedSource();
+          return;
+        }
+
+        clearSmartImportPickedSource();
+        smartImportPickedSource = source;
+        zone.classList.add("is-smart-import-pick-source");
+      }
+
+      function handleSmartImportDropClick(event) {
+        if (!smartImportPickedSource || event.target?.closest?.("[data-smart-import-drag]")) {
+          return;
+        }
+
+        const target = getSmartImportDragDescriptor(event.target?.closest?.("[data-smart-import-dropzone]"));
+        if (!target) {
+          return;
+        }
+
+        event.preventDefault();
+        moveSmartImportFieldValue(smartImportPickedSource, target);
+        clearSmartImportPickedSource();
+      }
+
+      function handleSmartImportDragStart(event) {
+        const handle = event.target?.closest?.("[data-smart-import-drag]");
+        if (!handle) {
+          return;
+        }
+
+        const zone = handle.closest("[data-smart-import-dropzone]");
+        const source = getSmartImportDragDescriptor(zone);
+        if (!source) {
+          event.preventDefault();
+          return;
+        }
+
+        smartImportDragSource = source;
+        zone.classList.add("is-smart-import-drag-source");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", JSON.stringify(source));
+      }
+
+      function handleSmartImportDragOver(event) {
+        if (!smartImportDragSource) {
+          return;
+        }
+
+        const zone = event.target?.closest?.("[data-smart-import-dropzone]");
+        const target = getSmartImportDragDescriptor(zone);
+        if (!target) {
+          return;
+        }
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        elements.smartImportPreviewRows
+          .querySelectorAll(".is-smart-import-drop-target")
+          .forEach((element) => element.classList.remove("is-smart-import-drop-target"));
+        if (!(target.rowIndex === smartImportDragSource.rowIndex && target.field === smartImportDragSource.field)) {
+          zone.classList.add("is-smart-import-drop-target");
+        }
+      }
+
+      function handleSmartImportDrop(event) {
+        const zone = event.target?.closest?.("[data-smart-import-dropzone]");
+        const target = getSmartImportDragDescriptor(zone);
+        if (!target || !smartImportDragSource) {
+          return;
+        }
+
+        event.preventDefault();
+        moveSmartImportFieldValue(smartImportDragSource, target);
+        smartImportDragSource = null;
+        clearSmartImportDragClasses();
+      }
+
+      function handleSmartImportDragEnd() {
+        smartImportDragSource = null;
+        clearSmartImportDragClasses();
       }
 
       function moveSmartImportPreviewRow(rowIndex, targetValue) {
@@ -5072,6 +5317,8 @@
       }
 
       function renderSmartImportPreview(rows) {
+        smartImportDragSource = null;
+        smartImportPickedSource = null;
         if (!rows.length) {
           elements.smartImportPreviewRows.innerHTML = '<tr><td colspan="5">Belum ada data valid.</td></tr>';
           elements.smartImportSummary.textContent = "Tidak ada data untuk di-apply.";
@@ -8758,6 +9005,12 @@
         syncSmartImportPreviewStateFromDom();
         renderSmartImportPreview(smartImportPreviewState);
       });
+      elements.smartImportPreviewRows.addEventListener("dragstart", handleSmartImportDragStart);
+      elements.smartImportPreviewRows.addEventListener("dragover", handleSmartImportDragOver);
+      elements.smartImportPreviewRows.addEventListener("drop", handleSmartImportDrop);
+      elements.smartImportPreviewRows.addEventListener("dragend", handleSmartImportDragEnd);
+      elements.smartImportPreviewRows.addEventListener("click", handleSmartImportPickClick);
+      elements.smartImportPreviewRows.addEventListener("click", handleSmartImportDropClick);
       elements.smartImportPreviewBtn.addEventListener("click", previewSmartImportRawData);
       elements.smartImportApplyBtn.addEventListener("click", applySmartImportToTable1);
 
