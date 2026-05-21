@@ -39,6 +39,16 @@ assert.match(
   /if\s*\(\s*applyDraftDataFromJson\(raw\)\s*\)\s*{\s*window\.setTimeout\(sendCollabFullPayload,\s*0\);/s,
   "loaded draft should sync to active collab session"
 );
+assert.match(
+  html,
+  /function\s+resetAll\(\)\s*{[\s\S]*?window\.setTimeout\(sendCollabFullPayload,\s*0\);[\s\S]*?}/,
+  "clear all should sync a full empty draft to active collab session"
+);
+assert.match(
+  html,
+  /function\s+applyActiveDatePickerValue\(\)\s*{[\s\S]*?const path = getControlCollabPath\(displayInput\);[\s\S]*?queueCollabFieldPatch\(path,\s*getCollabFieldValue\(displayInput\),\s*true\);[\s\S]*?}/,
+  "date picker changes should sync through collab patches"
+);
 assert.ok(
   html.indexOf('class="collab-panel"') < html.indexOf('id="loadDraftBtn"'),
   "collab controls should sit before Load Draft Data"

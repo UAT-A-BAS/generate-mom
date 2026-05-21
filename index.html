@@ -3751,7 +3751,18 @@
         }
 
         const { displayInput, startInput, endInput } = activeDatePicker;
-        displayInput.value = formatDateRangeFromNative(startInput.value, endInput.value);
+        const nextValue = formatDateRangeFromNative(startInput.value, endInput.value);
+        if (displayInput.value === nextValue) {
+          return;
+        }
+
+        displayInput.value = nextValue;
+        schedulePreviewDrawerRefresh();
+
+        const path = getControlCollabPath(displayInput);
+        if (path) {
+          queueCollabFieldPatch(path, getCollabFieldValue(displayInput), true);
+        }
       }
 
       function handleDatePickerClick(event) {
@@ -9646,6 +9657,7 @@
         setMemoPanelOpen(false);
         clearPreviewResult();
         clearFeedback();
+        window.setTimeout(sendCollabFullPayload, 0);
       }
 
       // REAL-TIME COLLABORATION
