@@ -71,12 +71,16 @@
       .hero {
         position: relative;
         overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, auto);
+        align-items: center;
+        gap: 18px;
         background:
           linear-gradient(135deg, rgba(27, 77, 120, 0.97), rgba(19, 42, 69, 0.96)),
           #163754;
         color: #fff;
         border-radius: 30px;
-        padding: 20px 190px 20px 22px;
+        padding: 20px 22px;
         box-shadow: var(--shadow);
         animation: rise-in 520ms ease both;
       }
@@ -106,15 +110,14 @@
       }
 
       .hero-actions {
-        position: absolute;
-        right: 26px;
-        bottom: 28px;
+        position: relative;
         z-index: 2;
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         justify-content: flex-end;
-        gap: 8px;
-        max-width: 160px;
+        gap: 6px;
+        max-width: min(760px, 54vw);
       }
 
       .hero-actions button {
@@ -140,6 +143,29 @@
 
       .hero-actions .btn-hero-primary:hover {
         background: #fff;
+      }
+
+      .hero .collab-panel {
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        gap: 6px;
+        min-width: min(100%, 390px);
+      }
+
+      .hero .collab-status {
+        flex: 1 1 320px;
+        justify-content: flex-end;
+        gap: 5px;
+        min-width: min(100%, 280px);
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .hero .collab-pill {
+        min-height: 30px;
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
       }
 
       .hero-badges {
@@ -2189,6 +2215,15 @@
           margin-top: 16px;
         }
 
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .hero .collab-panel,
+        .hero .collab-status {
+          justify-content: flex-start;
+        }
+
         .field.span-8,
         .field.span-6,
         .field.span-4,
@@ -2323,6 +2358,17 @@
       <header class="hero">
         <h1>MOM Persiapan Implementasi</h1>
         <div class="hero-actions" aria-label="Draft actions">
+          <div class="collab-panel" aria-label="Collaboration">
+            <input id="collabEditorName" type="hidden" />
+            <button id="startCollabBtn" type="button" class="btn-secondary">Start Collab</button>
+            <button id="copyShareLinkBtn" type="button" class="btn-ghost" hidden>Copy Share Link</button>
+            <div id="collabStatus" class="collab-status is-personal" role="status" aria-live="polite">
+              <span id="collabModeText" class="collab-pill collab-mode-pill">Personal Draft</span>
+              <span id="collabConnectionText" class="collab-pill collab-connection-pill">Offline</span>
+              <span id="collabUsersText" class="collab-pill">Users: 1</span>
+              <span id="collabLastSyncedText" class="collab-pill">Last synced: -</span>
+            </div>
+          </div>
           <button id="loadDraftBtn" type="button" class="btn-hero-primary">Load Draft Data</button>
           <input id="draftFileInput" type="file" accept="application/json,.json" hidden />
         </div>
@@ -2516,24 +2562,6 @@
           <button id="exportXlsxBtn" type="button" class="btn-ghost">Export XLSX</button>
           <button id="exportOutlookBtn" type="button" class="btn-ghost">Export to Outlook</button>
           <button id="saveDraftBtn" type="button" class="btn-ghost">Save Draft Data</button>
-          <div class="collab-panel" aria-label="Collaboration">
-            <input
-              id="collabEditorName"
-              class="collab-editor-input"
-              type="text"
-              placeholder="Nama Editor"
-              autocomplete="name"
-              aria-label="Nama Editor"
-            />
-            <button id="startCollabBtn" type="button" class="btn-secondary">Start Collab</button>
-            <button id="copyShareLinkBtn" type="button" class="btn-ghost" hidden>Copy Share Link</button>
-            <div id="collabStatus" class="collab-status is-personal" role="status" aria-live="polite">
-              <span id="collabModeText" class="collab-pill collab-mode-pill">Personal Draft</span>
-              <span id="collabConnectionText" class="collab-pill collab-connection-pill">Offline</span>
-              <span id="collabUsersText" class="collab-pill">Users: 1</span>
-              <span id="collabLastSyncedText" class="collab-pill">Last synced: -</span>
-            </div>
-          </div>
           <button id="resetBtn" type="button" class="btn-secondary actions-end">Clear All</button>
         </section>
 
