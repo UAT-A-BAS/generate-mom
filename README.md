@@ -51,20 +51,20 @@ Docs:
 
 ## Deploy Worker / Durable Objects
 
-Deploy Worker staging terpisah:
+Deploy Worker production:
 
 ```powershell
 cd worker
 npx wrangler deploy
 ```
 
-Pages Function `/api/collab/:sessionId` proxy ke Worker staging. Default URL:
+Pages Function `/api/collab/:sessionId` proxy ke Worker production. Default URL:
 
 ```text
-https://generate-mom-collab-worker-dev-staging.alex-marcello08.workers.dev
+https://generate-mom-collab-worker.alex-marcello08.workers.dev
 ```
 
-Untuk production nanti, buat Worker production terpisah dan set environment variable `MOM_COLLAB_WORKER_URL` di Cloudflare Pages agar tidak memakai storage staging.
+Untuk staging, branch `dev-staging` memakai Worker `generate-mom-collab-worker-dev-staging`.
 
 Docs:
 

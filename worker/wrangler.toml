@@ -1,4 +1,4 @@
-name = "generate-mom-collab-worker-dev-staging"
+name = "generate-mom-collab-worker"
 main = "index.mjs"
 compatibility_date = "2026-05-21"
 

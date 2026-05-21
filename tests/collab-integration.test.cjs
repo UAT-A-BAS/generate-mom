@@ -50,7 +50,7 @@ for (const file of [pagesFunctionPath, workerPath, workerWranglerPath, readmePat
 
 const pagesFunction = fs.readFileSync(pagesFunctionPath, "utf8");
 assert.match(pagesFunction, /MOM_COLLAB_WORKER_URL/, "Pages Function should allow worker URL override");
-assert.match(pagesFunction, /generate-mom-collab-worker-dev-staging/, "Pages Function should default to staging Worker");
+assert.match(pagesFunction, /generate-mom-collab-worker\.alex-marcello08\.workers\.dev/, "Pages Function should default to production Worker");
 assert.match(pagesFunction, /fetch\(new Request/, "Pages Function should proxy the WebSocket request");
 
 const workerWrangler = fs.readFileSync(workerWranglerPath, "utf8");
