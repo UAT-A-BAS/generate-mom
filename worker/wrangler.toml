@@ -1,0 +1,11 @@
+name = "generate-mom-collab-worker-dev-staging"
+main = "index.mjs"
+compatibility_date = "2026-05-21"
+
+[[durable_objects.bindings]]
+name = "MOM_COLLAB_SESSIONS"
+class_name = "MomCollabSession"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MomCollabSession"]
