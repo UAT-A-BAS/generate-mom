@@ -9620,7 +9620,9 @@
 
         try {
           const raw = await file.text();
-          applyDraftDataFromJson(raw);
+          if (applyDraftDataFromJson(raw)) {
+            window.setTimeout(sendCollabFullPayload, 0);
+          }
         } catch (error) {
           showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
         } finally {

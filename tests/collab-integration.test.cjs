@@ -34,6 +34,11 @@ assert.match(html, /new WebSocket\(/, "frontend should connect via WebSocket");
 assert.match(html, /api\/collab/, "frontend should use the collab API route");
 assert.match(html, /queueRemotePatchUntilBlur/, "focused local fields should queue remote patches");
 assert.match(html, /id="collabEditorName"\s+type="hidden"|id="collabEditorName"[^>]*type="hidden"/, "editor name should be hidden");
+assert.match(
+  html,
+  /if\s*\(\s*applyDraftDataFromJson\(raw\)\s*\)\s*{\s*window\.setTimeout\(sendCollabFullPayload,\s*0\);/s,
+  "loaded draft should sync to active collab session"
+);
 assert.ok(
   html.indexOf('class="collab-panel"') < html.indexOf('id="loadDraftBtn"'),
   "collab controls should sit before Load Draft Data"
