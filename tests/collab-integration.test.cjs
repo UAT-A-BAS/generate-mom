@@ -36,21 +36,17 @@ assert.match(html, /queueRemotePatchUntilBlur/, "focused local fields should que
 
 const pagesFunctionPath = path.join(root, "functions", "api", "collab", "[sessionId].js");
 const workerPath = path.join(root, "worker", "index.mjs");
-const rootWranglerPath = path.join(root, "wrangler.toml");
 const workerWranglerPath = path.join(root, "worker", "wrangler.toml");
 const readmePath = path.join(root, "README.md");
 
-for (const file of [pagesFunctionPath, workerPath, rootWranglerPath, workerWranglerPath, readmePath]) {
+for (const file of [pagesFunctionPath, workerPath, workerWranglerPath, readmePath]) {
   assert.equal(fs.existsSync(file), true, `${path.relative(root, file)} should exist`);
 }
 
 const pagesFunction = fs.readFileSync(pagesFunctionPath, "utf8");
-assert.match(pagesFunction, /MOM_COLLAB_SESSIONS/, "Pages Function should use DO binding");
-assert.match(pagesFunction, /idFromName\(sessionId\)/, "Pages Function should route by sessionId");
-
-const rootWrangler = fs.readFileSync(rootWranglerPath, "utf8");
-assert.match(rootWrangler, /pages_build_output_dir\s*=\s*"\."/);
-assert.match(rootWrangler, /script_name\s*=\s*"generate-mom-collab-worker-dev-staging"/);
+assert.match(pagesFunction, /MOM_COLLAB_WORKER_URL/, "Pages Function should allow worker URL override");
+assert.match(pagesFunction, /generate-mom-collab-worker-dev-staging/, "Pages Function should default to staging Worker");
+assert.match(pagesFunction, /fetch\(new Request/, "Pages Function should proxy the WebSocket request");
 
 const workerWrangler = fs.readFileSync(workerWranglerPath, "utf8");
 assert.match(workerWrangler, /main\s*=\s*"index\.mjs"/);

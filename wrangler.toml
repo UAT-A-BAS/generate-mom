@@ -1,8 +1,0 @@
-name = "generate-mom"
-compatibility_date = "2026-05-21"
-pages_build_output_dir = "."
-
-[[durable_objects.bindings]]
-name = "MOM_COLLAB_SESSIONS"
-class_name = "MomCollabSession"
-script_name = "generate-mom-collab-worker-dev-staging"

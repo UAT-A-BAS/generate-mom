@@ -16,17 +16,10 @@ Static-only:
 npx wrangler pages dev .
 ```
 
-Collab lokal:
+Collab lokal memakai Pages Function yang proxy ke Worker staging. Jalankan:
 
 ```powershell
-cd worker
-npx wrangler dev
-```
-
-Terminal kedua:
-
-```powershell
-npx wrangler pages dev . --do MOM_COLLAB_SESSIONS=MomCollabSession@generate-mom-collab-worker-dev-staging
+npx wrangler pages dev .
 ```
 
 Buka URL Pages lokal, klik `Start Collab`, lalu buka share link di browser lain.
@@ -37,7 +30,7 @@ Staging dipush ke branch `dev-staging` supaya production branch tidak berubah:
 
 ```powershell
 git switch dev-staging
-git add index.html functions worker wrangler.toml README.md tests
+git add index.html functions worker README.md tests
 git commit -m "Add MOM real-time collaboration"
 git push -u origin dev-staging
 ```
@@ -65,16 +58,13 @@ cd worker
 npx wrangler deploy
 ```
 
-Root `wrangler.toml` sudah bind Pages Function ke Worker staging:
+Pages Function `/api/collab/:sessionId` proxy ke Worker staging. Default URL:
 
-```toml
-[[durable_objects.bindings]]
-name = "MOM_COLLAB_SESSIONS"
-class_name = "MomCollabSession"
-script_name = "generate-mom-collab-worker-dev-staging"
+```text
+https://generate-mom-collab-worker-dev-staging.alex-marcello08.workers.dev
 ```
 
-Untuk production nanti, buat Worker production terpisah dan ubah `script_name` atau binding dashboard agar tidak memakai storage staging.
+Untuk production nanti, buat Worker production terpisah dan set environment variable `MOM_COLLAB_WORKER_URL` di Cloudflare Pages agar tidak memakai storage staging.
 
 Docs:
 
