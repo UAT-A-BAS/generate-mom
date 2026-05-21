@@ -71,12 +71,16 @@
       .hero {
         position: relative;
         overflow: hidden;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, auto);
+        align-items: center;
+        gap: 18px;
         background:
           linear-gradient(135deg, rgba(27, 77, 120, 0.97), rgba(19, 42, 69, 0.96)),
           #163754;
         color: #fff;
         border-radius: 30px;
-        padding: 20px 190px 20px 22px;
+        padding: 20px 22px;
         box-shadow: var(--shadow);
         animation: rise-in 520ms ease both;
       }
@@ -106,15 +110,14 @@
       }
 
       .hero-actions {
-        position: absolute;
-        right: 26px;
-        bottom: 28px;
+        position: relative;
         z-index: 2;
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         justify-content: flex-end;
-        gap: 8px;
-        max-width: 160px;
+        gap: 6px;
+        max-width: min(760px, 54vw);
       }
 
       .hero-actions button {
@@ -140,6 +143,29 @@
 
       .hero-actions .btn-hero-primary:hover {
         background: #fff;
+      }
+
+      .hero .collab-panel {
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        gap: 6px;
+        min-width: min(100%, 390px);
+      }
+
+      .hero .collab-status {
+        flex: 1 1 320px;
+        justify-content: flex-end;
+        gap: 5px;
+        min-width: min(100%, 280px);
+        color: rgba(255, 255, 255, 0.88);
+      }
+
+      .hero .collab-pill {
+        min-height: 30px;
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
       }
 
       .hero-badges {
@@ -1309,6 +1335,72 @@
         margin-left: auto;
       }
 
+      .collab-panel {
+        display: flex;
+        flex: 1 1 460px;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        min-width: min(100%, 320px);
+      }
+
+      .collab-editor-input {
+        width: 172px;
+        min-height: 44px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-size: 0.92rem;
+      }
+
+      .collab-status {
+        display: flex;
+        flex: 1 1 280px;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        min-width: min(100%, 260px);
+        color: var(--ink-soft);
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .collab-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 28px;
+        padding: 5px 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        white-space: nowrap;
+      }
+
+      .collab-pill::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #9aa7b8;
+      }
+
+      .collab-status.is-live .collab-mode-pill::before,
+      .collab-status.is-connected .collab-connection-pill::before {
+        background: #176438;
+      }
+
+      .collab-status.is-connecting .collab-connection-pill::before {
+        background: #b7791f;
+      }
+
+      .collab-status.is-disconnected .collab-connection-pill::before {
+        background: var(--danger);
+      }
+
+      .collab-status.is-personal .collab-mode-pill::before {
+        background: #5b6778;
+      }
+
       .feedback {
         display: none;
         margin-top: 14px;
@@ -2123,6 +2215,15 @@
           margin-top: 16px;
         }
 
+        .hero {
+          grid-template-columns: 1fr;
+        }
+
+        .hero .collab-panel,
+        .hero .collab-status {
+          justify-content: flex-start;
+        }
+
         .field.span-8,
         .field.span-6,
         .field.span-4,
@@ -2257,6 +2358,17 @@
       <header class="hero">
         <h1>MOM Persiapan Implementasi</h1>
         <div class="hero-actions" aria-label="Draft actions">
+          <div class="collab-panel" aria-label="Collaboration">
+            <input id="collabEditorName" type="hidden" />
+            <button id="startCollabBtn" type="button" class="btn-secondary">Start Collab</button>
+            <button id="copyShareLinkBtn" type="button" class="btn-ghost" hidden>Copy Share Link</button>
+            <div id="collabStatus" class="collab-status is-personal" role="status" aria-live="polite">
+              <span id="collabModeText" class="collab-pill collab-mode-pill">Personal Draft</span>
+              <span id="collabConnectionText" class="collab-pill collab-connection-pill">Offline</span>
+              <span id="collabUsersText" class="collab-pill">Users: 1</span>
+              <span id="collabLastSyncedText" class="collab-pill">Last synced: -</span>
+            </div>
+          </div>
           <button id="loadDraftBtn" type="button" class="btn-hero-primary">Load Draft Data</button>
           <input id="draftFileInput" type="file" accept="application/json,.json" hidden />
         </div>
@@ -2774,6 +2886,14 @@
         draftFileInput: document.querySelector("#draftFileInput"),
         exportXlsxBtn: document.querySelector("#exportXlsxBtn"),
         exportOutlookBtn: document.querySelector("#exportOutlookBtn"),
+        collabEditorName: document.querySelector("#collabEditorName"),
+        startCollabBtn: document.querySelector("#startCollabBtn"),
+        copyShareLinkBtn: document.querySelector("#copyShareLinkBtn"),
+        collabStatus: document.querySelector("#collabStatus"),
+        collabModeText: document.querySelector("#collabModeText"),
+        collabConnectionText: document.querySelector("#collabConnectionText"),
+        collabUsersText: document.querySelector("#collabUsersText"),
+        collabLastSyncedText: document.querySelector("#collabLastSyncedText"),
         memoFab: document.querySelector("#memoFab"),
         memoPanel: document.querySelector("#memoPanel"),
         memoCloseBtn: document.querySelector("#memoCloseBtn"),
@@ -2804,6 +2924,47 @@
       let previewDrawerRefreshTimer = null;
       let previewDrawerWidth = null;
       let previewDrawerResizeState = null;
+      const collabStorageKey = "mom-generator-collab-editor";
+      const collabClientStorageKey = "mom-generator-collab-client-id";
+      const collabDebounceMs = 500;
+      const collabStructuralActions = new Set([
+        "add-table1-package",
+        "remove-table1-project",
+        "add-table1-detail-row",
+        "remove-table1-package",
+        "move-table1-detail-row-up",
+        "move-table1-detail-row-down",
+        "remove-table1-detail-row",
+        "move-table3-row-up",
+        "move-table3-row-down",
+        "remove-table3-row",
+        "add-lampiran-feature",
+        "remove-lampiran-date",
+        "move-lampiran-feature-up",
+        "move-lampiran-feature-down",
+        "add-lampiran-scenario",
+        "remove-lampiran-feature",
+        "move-lampiran-scenario-up",
+        "move-lampiran-scenario-down",
+        "remove-lampiran-scenario",
+      ]);
+      const collabState = {
+        active: false,
+        connected: false,
+        sessionId: "",
+        clientId: "",
+        editorName: "",
+        socket: null,
+        version: 0,
+        users: 1,
+        lastSyncedAt: "",
+        applyingRemote: false,
+        reconnectTimer: null,
+        reconnectAttempts: 0,
+        pendingTimers: new Map(),
+        queuedPatches: new Map(),
+        queuedFullPatch: null,
+      };
 
       // =====================================================
       // FACTORY FUNCTIONS
@@ -9443,28 +9604,7 @@
           return false;
         }
 
-        table1BlueprintLevel = draft.table1BlueprintLevel === "bpro" ? "bpro" : "release";
-        table1ProjectsState = draft.table1ProjectsState.length
-          ? draft.table1ProjectsState
-          : [createEmptyTable1Project()];
-        table3State = draft.table3State.length ? draft.table3State : [createEmptyTable3Row()];
-        lampiranEnabled = draft.lampiranEnabled === true;
-        lampiranState = lampiranEnabled
-          ? normalizeLampiranState(draft.lampiranState, { keepBlank: true })
-          : [createEmptyLampiranDateGroup()];
-
-        syncBlueprintLevelControls();
-        renderTable1Projects();
-        renderTable2Rows();
-        applyChecklistValues(draft.checklistRows);
-        renderTable3Rows();
-        renderLampiranSection();
-        elements.memoTextarea.value = draft.memo || "";
-        refreshMemoState();
-        clearPreviewResult();
-        clearFeedback();
-        showFeedback("Draft data berhasil dimuat. Silakan review lalu Preview Table.", "success");
-        return true;
+        return applyDraftPayload(draft);
       }
 
       function loadDraftData() {
@@ -9506,7 +9646,815 @@
         clearFeedback();
       }
 
+      // REAL-TIME COLLABORATION
       // =====================================================
+
+      function getStoredCollabClientId() {
+        const existingId = window.sessionStorage?.getItem(collabClientStorageKey);
+        if (existingId) {
+          return existingId;
+        }
+
+        const nextId =
+          crypto?.randomUUID?.() ||
+          `client-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        window.sessionStorage?.setItem(collabClientStorageKey, nextId);
+        return nextId;
+      }
+
+      function getCollabEditorName() {
+        const inputName = elements.collabEditorName.value.trim();
+        if (inputName) {
+          window.localStorage?.setItem(collabStorageKey, inputName);
+          return inputName;
+        }
+
+        const storedName = window.localStorage?.getItem(collabStorageKey)?.trim();
+        if (storedName) {
+          elements.collabEditorName.value = storedName;
+          return storedName;
+        }
+
+        const fallbackName = `Editor ${getStoredCollabClientId().slice(0, 4).toUpperCase()}`;
+        elements.collabEditorName.value = fallbackName;
+        return fallbackName;
+      }
+
+      function generateCollabSessionId() {
+        return (
+          crypto?.randomUUID?.() ||
+          `mom-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+        )
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, "")
+          .slice(0, 64);
+      }
+
+      function getCollabSessionIdFromUrl() {
+        const sessionId = new URL(window.location.href).searchParams.get("session") || "";
+        return sessionId.trim().replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 96);
+      }
+
+      function updateCollabUrlSession(sessionId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("session", sessionId);
+        window.history.pushState({}, "", url);
+      }
+
+      function buildCollabWebSocketUrl(sessionId) {
+        const url = new URL(`/api/collab/${encodeURIComponent(sessionId)}`, window.location.href);
+        url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+        url.searchParams.set("clientId", collabState.clientId);
+        url.searchParams.set("editorName", collabState.editorName);
+        return url.toString();
+      }
+
+      function formatCollabSyncedAt(value) {
+        if (!value) {
+          return "-";
+        }
+
+        return new Date(value).toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+      }
+
+      function updateCollabStatus(status = {}) {
+        if (typeof status.active === "boolean") {
+          collabState.active = status.active;
+        }
+        if (typeof status.connected === "boolean") {
+          collabState.connected = status.connected;
+        }
+        if (typeof status.users === "number") {
+          collabState.users = Math.max(status.users, collabState.active ? 1 : 1);
+        }
+        if (status.lastSyncedAt) {
+          collabState.lastSyncedAt = status.lastSyncedAt;
+        }
+
+        const connection = status.connection || (collabState.connected ? "connected" : "offline");
+        const modeText = collabState.active ? "Live" : "Personal Draft";
+        const connectionText =
+          connection === "connected"
+            ? "Connected"
+            : connection === "connecting"
+              ? "Connecting"
+              : connection === "disconnected"
+                ? "Disconnected"
+                : "Offline";
+
+        elements.collabStatus.classList.toggle("is-personal", !collabState.active);
+        elements.collabStatus.classList.toggle("is-live", collabState.active);
+        elements.collabStatus.classList.toggle("is-connected", connection === "connected");
+        elements.collabStatus.classList.toggle("is-connecting", connection === "connecting");
+        elements.collabStatus.classList.toggle("is-disconnected", connection === "disconnected");
+        elements.collabModeText.textContent = modeText;
+        elements.collabConnectionText.textContent = connectionText;
+        elements.collabUsersText.textContent = `Users: ${collabState.users || 1}`;
+        elements.collabLastSyncedText.textContent = `Last synced: ${formatCollabSyncedAt(
+          collabState.lastSyncedAt
+        )}`;
+        elements.copyShareLinkBtn.hidden = !collabState.active;
+        elements.startCollabBtn.textContent = collabState.active ? "Restart Collab" : "Start Collab";
+      }
+
+      function collectDraftPayload() {
+        return collectDraftData();
+      }
+
+      function applyDraftPayload(payload, options = {}) {
+        if (!isValidDraftData(payload)) {
+          if (!options.silent) {
+            showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
+          }
+          return false;
+        }
+
+        table1BlueprintLevel = payload.table1BlueprintLevel === "bpro" ? "bpro" : "release";
+        table1ProjectsState = payload.table1ProjectsState.length
+          ? payload.table1ProjectsState
+          : [createEmptyTable1Project()];
+        table3State = payload.table3State.length ? payload.table3State : [createEmptyTable3Row()];
+        lampiranEnabled = payload.lampiranEnabled === true;
+        lampiranState = lampiranEnabled
+          ? normalizeLampiranState(payload.lampiranState, { keepBlank: true })
+          : [createEmptyLampiranDateGroup()];
+
+        syncBlueprintLevelControls();
+        renderTable1Projects();
+        renderTable2Rows();
+        applyChecklistValues(payload.checklistRows);
+        renderTable3Rows();
+        renderLampiranSection();
+        elements.memoTextarea.value = payload.memo || "";
+        refreshMemoState();
+        clearPreviewResult();
+
+        if (!options.silent) {
+          clearFeedback();
+          showFeedback("Draft data berhasil dimuat. Silakan review lalu Preview Table.", "success");
+        }
+
+        return true;
+      }
+
+      function setNestedDraftValue(root, pathParts, value) {
+        let target = root;
+        for (let index = 0; index < pathParts.length - 1; index += 1) {
+          const key = /^\d+$/.test(pathParts[index]) ? Number(pathParts[index]) : pathParts[index];
+          const nextPart = pathParts[index + 1];
+          if (target[key] === undefined || target[key] === null) {
+            target[key] = /^\d+$/.test(nextPart) ? [] : {};
+          }
+          target = target[key];
+        }
+
+        const finalKey = pathParts[pathParts.length - 1];
+        target[/^\d+$/.test(finalKey) ? Number(finalKey) : finalKey] = value;
+      }
+
+      function getCollabFieldValue(control) {
+        if (!control) {
+          return "";
+        }
+
+        if (control.matches('[data-field="documentNeeds"]')) {
+          const packageElement = control.closest(".table1-package");
+          return [...packageElement.querySelectorAll('[data-field="documentNeeds"]')]
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => checkbox.dataset.option);
+        }
+
+        if (control.matches('[name="lampiranEnabled"]')) {
+          return control.value === "yes";
+        }
+
+        return control.value;
+      }
+
+      function getDateDisplayFromNativeControl(control) {
+        return control.closest(".date-field-body")?.querySelector(".date-display");
+      }
+
+      function getControlCollabPath(control) {
+        if (!control) {
+          return "";
+        }
+
+        if (control.classList.contains("native-date-input")) {
+          control = getDateDisplayFromNativeControl(control);
+        }
+
+        if (!control || control.closest("#previewDrawer, #smartImportModal, .collab-panel")) {
+          return "";
+        }
+
+        if (control === elements.memoTextarea) {
+          return "memo";
+        }
+
+        if (control.matches('[name="table1BlueprintLevel"]')) {
+          return "table1BlueprintLevel";
+        }
+
+        if (control.matches('[name="lampiranEnabled"]')) {
+          return "lampiranEnabled";
+        }
+
+        const field = control.dataset.field;
+        if (!field) {
+          return "";
+        }
+
+        const table1Project = control.closest(".table1-project");
+        if (table1Project) {
+          const projectIndex = table1Project.dataset.projectIndex;
+          const packageElement = control.closest(".table1-package");
+          const detailRow = control.closest(".table1-detail-row");
+
+          if (detailRow && packageElement) {
+            return [
+              "table1ProjectsState",
+              projectIndex,
+              "relationPackages",
+              packageElement.dataset.packageIndex,
+              "detailRows",
+              detailRow.dataset.detailRowIndex,
+              field,
+            ].join("/");
+          }
+
+          if (packageElement) {
+            return [
+              "table1ProjectsState",
+              projectIndex,
+              "relationPackages",
+              packageElement.dataset.packageIndex,
+              field,
+            ].join("/");
+          }
+
+          return ["table1ProjectsState", projectIndex, field].join("/");
+        }
+
+        const checklistRow = control.closest("tr[data-checklist-id]");
+        if (checklistRow) {
+          return ["checklistRows", checklistRow.dataset.checklistId, field].join("/");
+        }
+
+        const table3Row = control.closest(".table3-row");
+        if (table3Row) {
+          return ["table3State", table3Row.dataset.rowIndex, field].join("/");
+        }
+
+        const lampiranDate = control.closest(".lampiran-date-card");
+        if (lampiranDate) {
+          const feature = control.closest(".lampiran-feature-card");
+          const scenario = control.closest("[data-lampiran-scenario-index]");
+          if (scenario && feature) {
+            return [
+              "lampiranState",
+              lampiranDate.dataset.lampiranDateIndex,
+              "features",
+              feature.dataset.lampiranFeatureIndex,
+              "scenarios",
+              scenario.dataset.lampiranScenarioIndex,
+              field,
+            ].join("/");
+          }
+
+          if (feature) {
+            return [
+              "lampiranState",
+              lampiranDate.dataset.lampiranDateIndex,
+              "features",
+              feature.dataset.lampiranFeatureIndex,
+              field,
+            ].join("/");
+          }
+
+          return ["lampiranState", lampiranDate.dataset.lampiranDateIndex, field].join("/");
+        }
+
+        return "";
+      }
+
+      function getFlagPathFromButton(flagButton) {
+        const wrapper = flagButton.closest(".flag-field");
+        const control =
+          wrapper?.querySelector("[data-field]") ||
+          wrapper?.querySelector("[data-flag-source]");
+        if (!control) {
+          return "";
+        }
+
+        const field = control.dataset.field || control.dataset.flagSource;
+        const basePath = getControlCollabPath(control);
+        if (!basePath || !field) {
+          return "";
+        }
+
+        if (basePath.startsWith("checklistRows/")) {
+          const [, checklistId] = basePath.split("/");
+          return ["checklistRows", checklistId, "flags", field].join("/");
+        }
+
+        const parts = basePath.split("/");
+        parts[parts.length - 1] = "flags";
+        parts.push(field);
+        return parts.join("/");
+      }
+
+      function getFocusedCollabPath() {
+        return getControlCollabPath(document.activeElement);
+      }
+
+      function findCollabControlByPath(path) {
+        const parts = path.split("/");
+        const isFlagPath = parts.includes("flags");
+        const flagField = isFlagPath ? parts[parts.indexOf("flags") + 1] : "";
+
+        if (path === "memo") {
+          return elements.memoTextarea;
+        }
+
+        if (path === "table1BlueprintLevel") {
+          return document.querySelector(`[name="table1BlueprintLevel"][value="${table1BlueprintLevel}"]`);
+        }
+
+        if (path === "lampiranEnabled") {
+          return document.querySelector(`[name="lampiranEnabled"][value="${lampiranEnabled ? "yes" : "no"}"]`);
+        }
+
+        if (parts[0] === "checklistRows") {
+          const row = elements.table2Rows.querySelector(`tr[data-checklist-id="${parts[1]}"]`);
+          const field = isFlagPath ? flagField : parts[2];
+          return row?.querySelector(`[data-field="${field}"]`);
+        }
+
+        if (parts[0] === "table3State") {
+          const row = elements.table3Rows.querySelector(`.table3-row[data-row-index="${parts[1]}"]`);
+          const field = isFlagPath ? flagField : parts[2];
+          return row?.querySelector(`[data-field="${field}"]`);
+        }
+
+        if (parts[0] === "lampiranState") {
+          const date = elements.lampiranRows.querySelector(
+            `.lampiran-date-card[data-lampiran-date-index="${parts[1]}"]`
+          );
+          if (!date) {
+            return null;
+          }
+
+          if (parts[2] !== "features") {
+            return date.querySelector(`[data-field="${isFlagPath ? flagField : parts[2]}"]`);
+          }
+
+          const feature = date.querySelector(
+            `.lampiran-feature-card[data-lampiran-feature-index="${parts[3]}"]`
+          );
+          if (!feature) {
+            return null;
+          }
+
+          if (parts[4] !== "scenarios") {
+            return feature.querySelector(`[data-field="${isFlagPath ? flagField : parts[4]}"]`);
+          }
+
+          const scenario = feature.querySelector(
+            `[data-lampiran-scenario-index="${parts[5]}"]`
+          );
+          return scenario?.querySelector(`[data-field="${isFlagPath ? flagField : parts[6]}"]`);
+        }
+
+        if (parts[0] === "table1ProjectsState") {
+          const project = elements.table1Projects.querySelector(
+            `.table1-project[data-project-index="${parts[1]}"]`
+          );
+          if (!project) {
+            return null;
+          }
+
+          if (parts[2] !== "relationPackages") {
+            return project.querySelector(`:scope > .field-grid [data-field="${isFlagPath ? flagField : parts[2]}"]`);
+          }
+
+          const packageElement = project.querySelector(
+            `.table1-package[data-package-index="${parts[3]}"]`
+          );
+          if (!packageElement) {
+            return null;
+          }
+
+          if (parts[4] !== "detailRows") {
+            const field = isFlagPath ? flagField : parts[4];
+            if (field === "documentNeeds") {
+              return packageElement.querySelector('[data-flag-source="documentNeeds"]');
+            }
+            return packageElement.querySelector(`:scope > .table1-main-grid [data-field="${field}"]`);
+          }
+
+          const detail = packageElement.querySelector(
+            `.table1-detail-row[data-detail-row-index="${parts[5]}"]`
+          );
+          return detail?.querySelector(`[data-field="${isFlagPath ? flagField : parts[6]}"]`);
+        }
+
+        return null;
+      }
+
+      function syncDateNativeControls(control, value) {
+        if (!control?.classList?.contains("date-display")) {
+          return;
+        }
+
+        const fieldBody = control.closest(".date-field-body");
+        const startInput = fieldBody?.querySelector('[data-native-date-role="start"]');
+        const endInput = fieldBody?.querySelector('[data-native-date-role="end"]');
+        if (startInput) {
+          startInput.value = formatDateRangeForNative(value || "", "start");
+        }
+        if (endInput) {
+          endInput.value = formatDateRangeForNative(value || "", "end");
+        }
+      }
+
+      function applyFieldPatchValue(path, value) {
+        if (!path) {
+          return;
+        }
+
+        const parts = path.split("/");
+        const isFlagPath = parts.includes("flags");
+
+        if (path === "memo") {
+          elements.memoTextarea.value = value || "";
+          refreshMemoState();
+          clearPreviewResult();
+          return;
+        }
+
+        if (path === "table1BlueprintLevel") {
+          table1BlueprintLevel = value === "bpro" ? "bpro" : "release";
+          syncBlueprintLevelControls();
+          renderTable1Projects();
+          clearPreviewResult();
+          return;
+        }
+
+        if (path === "lampiranEnabled") {
+          lampiranEnabled = value === true;
+          renderLampiranSection();
+          clearPreviewResult();
+          return;
+        }
+
+        if (parts[0] === "table1ProjectsState") {
+          setNestedDraftValue(table1ProjectsState, parts.slice(1), value);
+        } else if (parts[0] === "table3State") {
+          setNestedDraftValue(table3State, parts.slice(1), value);
+        } else if (parts[0] === "lampiranState") {
+          setNestedDraftValue(lampiranState, parts.slice(1), value);
+        }
+
+        const control = findCollabControlByPath(path);
+        if (isFlagPath) {
+          setFlaggedFieldState(control?.closest?.(".flag-field"), Boolean(value));
+        } else if (Array.isArray(value) && path.endsWith("/documentNeeds")) {
+          const packageElement = control?.closest?.(".table1-package");
+          packageElement?.querySelectorAll('[data-field="documentNeeds"]').forEach((checkbox) => {
+            checkbox.checked = value.includes(checkbox.dataset.option);
+          });
+        } else if (control) {
+          control.value = value || "";
+          syncDateNativeControls(control, value);
+        }
+
+        if (path.startsWith("checklistRows/")) {
+          const row = control?.closest?.("tr");
+          if (row) {
+            updateChecklistRowState(row);
+          }
+        }
+
+        refreshTextareasScrollState(document);
+        refreshMemoState();
+        clearPreviewResult();
+      }
+
+      function queueRemotePatchUntilBlur(patch) {
+        if (patch.type === "full") {
+          collabState.queuedFullPatch = patch;
+          return;
+        }
+
+        if (patch.path) {
+          collabState.queuedPatches.set(patch.path, patch);
+        }
+      }
+
+      function flushQueuedRemotePatches() {
+        const activePath = getFocusedCollabPath();
+        if (activePath) {
+          return;
+        }
+
+        const fullPatch = collabState.queuedFullPatch;
+        collabState.queuedFullPatch = null;
+        if (fullPatch) {
+          applyRemotePatch(fullPatch);
+        }
+
+        const queued = [...collabState.queuedPatches.values()];
+        collabState.queuedPatches.clear();
+        queued.forEach((patch) => applyRemotePatch(patch));
+      }
+
+      function applyRemotePatch(patch) {
+        if (!patch || patch.clientId === collabState.clientId) {
+          return;
+        }
+
+        const activePath = getFocusedCollabPath();
+        const touchesFocusedField =
+          activePath && (patch.type === "full" || patch.path === activePath);
+        if (touchesFocusedField) {
+          queueRemotePatchUntilBlur(patch);
+          updateCollabStatus({ connection: collabState.connected ? "connected" : "disconnected" });
+          return;
+        }
+
+        collabState.applyingRemote = true;
+        try {
+          if (patch.type === "full") {
+            applyDraftPayload(patch.value, { silent: true });
+          } else {
+            applyFieldPatchValue(patch.path, patch.value);
+          }
+
+          collabState.version = Math.max(collabState.version, Number(patch.version) || 0);
+          updateCollabStatus({
+            connected: collabState.connected,
+            connection: collabState.connected ? "connected" : "disconnected",
+            lastSyncedAt: patch.updatedAt || new Date().toISOString(),
+          });
+        } finally {
+          collabState.applyingRemote = false;
+        }
+      }
+
+      function sendCollabPatch(patch) {
+        if (
+          !collabState.active ||
+          !collabState.socket ||
+          collabState.socket.readyState !== WebSocket.OPEN
+        ) {
+          return false;
+        }
+
+        const message = {
+          type: patch.type || "patch",
+          sessionId: collabState.sessionId,
+          clientId: collabState.clientId,
+          editorName: collabState.editorName,
+          path: patch.path || "",
+          value: patch.value,
+          updatedAt: new Date().toISOString(),
+          version: collabState.version + 1,
+        };
+
+        collabState.socket.send(JSON.stringify(message));
+        collabState.version = message.version;
+        updateCollabStatus({ connected: true, connection: "connected", lastSyncedAt: message.updatedAt });
+        return true;
+      }
+
+      function sendCollabFullPayload() {
+        sendCollabPatch({
+          type: "full",
+          path: "draft",
+          value: collectDraftPayload(),
+        });
+      }
+
+      function queueCollabFieldPatch(path, value, immediate = false) {
+        if (!path || collabState.applyingRemote || !collabState.active) {
+          return;
+        }
+
+        window.clearTimeout(collabState.pendingTimers.get(path));
+        const send = () => {
+          collabState.pendingTimers.delete(path);
+          sendCollabPatch({ type: "patch", path, value });
+        };
+
+        if (immediate) {
+          send();
+          return;
+        }
+
+        collabState.pendingTimers.set(path, window.setTimeout(send, collabDebounceMs));
+      }
+
+      function handleCollabSocketMessage(event) {
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch (error) {
+          return;
+        }
+
+        if (message.type === "init") {
+          collabState.version = Number(message.version) || 0;
+          updateCollabStatus({
+            active: true,
+            connected: true,
+            connection: "connected",
+            users: Number(message.users) || 1,
+            lastSyncedAt: message.updatedAt || collabState.lastSyncedAt,
+          });
+
+          if (message.payload) {
+            applyRemotePatch({
+              type: "full",
+              clientId: message.clientId || "server",
+              value: message.payload,
+              updatedAt: message.updatedAt,
+              version: message.version,
+            });
+          } else if (message.needsPayload) {
+            window.setTimeout(sendCollabFullPayload, 80);
+          }
+          return;
+        }
+
+        if (message.type === "presence") {
+          updateCollabStatus({
+            active: true,
+            connected: collabState.connected,
+            connection: collabState.connected ? "connected" : "disconnected",
+            users: Number(message.users) || 1,
+          });
+          return;
+        }
+
+        applyRemotePatch(message);
+      }
+
+      function disconnectCollab() {
+        collabState.active = false;
+        collabState.connected = false;
+        window.clearTimeout(collabState.reconnectTimer);
+        collabState.pendingTimers.forEach((timer) => window.clearTimeout(timer));
+        collabState.pendingTimers.clear();
+        if (collabState.socket) {
+          collabState.socket.onclose = null;
+          collabState.socket.close(1000, "Local disconnect");
+        }
+        collabState.socket = null;
+        updateCollabStatus({ active: false, connected: false, connection: "offline", users: 1 });
+      }
+
+      function connectCollabSession(sessionId) {
+        const cleanSessionId = `${sessionId || ""}`.trim();
+        if (!cleanSessionId) {
+          return;
+        }
+
+        disconnectCollab();
+        collabState.active = true;
+        collabState.connected = false;
+        collabState.sessionId = cleanSessionId;
+        collabState.clientId = getStoredCollabClientId();
+        collabState.editorName = getCollabEditorName();
+        collabState.reconnectAttempts = 0;
+        updateCollabStatus({ active: true, connected: false, connection: "connecting", users: 1 });
+
+        const socket = new WebSocket(buildCollabWebSocketUrl(cleanSessionId));
+        collabState.socket = socket;
+
+        socket.addEventListener("open", () => {
+          if (socket !== collabState.socket) {
+            return;
+          }
+          collabState.connected = true;
+          collabState.reconnectAttempts = 0;
+          updateCollabStatus({ active: true, connected: true, connection: "connected" });
+          sendCollabPatch({ type: "hello", path: "presence", value: null });
+        });
+
+        socket.addEventListener("message", (event) => {
+          if (socket === collabState.socket) {
+            handleCollabSocketMessage(event);
+          }
+        });
+
+        socket.addEventListener("close", () => {
+          if (socket !== collabState.socket) {
+            return;
+          }
+          collabState.connected = false;
+          updateCollabStatus({ active: true, connected: false, connection: "disconnected" });
+          if (!collabState.active) {
+            return;
+          }
+
+          const delay = Math.min(1000 + collabState.reconnectAttempts * 1200, 8000);
+          collabState.reconnectAttempts += 1;
+          window.clearTimeout(collabState.reconnectTimer);
+          collabState.reconnectTimer = window.setTimeout(
+            () => connectCollabSession(collabState.sessionId),
+            delay
+          );
+        });
+
+        socket.addEventListener("error", () => {
+          if (socket !== collabState.socket) {
+            return;
+          }
+          updateCollabStatus({ active: true, connected: false, connection: "disconnected" });
+        });
+      }
+
+      function startCollabSession() {
+        const sessionId = generateCollabSessionId();
+        updateCollabUrlSession(sessionId);
+        connectCollabSession(sessionId);
+      }
+
+      async function copyCollabShareLink() {
+        if (!collabState.active || !collabState.sessionId) {
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set("session", collabState.sessionId);
+        const shareLink = url.toString();
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareLink);
+        } else {
+          window.prompt("Copy share link:", shareLink);
+        }
+        showFeedback("Share link berhasil disalin.", "success");
+      }
+
+      function handleLocalCollabInput(event, immediate = false) {
+        if (collabState.applyingRemote || !collabState.active) {
+          return;
+        }
+
+        const target = event.target?.classList?.contains("native-date-input")
+          ? getDateDisplayFromNativeControl(event.target)
+          : event.target;
+        const path = getControlCollabPath(target);
+        if (!path) {
+          return;
+        }
+
+        queueCollabFieldPatch(path, getCollabFieldValue(target), immediate);
+      }
+
+      function scheduleCollabFullAfterLocalAction(event) {
+        if (!collabState.active || collabState.applyingRemote) {
+          return;
+        }
+
+        const button = event.target.closest("button");
+        if (!button || button.closest("#previewDrawer, #smartImportModal .smart-import-preview-wrap, .collab-panel")) {
+          return;
+        }
+
+        const shouldSyncFull =
+          collabStructuralActions.has(button.dataset.action) ||
+          button.id === "addTable1Project" ||
+          button.id === "addTable3Row" ||
+          button.id === "addLampiranDateGroup" ||
+          button.id === "smartImportApplyBtn";
+
+        if (shouldSyncFull) {
+          window.setTimeout(sendCollabFullPayload, 0);
+        }
+      }
+
+      function bootCollabFromUrl() {
+        collabState.clientId = getStoredCollabClientId();
+        const storedName = window.localStorage?.getItem(collabStorageKey);
+        if (storedName) {
+          elements.collabEditorName.value = storedName;
+        }
+
+        const sessionId = getCollabSessionIdFromUrl();
+        if (sessionId) {
+          connectCollabSession(sessionId);
+          return;
+        }
+
+        updateCollabStatus({ active: false, connected: false, connection: "offline", users: 1 });
+      }
+
       // EVENT HANDLERS
       // =====================================================
 
@@ -9817,6 +10765,10 @@
 
           const wrapper = flagButton.closest(".flag-field");
           setFlaggedFieldState(wrapper, !wrapper.classList.contains("is-flagged"));
+          const flagPath = getFlagPathFromButton(flagButton);
+          if (flagPath) {
+            queueCollabFieldPatch(flagPath, wrapper.classList.contains("is-flagged"), true);
+          }
         }
 
         const dateDisplay = event.target.closest(".date-display");
@@ -9862,6 +10814,8 @@
         if (!event.target.closest("#previewDrawer")) {
           schedulePreviewDrawerRefresh();
         }
+
+        handleLocalCollabInput(event, true);
       });
 
       document.addEventListener("input", (event) => {
@@ -9869,6 +10823,8 @@
         if (!event.target.closest("#previewDrawer")) {
           schedulePreviewDrawerRefresh();
         }
+
+        handleLocalCollabInput(event);
       });
 
       document.addEventListener("click", (event) => {
@@ -9879,6 +10835,12 @@
         if (event.target.closest("button, [data-action]")) {
           schedulePreviewDrawerRefresh();
         }
+
+        scheduleCollabFullAfterLocalAction(event);
+      });
+
+      document.addEventListener("focusout", () => {
+        window.setTimeout(flushQueuedRemotePatches, 0);
       });
 
       elements.memoFab.addEventListener("click", () => {
@@ -9981,6 +10943,11 @@
       elements.resetBtn.addEventListener("click", resetAll);
       elements.exportXlsxBtn.addEventListener("click", exportXlsxResult);
       elements.exportOutlookBtn.addEventListener("click", exportOutlookResult);
+      elements.startCollabBtn.addEventListener("click", startCollabSession);
+      elements.copyShareLinkBtn.addEventListener("click", copyCollabShareLink);
+      elements.collabEditorName.addEventListener("change", () => {
+        collabState.editorName = getCollabEditorName();
+      });
 
       renderTable1Projects();
       renderTable2Rows();
@@ -9988,6 +10955,7 @@
       renderLampiranSection();
       refreshMemoState();
       updatePreviewJumpButton();
+      bootCollabFromUrl();
     </script>
   </body>
 </html>
