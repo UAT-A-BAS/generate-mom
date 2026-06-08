@@ -662,6 +662,12 @@
         color: #fff;
       }
 
+      .date-picker-day.is-pending {
+        background: #dfefff;
+        color: #005bac;
+        box-shadow: inset 0 0 0 2px rgba(0, 103, 189, 0.35);
+      }
+
       .date-picker-day:focus {
         outline: 2px solid rgba(0, 103, 189, 0.35);
         outline-offset: 2px;
@@ -3287,16 +3293,52 @@
         };
       }
 
-      function formatDateRangeForDisplay(value) {
-        const range = parseDateRangeValue(value);
-        const start = formatDateForDisplay(range.start);
-        const end = formatDateForDisplay(range.end);
-
-        if (start && end && start !== end) {
-          return `${start} - ${end}`;
+      function normalizeDateSegment(segment) {
+        const start = formatDateForDisplay(segment?.start || "");
+        const end = formatDateForDisplay(segment?.end || "");
+        if (!start && !end) {
+          return null;
         }
 
-        return start || end;
+        if (!end || start === end) {
+          return { start: start || end, end: "" };
+        }
+
+        return { start, end };
+      }
+
+      function parseDateMultiValue(value) {
+        return `${value ?? ""}`
+          .split(/\s*,\s*/)
+          .map((part) => normalizeDateSegment(parseDateRangeValue(part)))
+          .filter(Boolean);
+      }
+
+      function getPrimaryDateSegment(value) {
+        return parseDateMultiValue(value)[0] || { start: "", end: "" };
+      }
+
+      function formatDateSegmentForDisplay(segment) {
+        const normalized = normalizeDateSegment(segment);
+        if (!normalized) {
+          return "";
+        }
+
+        if (normalized.end && normalized.start !== normalized.end) {
+          return `${normalized.start} - ${normalized.end}`;
+        }
+
+        return normalized.start || normalized.end;
+      }
+
+      function formatDateRangeForDisplay(value) {
+        const segments = parseDateMultiValue(value);
+
+        if (segments.length) {
+          return segments.map(formatDateSegmentForDisplay).filter(Boolean).join(", ");
+        }
+
+        return "";
       }
 
       function formatDateIndonesian(value) {
@@ -3324,16 +3366,97 @@
         return `${Number(match[1])} ${months[monthIndex] || match[2]} ${match[3]}`;
       }
 
-      function formatDateRangeIndonesian(value) {
-        const range = parseDateRangeValue(value);
-        const start = formatDateIndonesian(range.start);
-        const end = formatDateIndonesian(range.end);
-
-        if (start && end && start !== end) {
-          return `${start} - ${end}`;
+      function getDateDisplayParts(value) {
+        const formatted = formatDateForDisplay(value);
+        const match = formatted.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (!match) {
+          return null;
         }
 
-        return start || end;
+        const months = [
+          "Januari",
+          "Februari",
+          "Maret",
+          "April",
+          "Mei",
+          "Juni",
+          "Juli",
+          "Agustus",
+          "September",
+          "Oktober",
+          "November",
+          "Desember",
+        ];
+        const monthIndex = Number(match[2]) - 1;
+        return {
+          day: Number(match[1]),
+          month: months[monthIndex] || match[2],
+          monthNumber: Number(match[2]),
+          year: match[3],
+          raw: formatted,
+        };
+      }
+
+      function formatDateSegmentIndonesian(segment, includeYear = true) {
+        const normalized = normalizeDateSegment(segment);
+        if (!normalized) {
+          return "";
+        }
+
+        const start = getDateDisplayParts(normalized.start);
+        const end = normalized.end ? getDateDisplayParts(normalized.end) : null;
+        if (!start || (normalized.end && !end)) {
+          return formatDateSegmentForDisplay(normalized);
+        }
+
+        if (!end || start.raw === end.raw) {
+          return `${start.day} ${start.month}${includeYear ? ` ${start.year}` : ""}`;
+        }
+
+        if (start.year === end.year && start.monthNumber === end.monthNumber) {
+          return `${start.day}-${end.day} ${start.month}${includeYear ? ` ${start.year}` : ""}`;
+        }
+
+        if (start.year === end.year) {
+          return `${start.day} ${start.month} - ${end.day} ${end.month}${includeYear ? ` ${end.year}` : ""}`;
+        }
+
+        return `${start.day} ${start.month} ${start.year} - ${end.day} ${end.month} ${end.year}`;
+      }
+
+      function formatDateRangeIndonesian(value) {
+        const segments = parseDateMultiValue(value);
+        if (!segments.length) {
+          return "";
+        }
+
+        const years = segments
+          .flatMap((segment) => [segment.start, segment.end].filter(Boolean))
+          .map(getDateDisplayParts)
+          .filter(Boolean)
+          .map((date) => date.year);
+        const sharedYear = years.length && years.every((year) => year === years[0]) ? years[0] : "";
+        if (!sharedYear || segments.length === 1) {
+          return segments.map((segment) => formatDateSegmentIndonesian(segment, true)).join(", ");
+        }
+
+        return segments
+          .map((segment, index) => formatDateSegmentIndonesian(segment, index === segments.length - 1))
+          .join(", ");
+      }
+
+      function formatDateRangeForResult(value) {
+        return formatDateRangeIndonesian(value) || formatDateRangeForDisplay(value);
+      }
+
+      function formatDateSegmentsFromNative(segments = [], pendingStart = "") {
+        const normalizedSegments = segments.map(normalizeDateSegment).filter(Boolean);
+        const pending = pendingStart ? normalizeDateSegment({ start: formatDateForDisplay(pendingStart), end: "" }) : null;
+        if (pending) {
+          normalizedSegments.push(pending);
+        }
+
+        return normalizedSegments.map(formatDateSegmentForDisplay).filter(Boolean).join(", ");
       }
 
       function formatDateForNative(value) {
@@ -3355,7 +3478,7 @@
       }
 
       function formatDateRangeForNative(value, role) {
-        const range = parseDateRangeValue(value);
+        const range = getPrimaryDateSegment(value);
         const targetValue = role === "end" ? range.end || range.start : range.start;
         return formatDateForNative(targetValue);
       }
@@ -3372,11 +3495,11 @@
       }
 
       function isValidDateDisplayValue(value) {
-        const range = parseDateRangeValue(value);
+        const segments = parseDateMultiValue(value);
         const datePattern = /^\d{2}-\d{2}-\d{4}$/;
         return Boolean(
-          datePattern.test(range.start) &&
-            (!range.end || datePattern.test(range.end))
+          segments.length &&
+            segments.every((range) => datePattern.test(range.start) && (!range.end || datePattern.test(range.end)))
         );
       }
 
@@ -3632,15 +3755,13 @@
           return;
         }
 
-        const { picker, viewDate, startInput, endInput } = activeDatePicker;
+        const { picker, viewDate, segments = [], pendingStart = "" } = activeDatePicker;
         const yearValue = viewDate.getFullYear();
         const monthValue = viewDate.getMonth();
         const viewMode = activeDatePicker.viewMode || "days";
         const monthName = viewDate.toLocaleDateString("en-US", { month: "long" });
         const yearPanelStart = getYearPanelStart(yearValue);
         const days = getPickerMonthMatrix(viewDate);
-        const startValue = startInput.value;
-        const endValue = endInput.value;
 
         if (viewMode === "months") {
           picker.innerHTML = `
@@ -3691,13 +3812,23 @@
               .map((date) => {
                 const iso = isoFromDate(date);
                 const isMuted = date.getMonth() !== viewDate.getMonth();
-                const isSelected = iso === startValue || iso === endValue;
-                const isInRange = startValue && endValue && iso > startValue && iso < endValue;
+                const isSelected = segments.some((segment) => {
+                  const startIso = formatDateForNative(segment.start);
+                  const endIso = formatDateForNative(segment.end || segment.start);
+                  return iso === startIso || iso === endIso;
+                });
+                const isInRange = segments.some((segment) => {
+                  const startIso = formatDateForNative(segment.start);
+                  const endIso = formatDateForNative(segment.end || segment.start);
+                  return startIso && endIso && iso > startIso && iso < endIso;
+                });
+                const isPending = pendingStart && iso === pendingStart;
                 const classes = [
                   "date-picker-day",
                   isMuted ? "is-muted" : "",
                   isInRange ? "is-in-range" : "",
                   isSelected ? "is-selected" : "",
+                  isPending ? "is-pending" : "",
                 ]
                   .filter(Boolean)
                   .join(" ");
@@ -3736,7 +3867,8 @@
           displayInput,
           startInput,
           endInput,
-          selectingEnd: Boolean(startInput.value && !endInput.value),
+          segments: parseDateMultiValue(displayInput.value),
+          pendingStart: "",
           viewMode: "days",
           viewDate: dateFromIso(startInput.value) || new Date(),
         };
@@ -3751,12 +3883,18 @@
         }
 
         const { displayInput, startInput, endInput } = activeDatePicker;
-        const nextValue = formatDateRangeFromNative(startInput.value, endInput.value);
+        const nextValue = formatDateSegmentsFromNative(
+          activeDatePicker.segments || [],
+          activeDatePicker.pendingStart || ""
+        );
         if (displayInput.value === nextValue) {
           return;
         }
 
         displayInput.value = nextValue;
+        const primarySegment = getPrimaryDateSegment(nextValue);
+        startInput.value = formatDateRangeForNative(formatDateSegmentForDisplay(primarySegment), "start");
+        endInput.value = formatDateRangeForNative(formatDateSegmentForDisplay(primarySegment), "end");
         schedulePreviewDrawerRefresh();
 
         const path = getControlCollabPath(displayInput);
@@ -3807,8 +3945,10 @@
           if (action === "clear") {
             activeDatePicker.startInput.value = "";
             activeDatePicker.endInput.value = "";
+            activeDatePicker.segments = [];
+            activeDatePicker.pendingStart = "";
             applyActiveDatePickerValue();
-            closeDateRangePicker();
+            renderDateRangePicker();
             return;
           }
 
@@ -3846,30 +3986,32 @@
         }
 
         const selectedIso = dayButton.dataset.pickerDate;
-        const { startInput, endInput } = activeDatePicker;
-        if (!startInput.value || !activeDatePicker.selectingEnd) {
-          startInput.value = selectedIso;
-          endInput.value = "";
-          activeDatePicker.selectingEnd = true;
+        if (!activeDatePicker.pendingStart) {
+          activeDatePicker.pendingStart = selectedIso;
           activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
           applyActiveDatePickerValue();
           renderDateRangePicker();
           return;
         }
 
-        if (selectedIso < startInput.value) {
-          startInput.value = selectedIso;
-          endInput.value = "";
+        if (selectedIso < activeDatePicker.pendingStart) {
+          activeDatePicker.pendingStart = selectedIso;
           activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
           applyActiveDatePickerValue();
           renderDateRangePicker();
           return;
         }
 
-        endInput.value = selectedIso;
-        activeDatePicker.selectingEnd = false;
+        activeDatePicker.segments = [
+          ...(activeDatePicker.segments || []),
+          normalizeDateSegment({
+            start: formatDateForDisplay(activeDatePicker.pendingStart),
+            end: selectedIso === activeDatePicker.pendingStart ? "" : formatDateForDisplay(selectedIso),
+          }),
+        ].filter(Boolean);
+        activeDatePicker.pendingStart = "";
         applyActiveDatePickerValue();
-        closeDateRangePicker();
+        renderDateRangePicker();
       }
 
       function refreshTextareaScrollState(textarea) {
@@ -7670,7 +7812,7 @@
                     row.flags?.pic
                   )}</td>
                   <td class="${buildResultCellClass("center", row.flags?.target)}">${renderResultCellContent(
-                    escapeHtml(row.target || "-"),
+                    escapeHtml(formatDateRangeForResult(row.target) || "-"),
                     row.flags?.target
                   )}</td>
                   <td class="${buildResultCellClass("", row.flags?.note)}">${renderResultCellContent(
@@ -7705,7 +7847,7 @@
                   row.flags?.pic
                 )}</td>
                 <td class="${buildResultCellClass("center", row.flags?.target)}">${renderResultCellContent(
-                  escapeHtml(row.target || "-"),
+                  escapeHtml(formatDateRangeForResult(row.target) || "-"),
                   row.flags?.target
                 )}</td>
                 <td class="${buildResultCellClass("", row.flags?.note)}">${renderResultCellContent(
