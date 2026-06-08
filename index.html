@@ -497,6 +497,16 @@
         white-space: nowrap;
       }
 
+      .field-body > textarea.date-display.is-multiline-date {
+        min-height: 44px;
+        height: auto;
+        resize: none;
+        overflow: hidden;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        text-overflow: clip;
+      }
+
       .native-date-input {
         position: absolute;
         right: 0;
@@ -3341,6 +3351,15 @@
         return "";
       }
 
+      function formatDateRangeForFieldDisplay(value, multiline = false) {
+        const display = formatDateRangeForDisplay(value);
+        return multiline ? display.replace(/,\s*/g, ",\n") : display;
+      }
+
+      function isDateDisplayMultiline(control) {
+        return control?.dataset?.dateMultiline === "true";
+      }
+
       function formatDateIndonesian(value) {
         const formatted = formatDateForDisplay(value);
         const match = formatted.match(/^(\d{2})-(\d{2})-(\d{4})$/);
@@ -3561,14 +3580,26 @@
       }
 
       function renderDateField(options = {}) {
-        const displayValue = formatDateRangeForDisplay(options.value);
+        const multiline = Boolean(options.multiline);
+        const displayValue = formatDateRangeForFieldDisplay(options.value, multiline);
         const nativeStartValue = formatDateRangeForNative(options.value, "start");
         const nativeEndValue = formatDateRangeForNative(options.value, "end");
         const disabled = options.disabled ? "disabled" : "";
-
-        return renderFlagField(
-          `
-            <div class="field-body date-field-body" data-date-field="${escapeHtml(options.field)}">
+        const dateControlMarkup = multiline
+          ? `
+              <textarea
+                class="date-display is-multiline-date"
+                data-field="${escapeHtml(options.field)}"
+                data-date-multiline="true"
+                placeholder="${escapeHtml(options.placeholder || "DD-MM-YYYY")}"
+                readonly
+                rows="1"
+                aria-label="${escapeHtml(options.ariaLabel || "Pilih tanggal")}"
+                title="Klik untuk pilih rentang tanggal"
+                ${disabled}
+              >${escapeHtml(displayValue)}</textarea>
+            `
+          : `
               <input
                 type="text"
                 class="date-display"
@@ -3580,6 +3611,12 @@
                 title="Klik untuk pilih rentang tanggal"
                 ${disabled}
               />
+            `;
+
+        return renderFlagField(
+          `
+            <div class="field-body date-field-body" data-date-field="${escapeHtml(options.field)}">
+              ${dateControlMarkup}
               <input
                 type="hidden"
                 class="native-date-input"
@@ -3626,6 +3663,19 @@
         }
       }
 
+      function resizeDateDisplay(control) {
+        if (!control?.classList?.contains("is-multiline-date")) {
+          return;
+        }
+
+        control.style.height = "auto";
+        control.style.height = `${Math.max(44, control.scrollHeight)}px`;
+      }
+
+      function refreshDateDisplayHeights(root = document) {
+        root.querySelectorAll?.(".date-display.is-multiline-date").forEach(resizeDateDisplay);
+      }
+
       function syncDateDisplayFromNative(nativeInput) {
         const fieldBody = nativeInput.closest(".field-body");
         const displayInput = fieldBody?.querySelector(".date-display");
@@ -3642,7 +3692,11 @@
           }
         }
 
-        displayInput.value = formatDateRangeFromNative(startInput?.value || "", endInput?.value || "");
+        displayInput.value = formatDateRangeForFieldDisplay(
+          formatDateRangeFromNative(startInput?.value || "", endInput?.value || ""),
+          isDateDisplayMultiline(displayInput)
+        );
+        resizeDateDisplay(displayInput);
         displayInput.dataset.nextDateRole =
           nativeInput.dataset.nativeDateRole === "start" ? "end" : "start";
 
@@ -3891,7 +3945,8 @@
           return;
         }
 
-        displayInput.value = nextValue;
+        displayInput.value = formatDateRangeForFieldDisplay(nextValue, isDateDisplayMultiline(displayInput));
+        resizeDateDisplay(displayInput);
         const primarySegment = getPrimaryDateSegment(nextValue);
         startInput.value = formatDateRangeForNative(formatDateSegmentForDisplay(primarySegment), "start");
         endInput.value = formatDateRangeForNative(formatDateSegmentForDisplay(primarySegment), "end");
@@ -6780,6 +6835,7 @@
                           flagged: false,
                           ariaLabel: `Pilih target untuk ${child.label}`,
                           flagLabel: "Flag Target",
+                          multiline: true,
                         })}
                       </td>
                       <td>
@@ -6848,6 +6904,7 @@
                     flagged: false,
                     ariaLabel: `Pilih target untuk ${item.label}`,
                     flagLabel: "Flag Target",
+                    multiline: true,
                   })}
                 </td>
                 <td>
@@ -6867,6 +6924,7 @@
 
         elements.table2Rows.innerHTML = rowMarkup;
         upgradeFreeTextInputsToTextarea(elements.table2Rows);
+        refreshDateDisplayHeights(elements.table2Rows);
         refreshChecklistRowsState();
       }
 
@@ -9716,7 +9774,8 @@
           const targetDisplay = rowElement.querySelector('[data-field="target"]');
           const targetNative = rowElement.querySelector('[data-native-date-for="target"]');
           if (targetDisplay) {
-            targetDisplay.value = row.target || "";
+            targetDisplay.value = formatDateRangeForFieldDisplay(row.target || "", isDateDisplayMultiline(targetDisplay));
+            resizeDateDisplay(targetDisplay);
             setFlaggedFieldState(targetDisplay.closest(".flag-field"), Boolean(row.flags?.target));
           }
           if (targetNative) {
@@ -9733,6 +9792,7 @@
 
         refreshChecklistRowsState();
         refreshTextareasScrollState(elements.table2Rows);
+        refreshDateDisplayHeights(elements.table2Rows);
       }
 
       function clearPreviewResult() {
@@ -10285,8 +10345,11 @@
             checkbox.checked = value.includes(checkbox.dataset.option);
           });
         } else if (control) {
-          control.value = value || "";
+          control.value = control.classList?.contains("date-display")
+            ? formatDateRangeForFieldDisplay(value || "", isDateDisplayMultiline(control))
+            : value || "";
           syncDateNativeControls(control, value);
+          resizeDateDisplay(control);
         }
 
         if (path.startsWith("checklistRows/")) {
