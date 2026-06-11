@@ -888,6 +888,56 @@
         gap: 4px;
       }
 
+      .table3-drag-handle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--ink-soft);
+        box-shadow: none;
+        cursor: grab;
+        touch-action: none;
+      }
+
+      .table3-drag-handle:hover,
+      .table3-drag-handle:focus-visible {
+        border-color: rgba(27, 77, 120, 0.55);
+        color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(27, 77, 120, 0.12);
+      }
+
+      .table3-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .table3-drag-handle svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+      }
+
+      .table3-row.is-dragging {
+        opacity: 0.48;
+      }
+
+      .table3-row.is-drop-before > td {
+        box-shadow: inset 0 3px 0 var(--accent);
+      }
+
+      .table3-row.is-drop-after > td {
+        box-shadow: inset 0 -3px 0 var(--accent);
+      }
+
       .table3-add-row-actions {
         justify-content: flex-end;
         padding-top: 12px;
@@ -2936,6 +2986,7 @@
       let smartImportSourceRowCount = 0;
       let smartImportDragSource = null;
       let smartImportPickedSource = null;
+      let table3DragSourceIndex = null;
       let previewJumpReturnY = null;
       let previewDrawerRefreshTimer = null;
       let previewDrawerWidth = null;
@@ -2951,8 +3002,6 @@
         "move-table1-detail-row-up",
         "move-table1-detail-row-down",
         "remove-table1-detail-row",
-        "move-table3-row-up",
-        "move-table3-row-down",
         "remove-table3-row",
         "add-lampiran-feature",
         "remove-lampiran-date",
@@ -3165,6 +3214,16 @@
               <path d="M7.5 7.5l.8 11h7.4l.8-11"></path>
               <path d="M10 10.5v5"></path>
               <path d="M14 10.5v5"></path>
+            </svg>
+          `,
+          grip: `
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9 6h.01"></path>
+              <path d="M15 6h.01"></path>
+              <path d="M9 12h.01"></path>
+              <path d="M15 12h.01"></path>
+              <path d="M9 18h.01"></path>
+              <path d="M15 18h.01"></path>
             </svg>
           `,
         };
@@ -6936,15 +6995,6 @@
         elements.table3Rows.innerHTML = table3State
           .map(
             (row, index) => {
-              const moveUpButton =
-                index > 0
-                  ? `<button type="button" class="btn-move" data-action="move-table3-row-up" aria-label="Naikkan strategi implementasi ${index + 1}">&#8593;</button>`
-                  : "";
-              const moveDownButton =
-                index < table3State.length - 1
-                  ? `<button type="button" class="btn-move" data-action="move-table3-row-down" aria-label="Turunkan strategi implementasi ${index + 1}">&#8595;</button>`
-                  : "";
-
               return `
                 <tr class="table3-row" data-row-index="${index}">
                   <td class="row-number">${index + 1}</td>
@@ -7014,8 +7064,16 @@
                   </td>
                   <td>
                     <div class="table3-row-actions">
-                      ${moveUpButton}
-                      ${moveDownButton}
+                      <button
+                        type="button"
+                        class="table3-drag-handle"
+                        draggable="true"
+                        data-table3-drag-handle
+                        aria-label="Geser strategi implementasi ${index + 1}"
+                        title="Drag untuk memindahkan baris. Alt + panah atas/bawah untuk keyboard."
+                      >
+                        ${renderIconSvg("grip")}
+                      </button>
                       ${renderIconButton({
                         action: "remove-table3-row",
                         label: "Hapus Baris Strategi Implementasi",
@@ -7031,6 +7089,103 @@
           )
           .join("");
         upgradeFreeTextInputsToTextarea(elements.table3Rows);
+      }
+
+      function clearTable3DragState() {
+        elements.table3Rows
+          .querySelectorAll(".is-dragging, .is-drop-before, .is-drop-after")
+          .forEach((row) => row.classList.remove("is-dragging", "is-drop-before", "is-drop-after"));
+      }
+
+      function moveTable3Row(sourceIndex, insertionIndex) {
+        if (
+          !Number.isInteger(sourceIndex) ||
+          !Number.isInteger(insertionIndex) ||
+          sourceIndex < 0 ||
+          sourceIndex >= table3State.length
+        ) {
+          return false;
+        }
+
+        const boundedInsertionIndex = Math.max(0, Math.min(insertionIndex, table3State.length));
+        const adjustedIndex =
+          sourceIndex < boundedInsertionIndex ? boundedInsertionIndex - 1 : boundedInsertionIndex;
+        if (adjustedIndex === sourceIndex) {
+          return false;
+        }
+
+        const [movedRow] = table3State.splice(sourceIndex, 1);
+        table3State.splice(adjustedIndex, 0, movedRow);
+        renderTable3Rows();
+        window.setTimeout(sendCollabFullPayload, 0);
+        return true;
+      }
+
+      function handleTable3DragStart(event) {
+        const handle = event.target.closest("[data-table3-drag-handle]");
+        const row = handle?.closest(".table3-row");
+        if (!handle || !row) {
+          return;
+        }
+
+        syncTable3StateFromDom();
+        table3DragSourceIndex = Number(row.dataset.rowIndex);
+        row.classList.add("is-dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", `${table3DragSourceIndex}`);
+      }
+
+      function handleTable3DragOver(event) {
+        const row = event.target.closest(".table3-row");
+        if (!row || !Number.isInteger(table3DragSourceIndex)) {
+          return;
+        }
+
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+        const rect = row.getBoundingClientRect();
+        const dropAfter = event.clientY >= rect.top + rect.height / 2;
+        elements.table3Rows
+          .querySelectorAll(".is-drop-before, .is-drop-after")
+          .forEach((candidate) => candidate.classList.remove("is-drop-before", "is-drop-after"));
+        row.classList.add(dropAfter ? "is-drop-after" : "is-drop-before");
+      }
+
+      function handleTable3Drop(event) {
+        const row = event.target.closest(".table3-row");
+        if (!row || !Number.isInteger(table3DragSourceIndex)) {
+          return;
+        }
+
+        event.preventDefault();
+        const targetIndex = Number(row.dataset.rowIndex);
+        const insertionIndex = targetIndex + (row.classList.contains("is-drop-after") ? 1 : 0);
+        const sourceIndex = table3DragSourceIndex;
+        table3DragSourceIndex = null;
+        clearTable3DragState();
+        moveTable3Row(sourceIndex, insertionIndex);
+      }
+
+      function handleTable3DragEnd() {
+        table3DragSourceIndex = null;
+        clearTable3DragState();
+      }
+
+      function handleTable3DragKeyboard(event) {
+        const handle = event.target.closest("[data-table3-drag-handle]");
+        if (!handle || !event.altKey || !["ArrowUp", "ArrowDown"].includes(event.key)) {
+          return;
+        }
+
+        event.preventDefault();
+        syncTable3StateFromDom();
+        const sourceIndex = Number(handle.closest(".table3-row")?.dataset.rowIndex);
+        const insertionIndex = event.key === "ArrowUp" ? sourceIndex - 1 : sourceIndex + 2;
+        moveTable3Row(sourceIndex, insertionIndex);
+        const nextIndex = event.key === "ArrowUp" ? sourceIndex - 1 : sourceIndex + 1;
+        elements.table3Rows
+          .querySelector(`.table3-row[data-row-index="${nextIndex}"] [data-table3-drag-handle]`)
+          ?.focus();
       }
 
       // =====================================================
@@ -10800,21 +10955,6 @@
         const index = Number(rowElement.dataset.rowIndex);
         syncTable3StateFromDom();
 
-        if (
-          button.dataset.action === "move-table3-row-up" ||
-          button.dataset.action === "move-table3-row-down"
-        ) {
-          const targetIndex = button.dataset.action === "move-table3-row-up" ? index - 1 : index + 1;
-          if (targetIndex < 0 || targetIndex >= table3State.length) {
-            return;
-          }
-
-          const [movedRow] = table3State.splice(index, 1);
-          table3State.splice(targetIndex, 0, movedRow);
-          renderTable3Rows();
-          return;
-        }
-
         if (button.dataset.action !== "remove-table3-row") {
           return;
         }
@@ -10827,6 +10967,11 @@
 
         renderTable3Rows();
       });
+      elements.table3Rows.addEventListener("dragstart", handleTable3DragStart);
+      elements.table3Rows.addEventListener("dragover", handleTable3DragOver);
+      elements.table3Rows.addEventListener("drop", handleTable3Drop);
+      elements.table3Rows.addEventListener("dragend", handleTable3DragEnd);
+      elements.table3Rows.addEventListener("keydown", handleTable3DragKeyboard);
 
       elements.lampiranEnabledControls.forEach((control) => {
         control.addEventListener("change", (event) => {
