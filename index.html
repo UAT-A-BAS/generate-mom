@@ -3377,10 +3377,11 @@
       }
 
       function parseDateMultiValue(value) {
-        return `${value ?? ""}`
+        const segments = `${value ?? ""}`
           .split(/\s*,\s*/)
           .map((part) => normalizeDateSegment(parseDateRangeValue(part)))
           .filter(Boolean);
+        return normalizeDateSegments(segments);
       }
 
       function getPrimaryDateSegment(value) {
@@ -3528,34 +3529,12 @@
       }
 
       function formatDateSegmentsFromNative(segments = [], pendingStart = "") {
-        const normalizedSegments = segments.map(normalizeDateSegment).filter(Boolean);
+        const normalizedSegments = normalizeDateSegments(segments);
         const pending = pendingStart ? normalizeDateSegment({ start: formatDateForDisplay(pendingStart), end: "" }) : null;
-        if (pending) {
-          normalizedSegments.push(pending);
-        }
-
-        return normalizedSegments.map(formatDateSegmentForDisplay).filter(Boolean).join(", ");
-      }
-
-      function findSingleDateSegmentIndex(segments = [], isoValue = "") {
-        return segments.findIndex((segment) => {
-          const startIso = formatDateForNative(segment?.start || "");
-          const endIso = formatDateForNative(segment?.end || segment?.start || "");
-          return startIso === isoValue && endIso === isoValue;
-        });
-      }
-
-      function appendUniqueDateSegment(segments = [], segment) {
-        const normalized = normalizeDateSegment(segment);
-        if (!normalized) {
-          return segments;
-        }
-
-        const normalizedKey = formatDateSegmentForDisplay(normalized);
-        const alreadyExists = segments.some(
-          (existingSegment) => formatDateSegmentForDisplay(existingSegment) === normalizedKey
-        );
-        return alreadyExists ? segments : [...segments, normalized];
+        const displaySegments = pending
+          ? normalizeDateSegments([...normalizedSegments, pending])
+          : normalizedSegments;
+        return displaySegments.map(formatDateSegmentForDisplay).filter(Boolean).join(", ");
       }
 
       function formatDateForNative(value) {
@@ -3574,6 +3553,102 @@
         }
 
         return "";
+      }
+
+      function nextIsoDate(isoValue) {
+        const [year, month, day] = `${isoValue || ""}`.split("-").map(Number);
+        if (!year || !month || !day) {
+          return "";
+        }
+
+        const date = new Date(Date.UTC(year, month - 1, day));
+        date.setUTCDate(date.getUTCDate() + 1);
+        return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
+          date.getUTCDate()
+        ).padStart(2, "0")}`;
+      }
+
+      function expandDateSegmentsToIsoValues(segments = []) {
+        const isoValues = new Set();
+        segments.map(normalizeDateSegment).filter(Boolean).forEach((segment) => {
+          const firstIso = formatDateForNative(segment.start);
+          const lastIso = formatDateForNative(segment.end || segment.start);
+          if (!firstIso || !lastIso) {
+            return;
+          }
+
+          const startIso = firstIso <= lastIso ? firstIso : lastIso;
+          const endIso = firstIso <= lastIso ? lastIso : firstIso;
+          let cursor = startIso;
+          let safety = 0;
+          while (cursor && cursor <= endIso && safety < 36600) {
+            isoValues.add(cursor);
+            cursor = nextIsoDate(cursor);
+            safety += 1;
+          }
+        });
+        return [...isoValues].sort();
+      }
+
+      function collapseIsoValuesToDateSegments(isoValues = []) {
+        const sortedValues = [...new Set(isoValues.filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)))].sort();
+        if (!sortedValues.length) {
+          return [];
+        }
+
+        const segments = [];
+        let rangeStart = sortedValues[0];
+        let rangeEnd = sortedValues[0];
+        const pushRange = () => {
+          segments.push({
+            start: formatDateForDisplay(rangeStart),
+            end: rangeEnd === rangeStart ? "" : formatDateForDisplay(rangeEnd),
+          });
+        };
+
+        sortedValues.slice(1).forEach((isoValue) => {
+          if (nextIsoDate(rangeEnd) === isoValue) {
+            rangeEnd = isoValue;
+            return;
+          }
+
+          pushRange();
+          rangeStart = isoValue;
+          rangeEnd = isoValue;
+        });
+        pushRange();
+        return segments;
+      }
+
+      function normalizeDateSegments(segments = []) {
+        return collapseIsoValuesToDateSegments(expandDateSegmentsToIsoValues(segments));
+      }
+
+      function isDateSelectedInSegments(segments = [], isoValue = "") {
+        return expandDateSegmentsToIsoValues(segments).includes(isoValue);
+      }
+
+      function addDateRangeToSegments(segments = [], startIso = "", endIso = "") {
+        if (!startIso || !endIso) {
+          return normalizeDateSegments(segments);
+        }
+
+        const isoValues = new Set(expandDateSegmentsToIsoValues(segments));
+        let cursor = startIso <= endIso ? startIso : endIso;
+        const rangeEnd = startIso <= endIso ? endIso : startIso;
+        let safety = 0;
+        while (cursor && cursor <= rangeEnd && safety < 36600) {
+          isoValues.add(cursor);
+          cursor = nextIsoDate(cursor);
+          safety += 1;
+        }
+        return collapseIsoValuesToDateSegments([...isoValues]);
+      }
+
+      function removeDateFromSegments(segments = [], isoValue = "") {
+        const isoValues = new Set(expandDateSegmentsToIsoValues(segments));
+        isoValues.delete(isoValue);
+        return collapseIsoValuesToDateSegments([...isoValues]);
       }
 
       function formatDateRangeForNative(value, role) {
@@ -4121,27 +4196,27 @@
         }
 
         const selectedIso = dayButton.dataset.pickerDate;
-        if (!activeDatePicker.pendingStart) {
-          const selectedSegmentIndex = findSingleDateSegmentIndex(
-            activeDatePicker.segments || [],
-            selectedIso
-          );
-          if (selectedSegmentIndex >= 0) {
-            activeDatePicker.segments.splice(selectedSegmentIndex, 1);
-            applyActiveDatePickerValue();
-            renderDateRangePicker();
-            return;
-          }
-
-          activeDatePicker.pendingStart = selectedIso;
-          activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
+        if (activeDatePicker.pendingStart === selectedIso) {
+          activeDatePicker.pendingStart = "";
           applyActiveDatePickerValue();
           renderDateRangePicker();
           return;
         }
 
-        if (selectedIso === activeDatePicker.pendingStart) {
+        if (isDateSelectedInSegments(activeDatePicker.segments || [], selectedIso)) {
+          activeDatePicker.segments = removeDateFromSegments(
+            activeDatePicker.segments || [],
+            selectedIso
+          );
           activeDatePicker.pendingStart = "";
+          applyActiveDatePickerValue();
+          renderDateRangePicker();
+          return;
+        }
+
+        if (!activeDatePicker.pendingStart) {
+          activeDatePicker.pendingStart = selectedIso;
+          activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
           applyActiveDatePickerValue();
           renderDateRangePicker();
           return;
@@ -4155,12 +4230,10 @@
           return;
         }
 
-        activeDatePicker.segments = appendUniqueDateSegment(
+        activeDatePicker.segments = addDateRangeToSegments(
           activeDatePicker.segments || [],
-          {
-            start: formatDateForDisplay(activeDatePicker.pendingStart),
-            end: formatDateForDisplay(selectedIso),
-          }
+          activeDatePicker.pendingStart,
+          selectedIso
         );
         activeDatePicker.pendingStart = "";
         applyActiveDatePickerValue();
