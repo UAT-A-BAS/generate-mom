@@ -3537,6 +3537,27 @@
         return normalizedSegments.map(formatDateSegmentForDisplay).filter(Boolean).join(", ");
       }
 
+      function findSingleDateSegmentIndex(segments = [], isoValue = "") {
+        return segments.findIndex((segment) => {
+          const startIso = formatDateForNative(segment?.start || "");
+          const endIso = formatDateForNative(segment?.end || segment?.start || "");
+          return startIso === isoValue && endIso === isoValue;
+        });
+      }
+
+      function appendUniqueDateSegment(segments = [], segment) {
+        const normalized = normalizeDateSegment(segment);
+        if (!normalized) {
+          return segments;
+        }
+
+        const normalizedKey = formatDateSegmentForDisplay(normalized);
+        const alreadyExists = segments.some(
+          (existingSegment) => formatDateSegmentForDisplay(existingSegment) === normalizedKey
+        );
+        return alreadyExists ? segments : [...segments, normalized];
+      }
+
       function formatDateForNative(value) {
         const raw = `${value ?? ""}`.trim();
         if (!raw) {
@@ -4101,8 +4122,26 @@
 
         const selectedIso = dayButton.dataset.pickerDate;
         if (!activeDatePicker.pendingStart) {
+          const selectedSegmentIndex = findSingleDateSegmentIndex(
+            activeDatePicker.segments || [],
+            selectedIso
+          );
+          if (selectedSegmentIndex >= 0) {
+            activeDatePicker.segments.splice(selectedSegmentIndex, 1);
+            applyActiveDatePickerValue();
+            renderDateRangePicker();
+            return;
+          }
+
           activeDatePicker.pendingStart = selectedIso;
           activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
+          applyActiveDatePickerValue();
+          renderDateRangePicker();
+          return;
+        }
+
+        if (selectedIso === activeDatePicker.pendingStart) {
+          activeDatePicker.pendingStart = "";
           applyActiveDatePickerValue();
           renderDateRangePicker();
           return;
@@ -4116,13 +4155,13 @@
           return;
         }
 
-        activeDatePicker.segments = [
-          ...(activeDatePicker.segments || []),
-          normalizeDateSegment({
+        activeDatePicker.segments = appendUniqueDateSegment(
+          activeDatePicker.segments || [],
+          {
             start: formatDateForDisplay(activeDatePicker.pendingStart),
-            end: selectedIso === activeDatePicker.pendingStart ? "" : formatDateForDisplay(selectedIso),
-          }),
-        ].filter(Boolean);
+            end: formatDateForDisplay(selectedIso),
+          }
+        );
         activeDatePicker.pendingStart = "";
         applyActiveDatePickerValue();
         renderDateRangePicker();
@@ -7006,6 +7045,7 @@
                       flagged: row.flags?.date,
                       ariaLabel: `Pilih tanggal strategi implementasi row ${index + 1}`,
                       flagLabel: "Flag Tanggal",
+                      multiline: true,
                     })}
                   </td>
                   <td>
@@ -7089,6 +7129,7 @@
           )
           .join("");
         upgradeFreeTextInputsToTextarea(elements.table3Rows);
+        refreshDateDisplayHeights(elements.table3Rows);
       }
 
       function clearTable3DragState() {
