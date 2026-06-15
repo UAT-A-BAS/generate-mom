@@ -3620,8 +3620,34 @@
         return segments;
       }
 
+      function sortDateSegments(segments = []) {
+        return segments
+          .map(normalizeDateSegment)
+          .filter(Boolean)
+          .sort((firstSegment, secondSegment) => {
+            const firstStart = formatDateForNative(firstSegment.start);
+            const secondStart = formatDateForNative(secondSegment.start);
+            if (firstStart !== secondStart) {
+              return firstStart.localeCompare(secondStart);
+            }
+
+            const firstEnd = formatDateForNative(firstSegment.end || firstSegment.start);
+            const secondEnd = formatDateForNative(secondSegment.end || secondSegment.start);
+            return secondEnd.localeCompare(firstEnd);
+          });
+      }
+
       function normalizeDateSegments(segments = []) {
-        return collapseIsoValuesToDateSegments(expandDateSegmentsToIsoValues(segments));
+        const selectedIsoValues = new Set();
+        const normalizedSegments = [];
+        sortDateSegments(segments).forEach((segment) => {
+          const uniqueIsoValues = expandDateSegmentsToIsoValues([segment]).filter(
+            (isoValue) => !selectedIsoValues.has(isoValue)
+          );
+          uniqueIsoValues.forEach((isoValue) => selectedIsoValues.add(isoValue));
+          normalizedSegments.push(...collapseIsoValuesToDateSegments(uniqueIsoValues));
+        });
+        return sortDateSegments(normalizedSegments);
       }
 
       function isDateSelectedInSegments(segments = [], isoValue = "") {
@@ -3633,22 +3659,33 @@
           return normalizeDateSegments(segments);
         }
 
-        const isoValues = new Set(expandDateSegmentsToIsoValues(segments));
+        const normalizedSegments = normalizeDateSegments(segments);
+        const selectedIsoValues = new Set(expandDateSegmentsToIsoValues(normalizedSegments));
+        const newIsoValues = [];
         let cursor = startIso <= endIso ? startIso : endIso;
         const rangeEnd = startIso <= endIso ? endIso : startIso;
         let safety = 0;
         while (cursor && cursor <= rangeEnd && safety < 36600) {
-          isoValues.add(cursor);
+          if (!selectedIsoValues.has(cursor)) {
+            newIsoValues.push(cursor);
+          }
           cursor = nextIsoDate(cursor);
           safety += 1;
         }
-        return collapseIsoValuesToDateSegments([...isoValues]);
+        return sortDateSegments([
+          ...normalizedSegments,
+          ...collapseIsoValuesToDateSegments(newIsoValues),
+        ]);
       }
 
       function removeDateFromSegments(segments = [], isoValue = "") {
-        const isoValues = new Set(expandDateSegmentsToIsoValues(segments));
-        isoValues.delete(isoValue);
-        return collapseIsoValuesToDateSegments([...isoValues]);
+        const remainingSegments = normalizeDateSegments(segments).flatMap((segment) => {
+          const remainingIsoValues = expandDateSegmentsToIsoValues([segment]).filter(
+            (selectedIso) => selectedIso !== isoValue
+          );
+          return collapseIsoValuesToDateSegments(remainingIsoValues);
+        });
+        return sortDateSegments(remainingSegments);
       }
 
       function formatDateRangeForNative(value, role) {
