@@ -3620,38 +3620,36 @@
         return segments;
       }
 
-      function sortDateSegments(segments = []) {
-        return segments
-          .map(normalizeDateSegment)
-          .filter(Boolean)
-          .sort((firstSegment, secondSegment) => {
-            const firstStart = formatDateForNative(firstSegment.start);
-            const secondStart = formatDateForNative(secondSegment.start);
-            if (firstStart !== secondStart) {
-              return firstStart.localeCompare(secondStart);
-            }
-
-            const firstEnd = formatDateForNative(firstSegment.end || firstSegment.start);
-            const secondEnd = formatDateForNative(secondSegment.end || secondSegment.start);
-            return secondEnd.localeCompare(firstEnd);
-          });
-      }
-
       function normalizeDateSegments(segments = []) {
-        const selectedIsoValues = new Set();
-        const normalizedSegments = [];
-        sortDateSegments(segments).forEach((segment) => {
-          const uniqueIsoValues = expandDateSegmentsToIsoValues([segment]).filter(
-            (isoValue) => !selectedIsoValues.has(isoValue)
-          );
-          uniqueIsoValues.forEach((isoValue) => selectedIsoValues.add(isoValue));
-          normalizedSegments.push(...collapseIsoValuesToDateSegments(uniqueIsoValues));
-        });
-        return sortDateSegments(normalizedSegments);
+        return collapseIsoValuesToDateSegments(expandDateSegmentsToIsoValues(segments));
       }
 
       function isDateSelectedInSegments(segments = [], isoValue = "") {
         return expandDateSegmentsToIsoValues(segments).includes(isoValue);
+      }
+
+      function findNearestSingleDateSegmentIndex(segments = [], isoValue = "") {
+        const targetDate = Date.parse(`${isoValue}T00:00:00Z`);
+        if (!Number.isFinite(targetDate)) {
+          return -1;
+        }
+
+        let nearestIndex = -1;
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        normalizeDateSegments(segments).forEach((segment, index) => {
+          if (segment.end) {
+            return;
+          }
+
+          const segmentIso = formatDateForNative(segment.start);
+          const segmentDate = Date.parse(`${segmentIso}T00:00:00Z`);
+          const distance = Math.abs(segmentDate - targetDate);
+          if (distance < nearestDistance) {
+            nearestIndex = index;
+            nearestDistance = distance;
+          }
+        });
+        return nearestIndex;
       }
 
       function addDateRangeToSegments(segments = [], startIso = "", endIso = "") {
@@ -3659,33 +3657,65 @@
           return normalizeDateSegments(segments);
         }
 
-        const normalizedSegments = normalizeDateSegments(segments);
-        const selectedIsoValues = new Set(expandDateSegmentsToIsoValues(normalizedSegments));
-        const newIsoValues = [];
+        const isoValues = new Set(expandDateSegmentsToIsoValues(segments));
         let cursor = startIso <= endIso ? startIso : endIso;
         const rangeEnd = startIso <= endIso ? endIso : startIso;
         let safety = 0;
         while (cursor && cursor <= rangeEnd && safety < 36600) {
-          if (!selectedIsoValues.has(cursor)) {
-            newIsoValues.push(cursor);
-          }
+          isoValues.add(cursor);
           cursor = nextIsoDate(cursor);
           safety += 1;
         }
-        return sortDateSegments([
-          ...normalizedSegments,
-          ...collapseIsoValuesToDateSegments(newIsoValues),
-        ]);
+        return collapseIsoValuesToDateSegments([...isoValues]);
+      }
+
+      function pairDateWithSingleSegment(segments = [], isoValue = "") {
+        const normalizedSegments = normalizeDateSegments(segments);
+        const singleIndex = findNearestSingleDateSegmentIndex(normalizedSegments, isoValue);
+        if (singleIndex < 0) {
+          return normalizedSegments;
+        }
+
+        const singleIso = formatDateForNative(normalizedSegments[singleIndex].start);
+        const remainingSegments = normalizedSegments.filter((_, index) => index !== singleIndex);
+        return addDateRangeToSegments(remainingSegments, singleIso, isoValue);
       }
 
       function removeDateFromSegments(segments = [], isoValue = "") {
-        const remainingSegments = normalizeDateSegments(segments).flatMap((segment) => {
-          const remainingIsoValues = expandDateSegmentsToIsoValues([segment]).filter(
-            (selectedIso) => selectedIso !== isoValue
-          );
-          return collapseIsoValuesToDateSegments(remainingIsoValues);
+        const normalizedSegments = normalizeDateSegments(segments);
+        const containingIndex = normalizedSegments.findIndex((segment) => {
+          const startIso = formatDateForNative(segment.start);
+          const endIso = formatDateForNative(segment.end || segment.start);
+          return isoValue >= startIso && isoValue <= endIso;
         });
-        return sortDateSegments(remainingSegments);
+        if (containingIndex < 0) {
+          return normalizedSegments;
+        }
+
+        const targetSegment = normalizedSegments[containingIndex];
+        const startIso = formatDateForNative(targetSegment.start);
+        const endIso = formatDateForNative(targetSegment.end || targetSegment.start);
+        const remainingSegments = normalizedSegments.filter((_, index) => index !== containingIndex);
+
+        if (startIso === endIso) {
+          return normalizeDateSegments(remainingSegments);
+        }
+
+        if (isoValue === startIso) {
+          remainingSegments.push({ start: formatDateForDisplay(endIso), end: "" });
+          return normalizeDateSegments(remainingSegments);
+        }
+
+        if (isoValue === endIso) {
+          remainingSegments.push({ start: formatDateForDisplay(startIso), end: "" });
+          return normalizeDateSegments(remainingSegments);
+        }
+
+        const remainingIsoValues = expandDateSegmentsToIsoValues([targetSegment]).filter(
+          (selectedIso) => selectedIso !== isoValue
+        );
+        remainingSegments.push(...collapseIsoValuesToDateSegments(remainingIsoValues));
+        return normalizeDateSegments(remainingSegments);
       }
 
       function formatDateRangeForNative(value, role) {
@@ -4252,14 +4282,20 @@
         }
 
         if (!activeDatePicker.pendingStart) {
-          activeDatePicker.pendingStart = selectedIso;
-          activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
-          applyActiveDatePickerValue();
-          renderDateRangePicker();
-          return;
-        }
+          const singleIndex = findNearestSingleDateSegmentIndex(
+            activeDatePicker.segments || [],
+            selectedIso
+          );
+          if (singleIndex >= 0) {
+            activeDatePicker.segments = pairDateWithSingleSegment(
+              activeDatePicker.segments || [],
+              selectedIso
+            );
+            applyActiveDatePickerValue();
+            renderDateRangePicker();
+            return;
+          }
 
-        if (selectedIso < activeDatePicker.pendingStart) {
           activeDatePicker.pendingStart = selectedIso;
           activeDatePicker.viewDate = dateFromIso(selectedIso) || activeDatePicker.viewDate;
           applyActiveDatePickerValue();

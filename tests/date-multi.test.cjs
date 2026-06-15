@@ -36,9 +36,10 @@ const functionNames = [
   "nextIsoDate",
   "expandDateSegmentsToIsoValues",
   "collapseIsoValuesToDateSegments",
-  "sortDateSegments",
   "normalizeDateSegments",
   "isDateSelectedInSegments",
+  "findNearestSingleDateSegmentIndex",
+  "pairDateWithSingleSegment",
   "addDateRangeToSegments",
   "removeDateFromSegments",
 ];
@@ -57,7 +58,7 @@ assert.equal(
   context.formatDateRangeForDisplay(
     "21-05-2026 - 22-05-2026, 23-05-2026 - 24-05-2026"
   ),
-  "21-05-2026 - 22-05-2026, 23-05-2026 - 24-05-2026"
+  "21-05-2026 - 24-05-2026"
 );
 
 assert.deepEqual(
@@ -86,10 +87,7 @@ assert.deepEqual(
       )
     )
   ),
-  [
-    { start: "21-05-2026", end: "22-05-2026" },
-    { start: "23-05-2026", end: "24-05-2026" },
-  ]
+  [{ start: "21-05-2026", end: "24-05-2026" }]
 );
 
 assert.deepEqual(
@@ -111,12 +109,24 @@ assert.deepEqual(
   JSON.parse(
     JSON.stringify(
       context.removeDateFromSegments(
-        [{ start: "21-05-2026", end: "24-05-2026" }],
-        "2026-05-21"
+        [{ start: "08-06-2026", end: "12-06-2026" }],
+        "2026-06-08"
       )
     )
   ),
-  [{ start: "22-05-2026", end: "24-05-2026" }]
+  [{ start: "12-06-2026", end: "" }]
+);
+
+assert.deepEqual(
+  JSON.parse(
+    JSON.stringify(
+      context.pairDateWithSingleSegment(
+        [{ start: "12-06-2026", end: "" }],
+        "2026-06-07"
+      )
+    )
+  ),
+  [{ start: "07-06-2026", end: "12-06-2026" }]
 );
 
 assert.equal(
