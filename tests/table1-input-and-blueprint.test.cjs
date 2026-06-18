@@ -27,7 +27,7 @@ function extractFunctionSource(source, name) {
 
 assert.match(
   html,
-  /\.table1-detail-row\s+\.field-body\s*>\s*\.free-textarea\s*\{[^}]*resize:\s*vertical;/s,
+  /\.table1-detail-row\s+\.field-body\s*>\s*\.free-textarea\s*\{(?=[^}]*height:\s*64px;)(?=[^}]*resize:\s*vertical;)[^}]*\}/s,
   "all Table 1 feature textareas should be vertically resizable"
 );
 assert.match(
