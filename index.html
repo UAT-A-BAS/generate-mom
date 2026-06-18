@@ -259,6 +259,7 @@
 
       .table1-detail-grid .field {
         min-width: 0;
+        align-content: start;
       }
 
       .table1-main-grid .field.span-3 {
@@ -4328,12 +4329,39 @@
         renderDateRangePicker();
       }
 
+      function getAutoGrowHeight(currentHeight, contentHeight, minimumHeight = 64) {
+        return Math.max(
+          minimumHeight,
+          Number(currentHeight) || 0,
+          Number(contentHeight) || 0
+        );
+      }
+
+      function autoGrowFeatureTextarea(textarea) {
+        if (!textarea?.closest?.(".table1-detail-row")) {
+          return;
+        }
+
+        const currentHeight = textarea.getBoundingClientRect().height;
+        const borderHeight = textarea.offsetHeight - textarea.clientHeight;
+        textarea.style.overflowY = "hidden";
+        textarea.style.height = "auto";
+        textarea.style.height = `${getAutoGrowHeight(
+          currentHeight,
+          textarea.scrollHeight + borderHeight
+        )}px`;
+        textarea.style.overflowY = "";
+      }
+
       function refreshTextareaScrollState(textarea) {
         if (!textarea?.classList?.contains("free-textarea")) {
           return;
         }
 
-        const needsScroll = textarea.value.includes("\n");
+        autoGrowFeatureTextarea(textarea);
+        const needsScroll = textarea.closest(".table1-detail-row")
+          ? textarea.scrollHeight > textarea.clientHeight + 1
+          : textarea.value.includes("\n");
         textarea.classList.toggle("has-scroll", needsScroll);
       }
 

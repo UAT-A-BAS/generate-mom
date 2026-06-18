@@ -32,6 +32,11 @@ assert.match(
 );
 assert.match(
   html,
+  /\.table1-detail-grid\s+\.field\s*\{[^}]*align-content:\s*start;/s,
+  "Table 1 feature fields should remain top-aligned when one textarea grows"
+);
+assert.match(
+  html,
   /#table2Rows\s+textarea\[data-field="note"\]\s*\{[^}]*resize:\s*vertical;/s,
   "Table 2 note textareas should be vertically resizable"
 );
@@ -39,6 +44,7 @@ assert.match(
 const context = { table1BlueprintLevel: "bpro" };
 vm.createContext(context);
 for (const functionName of [
+  "getAutoGrowHeight",
   "formatJoined",
   "joinDocumentNeeds",
   "buildGroupMeta",
@@ -47,6 +53,10 @@ for (const functionName of [
 ]) {
   vm.runInContext(extractFunctionSource(html, functionName), context);
 }
+
+assert.equal(context.getAutoGrowHeight(64, 138), 138);
+assert.equal(context.getAutoGrowHeight(200, 138), 200);
+assert.equal(context.getAutoGrowHeight(32, 40), 64);
 
 const sharedBlueprintRows = [
   {
