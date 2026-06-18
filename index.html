@@ -550,6 +550,20 @@
         height: 64px;
       }
 
+      .table1-detail-row .field-body > .free-textarea {
+        min-height: 44px;
+        resize: vertical;
+        overflow: auto !important;
+        scrollbar-width: auto;
+      }
+
+      #table2Rows textarea[data-field="note"] {
+        min-height: 42px;
+        height: 42px;
+        resize: vertical;
+        overflow: auto;
+      }
+
       .date-range-picker {
         position: fixed;
         z-index: 60;
@@ -4447,6 +4461,15 @@
         return meta;
       }
 
+      function normalizeBlueprintMergeKey(value, index) {
+        const normalizedValue = `${value || ""}`.trim();
+        if (!normalizedValue || normalizedValue === "-") {
+          return `__blueprint_empty_${index}`;
+        }
+
+        return normalizedValue;
+      }
+
       // Merge hanya untuk nilai berurutan yang identik, supaya hasil tabel tetap mengikuti urutan input user.
       function buildMergeMeta(rows) {
         const bpro = buildGroupMeta(rows, (row) => formatJoined([row.bproNumber, row.bproName]) || "-");
@@ -4454,7 +4477,7 @@
         const blueprint = buildGroupMeta(rows, (row, index) => {
           const blueprintValue = (row.blueprintLink || "").trim() || "-";
           if (table1BlueprintLevel === "bpro") {
-            return `${formatJoined([row.bproNumber, row.bproName]) || index}||${blueprintValue}`;
+            return normalizeBlueprintMergeKey(blueprintValue, index);
           }
 
           return `${formatJoined([row.releaseId, row.releaseName]) || "-"}||${blueprintValue}`;
