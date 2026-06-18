@@ -795,6 +795,7 @@
       .lampiran-feature-card .field,
       .lampiran-scenario-card .field {
         gap: 6px;
+        align-content: start;
       }
 
       .lampiran-date-card .rows-stack,
@@ -802,9 +803,12 @@
         gap: 8px;
       }
 
-      .lampiran-scenario-card textarea {
+      .lampiran-date-card .field-body > textarea:not(.date-display) {
         min-height: 64px;
         height: 64px;
+        resize: vertical;
+        overflow: auto !important;
+        scrollbar-width: auto;
       }
 
       .lampiran-card-actions {
@@ -4338,7 +4342,11 @@
       }
 
       function autoGrowFeatureTextarea(textarea) {
-        if (!textarea?.closest?.(".table1-detail-row")) {
+        const isResizableFeatureField = Boolean(
+          textarea?.closest?.(".table1-detail-row") ||
+            (textarea?.closest?.(".lampiran-date-card") && !textarea?.classList?.contains("date-display"))
+        );
+        if (!isResizableFeatureField) {
           return;
         }
 
@@ -4354,19 +4362,24 @@
       }
 
       function refreshTextareaScrollState(textarea) {
-        if (!textarea?.classList?.contains("free-textarea")) {
+        const isLampiranTextarea = Boolean(
+          textarea?.matches?.("textarea:not(.date-display)") && textarea.closest(".lampiran-date-card")
+        );
+        if (!textarea?.classList?.contains("free-textarea") && !isLampiranTextarea) {
           return;
         }
 
         autoGrowFeatureTextarea(textarea);
-        const needsScroll = textarea.closest(".table1-detail-row")
+        const needsScroll = textarea.closest(".table1-detail-row, .lampiran-date-card")
           ? textarea.scrollHeight > textarea.clientHeight + 1
           : textarea.value.includes("\n");
         textarea.classList.toggle("has-scroll", needsScroll);
       }
 
       function refreshTextareasScrollState(root = document) {
-        root.querySelectorAll(".free-textarea").forEach(refreshTextareaScrollState);
+        root
+          .querySelectorAll(".free-textarea, .lampiran-date-card textarea:not(.date-display)")
+          .forEach(refreshTextareaScrollState);
       }
 
       function upgradeFreeTextInputsToTextarea(root = document) {
@@ -7605,6 +7618,7 @@
           )
           .join("");
         upgradeFreeTextInputsToTextarea(elements.lampiranRows);
+        refreshTextareasScrollState(elements.lampiranRows);
       }
 
       function syncTable1ProjectsStateFromDom() {
@@ -11338,6 +11352,10 @@
           features[featureIndex].scenarios = [createEmptyLampiranScenario()];
         }
         renderLampiranSection();
+      });
+
+      elements.lampiranRows.addEventListener("input", (event) => {
+        refreshTextareaScrollState(event.target);
       });
 
       elements.table2Rows.addEventListener("input", (event) => {
