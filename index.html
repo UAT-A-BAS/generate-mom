@@ -3013,7 +3013,13 @@
       let previewDrawerResizeState = null;
       const collabStorageKey = "mom-generator-collab-editor";
       const collabClientStorageKey = "mom-generator-collab-client-id";
-      const collabDebounceMs = 500;
+      const collabDebounceMs = 3000;
+      const collabIdleMs = 5 * 60 * 1000;
+      const collabHiddenGraceMs = 60 * 1000;
+      const collabFlushCloseDelayMs = 120;
+      const collabReconnectBaseMs = 1000;
+      const collabReconnectMaxMs = 8000;
+      const collabActivityEvents = ["keydown", "input", "click", "mousemove", "scroll", "touchstart"];
       const collabStructuralActions = new Set([
         "add-table1-package",
         "remove-table1-project",
@@ -3044,8 +3050,14 @@
         users: 1,
         lastSyncedAt: "",
         applyingRemote: false,
+        idle: false,
+        suspendReason: "",
+        lastActivityAt: 0,
         reconnectTimer: null,
         reconnectAttempts: 0,
+        idleTimer: null,
+        hiddenTimer: null,
+        closeTimer: null,
         pendingTimers: new Map(),
         queuedPatches: new Map(),
         queuedFullPatch: null,
@@ -10385,6 +10397,188 @@
         elements.startCollabBtn.textContent = collabState.active ? "Restart Collab" : "Start Collab";
       }
 
+      function clearCollabTimer(timerKey) {
+        window.clearTimeout(collabState[timerKey]);
+        collabState[timerKey] = null;
+      }
+
+      function isCollabSocketOpen(socket = collabState.socket) {
+        return socket?.readyState === WebSocket.OPEN;
+      }
+
+      function closeCollabSocket(reason = "Collab disconnect", delayMs = 0) {
+        const socket = collabState.socket;
+        if (!socket) {
+          return;
+        }
+
+        collabState.socket = null;
+        const closeSocket = () => {
+          try {
+            if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+              socket.close(1000, reason);
+            }
+          } catch (error) {
+            // Best-effort close only; unload and browser shutdown can interrupt cleanup.
+          }
+        };
+
+        clearCollabTimer("closeTimer");
+        if (delayMs > 0) {
+          collabState.closeTimer = window.setTimeout(closeSocket, delayMs);
+          return;
+        }
+
+        closeSocket();
+      }
+
+      function shouldReconnectCollab() {
+        return (
+          collabState.active &&
+          Boolean(collabState.sessionId) &&
+          !collabState.idle &&
+          !document.hidden
+        );
+      }
+
+      function scheduleCollabReconnect() {
+        clearCollabTimer("reconnectTimer");
+        if (!shouldReconnectCollab()) {
+          return;
+        }
+
+        const delay = Math.min(
+          collabReconnectBaseMs * 2 ** collabState.reconnectAttempts,
+          collabReconnectMaxMs
+        );
+        collabState.reconnectAttempts += 1;
+        collabState.reconnectTimer = window.setTimeout(
+          () => connectCollabSession(collabState.sessionId),
+          delay
+        );
+      }
+
+      function clearPendingCollabPatchTimers() {
+        collabState.pendingTimers.forEach((timer) => window.clearTimeout(timer));
+        collabState.pendingTimers.clear();
+      }
+
+      function flushPendingCollabChanges() {
+        clearPendingCollabPatchTimers();
+        if (!isCollabSocketOpen()) {
+          return false;
+        }
+
+        return sendCollabFullPayload();
+      }
+
+      function scheduleCollabIdleTimer() {
+        clearCollabTimer("idleTimer");
+        if (!collabState.active || !collabState.sessionId || document.hidden) {
+          return;
+        }
+
+        collabState.idleTimer = window.setTimeout(() => {
+          pauseCollabSession("idle");
+        }, collabIdleMs);
+      }
+
+      function scheduleCollabHiddenTimer() {
+        clearCollabTimer("hiddenTimer");
+        if (!collabState.active || !collabState.sessionId || !document.hidden) {
+          return;
+        }
+
+        clearCollabTimer("idleTimer");
+        collabState.hiddenTimer = window.setTimeout(() => {
+          if (document.hidden) {
+            pauseCollabSession("hidden");
+          }
+        }, collabHiddenGraceMs);
+      }
+
+      function pauseCollabSession(reason) {
+        if (!collabState.active || !collabState.sessionId) {
+          return;
+        }
+
+        collabState.idle = true;
+        collabState.suspendReason = reason;
+        clearCollabTimer("idleTimer");
+        clearCollabTimer("hiddenTimer");
+        clearCollabTimer("reconnectTimer");
+        flushPendingCollabChanges();
+        closeCollabSocket(`Collab ${reason}`, collabFlushCloseDelayMs);
+        collabState.connected = false;
+        updateCollabStatus({ active: true, connected: false, connection: "disconnected" });
+      }
+
+      function resumeCollabSession() {
+        if (!collabState.active || !collabState.sessionId || document.hidden) {
+          return;
+        }
+
+        const socketState = collabState.socket?.readyState;
+        const shouldOpenSocket =
+          collabState.idle ||
+          socketState === undefined ||
+          socketState === WebSocket.CLOSING ||
+          socketState === WebSocket.CLOSED;
+
+        collabState.idle = false;
+        collabState.suspendReason = "";
+        scheduleCollabIdleTimer();
+
+        if (shouldOpenSocket) {
+          connectCollabSession(collabState.sessionId);
+        }
+      }
+
+      function markCollabUserActive(event) {
+        if (!collabState.active || !collabState.sessionId) {
+          return;
+        }
+
+        const now = Date.now();
+        if (event?.type === "mousemove" && now - collabState.lastActivityAt < 1000) {
+          return;
+        }
+
+        collabState.lastActivityAt = now;
+        if (document.hidden) {
+          return;
+        }
+
+        clearCollabTimer("hiddenTimer");
+        resumeCollabSession();
+      }
+
+      function handleCollabVisibilityChange() {
+        if (!collabState.active || !collabState.sessionId) {
+          return;
+        }
+
+        if (document.hidden) {
+          scheduleCollabHiddenTimer();
+          return;
+        }
+
+        markCollabUserActive({ type: "visibilitychange" });
+      }
+
+      function cleanupCollabBeforeUnload() {
+        if (!collabState.active || !collabState.sessionId) {
+          return;
+        }
+
+        clearCollabTimer("idleTimer");
+        clearCollabTimer("hiddenTimer");
+        clearCollabTimer("reconnectTimer");
+        flushPendingCollabChanges();
+        closeCollabSocket("Page unload");
+        collabState.connected = false;
+      }
+
       function collectDraftPayload() {
         return collectDraftData();
       }
@@ -10860,7 +11054,7 @@
       }
 
       function sendCollabFullPayload() {
-        sendCollabPatch({
+        return sendCollabPatch({
           type: "full",
           path: "draft",
           value: collectDraftPayload(),
@@ -10931,18 +11125,28 @@
         applyRemotePatch(message);
       }
 
-      function disconnectCollab() {
+      function disconnectCollab(options = {}) {
+        const { keepActive = false, flush = false, reason = "Local disconnect" } = options;
+        if (flush) {
+          flushPendingCollabChanges();
+        }
+
         collabState.active = false;
         collabState.connected = false;
-        window.clearTimeout(collabState.reconnectTimer);
-        collabState.pendingTimers.forEach((timer) => window.clearTimeout(timer));
-        collabState.pendingTimers.clear();
-        if (collabState.socket) {
-          collabState.socket.onclose = null;
-          collabState.socket.close(1000, "Local disconnect");
-        }
-        collabState.socket = null;
-        updateCollabStatus({ active: false, connected: false, connection: "offline", users: 1 });
+        collabState.idle = false;
+        collabState.suspendReason = "";
+        clearCollabTimer("reconnectTimer");
+        clearCollabTimer("idleTimer");
+        clearCollabTimer("hiddenTimer");
+        clearPendingCollabPatchTimers();
+        closeCollabSocket(reason);
+        collabState.active = keepActive && Boolean(collabState.sessionId);
+        updateCollabStatus({
+          active: collabState.active,
+          connected: false,
+          connection: collabState.active ? "disconnected" : "offline",
+          users: 1,
+        });
       }
 
       function connectCollabSession(sessionId) {
@@ -10951,14 +11155,17 @@
           return;
         }
 
-        disconnectCollab();
+        disconnectCollab({ reason: "Reconnect collab" });
         collabState.active = true;
         collabState.connected = false;
         collabState.sessionId = cleanSessionId;
         collabState.clientId = getStoredCollabClientId();
         collabState.editorName = getCollabEditorName();
-        collabState.reconnectAttempts = 0;
+        collabState.idle = false;
+        collabState.suspendReason = "";
+        collabState.lastActivityAt = Date.now();
         updateCollabStatus({ active: true, connected: false, connection: "connecting", users: 1 });
+        scheduleCollabIdleTimer();
 
         const socket = new WebSocket(buildCollabWebSocketUrl(cleanSessionId));
         collabState.socket = socket;
@@ -10970,6 +11177,7 @@
           collabState.connected = true;
           collabState.reconnectAttempts = 0;
           updateCollabStatus({ active: true, connected: true, connection: "connected" });
+          scheduleCollabIdleTimer();
           sendCollabPatch({ type: "hello", path: "presence", value: null });
         });
 
@@ -10985,17 +11193,11 @@
           }
           collabState.connected = false;
           updateCollabStatus({ active: true, connected: false, connection: "disconnected" });
-          if (!collabState.active) {
+          if (!shouldReconnectCollab()) {
             return;
           }
 
-          const delay = Math.min(1000 + collabState.reconnectAttempts * 1200, 8000);
-          collabState.reconnectAttempts += 1;
-          window.clearTimeout(collabState.reconnectTimer);
-          collabState.reconnectTimer = window.setTimeout(
-            () => connectCollabSession(collabState.sessionId),
-            delay
-          );
+          scheduleCollabReconnect();
         });
 
         socket.addEventListener("error", () => {
@@ -11463,6 +11665,14 @@
       document.addEventListener("focusout", () => {
         window.setTimeout(flushQueuedRemotePatches, 0);
       });
+
+      collabActivityEvents.forEach((eventName) => {
+        const target = eventName === "scroll" ? window : document;
+        target.addEventListener(eventName, markCollabUserActive, { capture: true, passive: true });
+      });
+      document.addEventListener("visibilitychange", handleCollabVisibilityChange);
+      window.addEventListener("beforeunload", cleanupCollabBeforeUnload);
+      window.addEventListener("pagehide", cleanupCollabBeforeUnload);
 
       elements.memoFab.addEventListener("click", () => {
         setMemoPanelOpen(!elements.memoPanel.classList.contains("open"));
