@@ -16,13 +16,13 @@ assert.match(
 );
 assert.match(
   html,
-  /function autoGrowFeatureTextarea\(textarea\)[\s\S]*?\.lampiran-date-card[\s\S]*?getAutoGrowHeight\(/,
-  "Lampiran textareas should use the auto-grow helper"
+  /function autoGrowFeatureTextarea\(textarea\)[\s\S]*?isVerticallyResizableTextarea\(textarea\)[\s\S]*?getAutoGrowHeight\(/,
+  "vertically resizable Lampiran textareas should use the generic auto-grow helper"
 );
 assert.match(
   html,
-  /querySelectorAll\("\.free-textarea, \.lampiran-date-card textarea:not\(\.date-display\)"\)/,
-  "Lampiran textareas should be refreshed after render"
+  /querySelectorAll\("textarea"\)/,
+  "all textareas should be checked after render so resizable Lampiran fields auto-grow"
 );
 assert.match(
   html,

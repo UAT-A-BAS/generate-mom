@@ -4353,45 +4353,49 @@
         );
       }
 
+      function isVerticallyResizableTextarea(textarea) {
+        if (!textarea?.matches?.("textarea")) {
+          return false;
+        }
+
+        const resizeMode = window.getComputedStyle(textarea).resize;
+        return resizeMode === "vertical" || resizeMode === "both";
+      }
+
       function autoGrowFeatureTextarea(textarea) {
-        const isResizableFeatureField = Boolean(
-          textarea?.closest?.(".table1-detail-row") ||
-            (textarea?.closest?.(".lampiran-date-card") && !textarea?.classList?.contains("date-display"))
-        );
-        if (!isResizableFeatureField) {
+        if (!isVerticallyResizableTextarea(textarea)) {
           return;
         }
 
+        const computedStyle = window.getComputedStyle(textarea);
+        const minimumHeight = Number.parseFloat(computedStyle.minHeight) || 0;
         const currentHeight = textarea.getBoundingClientRect().height;
         const borderHeight = textarea.offsetHeight - textarea.clientHeight;
         textarea.style.overflowY = "hidden";
         textarea.style.height = "auto";
         textarea.style.height = `${getAutoGrowHeight(
           currentHeight,
-          textarea.scrollHeight + borderHeight
+          textarea.scrollHeight + borderHeight,
+          minimumHeight
         )}px`;
         textarea.style.overflowY = "";
       }
 
       function refreshTextareaScrollState(textarea) {
-        const isLampiranTextarea = Boolean(
-          textarea?.matches?.("textarea:not(.date-display)") && textarea.closest(".lampiran-date-card")
-        );
-        if (!textarea?.classList?.contains("free-textarea") && !isLampiranTextarea) {
+        const isResizableTextarea = isVerticallyResizableTextarea(textarea);
+        if (!textarea?.classList?.contains("free-textarea") && !isResizableTextarea) {
           return;
         }
 
         autoGrowFeatureTextarea(textarea);
-        const needsScroll = textarea.closest(".table1-detail-row, .lampiran-date-card")
+        const needsScroll = isResizableTextarea
           ? textarea.scrollHeight > textarea.clientHeight + 1
           : textarea.value.includes("\n");
         textarea.classList.toggle("has-scroll", needsScroll);
       }
 
       function refreshTextareasScrollState(root = document) {
-        root
-          .querySelectorAll(".free-textarea, .lampiran-date-card textarea:not(.date-display)")
-          .forEach(refreshTextareaScrollState);
+        root.querySelectorAll("textarea").forEach(refreshTextareaScrollState);
       }
 
       function upgradeFreeTextInputsToTextarea(root = document) {
@@ -10108,23 +10112,22 @@
         };
       }
 
-      function slugifyDraftFilePart(value) {
-        const slug = `${value || ""}`
+      function sanitizeDraftFilePart(value) {
+        const sanitized = `${value || ""}`
           .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
+          .replace(/[<>:"/\\|?*\u0000-\u001F]/g, " ")
+          .replace(/\s+/g, " ")
+          .replace(/[. ]+$/g, "");
 
-        return slug || "mom";
+        return sanitized || "Project";
       }
 
       function buildDraftFileName(draft) {
         const projectName = draft.table1ProjectsState.find((project) => project?.projectName?.trim())
           ?.projectName;
-        const projectSlug = slugifyDraftFilePart(projectName);
-        const date = new Date().toISOString().slice(0, 10);
+        const safeProjectName = sanitizeDraftFilePart(projectName);
 
-        return `mom-draft-${projectSlug}-${date}.json`;
+        return `${safeProjectName}_MOM.json`;
       }
 
       async function saveDraftData() {
