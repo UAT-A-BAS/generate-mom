@@ -45,6 +45,14 @@ export function setDraftPath(draft, path, value) {
   return draft;
 }
 
+export function shouldAcceptFullMessage(latestPayload, latestVersion, message) {
+  if (!latestPayload) {
+    return true;
+  }
+
+  return message?.replace === true && Number(message.baseVersion) === Number(latestVersion);
+}
+
 function getClientMeta(request) {
   const url = new URL(request.url);
   return {
@@ -160,6 +168,17 @@ export class MomCollabSession {
       }
 
       if (message.type === "full") {
+        if (!shouldAcceptFullMessage(this.latestPayload, this.latestVersion, message)) {
+          this.send(server, {
+            type: "full",
+            clientId: "server",
+            value: this.latestPayload,
+            updatedAt: this.latestUpdatedAt,
+            version: this.latestVersion,
+            conflict: true,
+          });
+          return;
+        }
         this.latestPayload = message.value || null;
       } else if (message.type === "patch" && this.latestPayload && message.path) {
         setDraftPath(this.latestPayload, message.path, message.value);
@@ -170,6 +189,13 @@ export class MomCollabSession {
       this.latestVersion = message.version;
       this.latestUpdatedAt = message.updatedAt;
       await this.persistState();
+      this.send(server, {
+        type: "ack",
+        clientId: message.clientId,
+        path: message.path || "",
+        updatedAt: message.updatedAt,
+        version: message.version,
+      });
       this.broadcast(message, server);
     });
 

@@ -28,8 +28,13 @@ for (const functionName of [
 
 assert.match(
   html,
-  /function\s+flushPendingCollabChanges\(\)\s*{[\s\S]*?clearPendingCollabPatchTimers\(\);[\s\S]*?return sendCollabFullPayload\(\);[\s\S]*?}/,
-  "pending debounced changes should flush as a full draft before disconnect"
+  /function\s+flushPendingCollabChanges\(\)\s*{[\s\S]*?pendingPatches[\s\S]*?clearPendingCollabPatchTimers\(\);[\s\S]*?sendCollabPatch\(\{\s*type:\s*"patch",\s*path,\s*value\s*}\)[\s\S]*?}/,
+  "pending debounced changes should flush as field patches before disconnect"
+);
+assert.doesNotMatch(
+  html.match(/function\s+flushPendingCollabChanges\(\)[\s\S]*?\n\s*}/)?.[0] || "",
+  /sendCollabFullPayload/,
+  "idle flush must never replace the whole shared draft"
 );
 assert.match(
   html,

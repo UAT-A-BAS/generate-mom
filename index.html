@@ -7385,7 +7385,7 @@
         const [movedRow] = table3State.splice(sourceIndex, 1);
         table3State.splice(adjustedIndex, 0, movedRow);
         renderTable3Rows();
-        window.setTimeout(sendCollabFullPayload, 0);
+        window.setTimeout(() => sendCollabFullPayload({ replace: true }), 0);
         return true;
       }
 
@@ -10257,7 +10257,7 @@
         try {
           const raw = await file.text();
           if (applyDraftDataFromJson(raw)) {
-            window.setTimeout(sendCollabFullPayload, 0);
+            window.setTimeout(() => sendCollabFullPayload({ replace: true }), 0);
           }
         } catch (error) {
           showFeedback("Draft data tidak valid. Pastikan JSON berasal dari MOM Generator.", "error");
@@ -10282,7 +10282,7 @@
         setMemoPanelOpen(false);
         clearPreviewResult();
         clearFeedback();
-        window.setTimeout(sendCollabFullPayload, 0);
+        window.setTimeout(() => sendCollabFullPayload({ replace: true }), 0);
       }
 
       // REAL-TIME COLLABORATION
@@ -10462,17 +10462,26 @@
       }
 
       function clearPendingCollabPatchTimers() {
-        collabState.pendingTimers.forEach((timer) => window.clearTimeout(timer));
+        collabState.pendingTimers.forEach((pendingPatch) =>
+          window.clearTimeout(pendingPatch?.timer ?? pendingPatch)
+        );
         collabState.pendingTimers.clear();
       }
 
       function flushPendingCollabChanges() {
-        clearPendingCollabPatchTimers();
+        const pendingPatches = [...collabState.pendingTimers.entries()].map(
+          ([path, pendingPatch]) => ({ path, value: pendingPatch?.value })
+        );
         if (!isCollabSocketOpen()) {
           return false;
         }
 
-        return sendCollabFullPayload();
+        clearPendingCollabPatchTimers();
+        let flushed = true;
+        pendingPatches.forEach(({ path, value }) => {
+          flushed = sendCollabPatch({ type: "patch", path, value }) && flushed;
+        });
+        return flushed;
       }
 
       function scheduleCollabIdleTimer() {
@@ -11047,7 +11056,9 @@
           path: patch.path || "",
           value: patch.value,
           updatedAt: new Date().toISOString(),
+          baseVersion: collabState.version,
           version: collabState.version + 1,
+          replace: Boolean(patch.replace),
         };
 
         collabState.socket.send(JSON.stringify(message));
@@ -11056,11 +11067,12 @@
         return true;
       }
 
-      function sendCollabFullPayload() {
+      function sendCollabFullPayload(options = {}) {
         return sendCollabPatch({
           type: "full",
           path: "draft",
           value: collectDraftPayload(),
+          replace: Boolean(options.replace),
         });
       }
 
@@ -11069,7 +11081,7 @@
           return;
         }
 
-        window.clearTimeout(collabState.pendingTimers.get(path));
+        window.clearTimeout(collabState.pendingTimers.get(path)?.timer);
         const send = () => {
           collabState.pendingTimers.delete(path);
           sendCollabPatch({ type: "patch", path, value });
@@ -11080,7 +11092,10 @@
           return;
         }
 
-        collabState.pendingTimers.set(path, window.setTimeout(send, collabDebounceMs));
+        collabState.pendingTimers.set(path, {
+          timer: window.setTimeout(send, collabDebounceMs),
+          value,
+        });
       }
 
       function handleCollabSocketMessage(event) {
@@ -11121,6 +11136,17 @@
             connected: collabState.connected,
             connection: collabState.connected ? "connected" : "disconnected",
             users: Number(message.users) || 1,
+          });
+          return;
+        }
+
+        if (message.type === "ack") {
+          collabState.version = Math.max(collabState.version, Number(message.version) || 0);
+          updateCollabStatus({
+            active: true,
+            connected: collabState.connected,
+            connection: collabState.connected ? "connected" : "disconnected",
+            lastSyncedAt: message.updatedAt || collabState.lastSyncedAt,
           });
           return;
         }
@@ -11267,7 +11293,7 @@
           button.id === "smartImportApplyBtn";
 
         if (shouldSyncFull) {
-          window.setTimeout(sendCollabFullPayload, 0);
+          window.setTimeout(() => sendCollabFullPayload({ replace: true }), 0);
         }
       }
 

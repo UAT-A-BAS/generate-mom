@@ -36,14 +36,15 @@ assert.match(html, /queueRemotePatchUntilBlur/, "focused local fields should que
 assert.match(html, /id="collabEditorName"\s+type="hidden"|id="collabEditorName"[^>]*type="hidden"/, "editor name should be hidden");
 assert.match(
   html,
-  /if\s*\(\s*applyDraftDataFromJson\(raw\)\s*\)\s*{\s*window\.setTimeout\(sendCollabFullPayload,\s*0\);/s,
-  "loaded draft should sync to active collab session"
+  /if\s*\(\s*applyDraftDataFromJson\(raw\)\s*\)\s*{\s*window\.setTimeout\(\(\)\s*=>\s*sendCollabFullPayload\(\{\s*replace:\s*true\s*}\),\s*0\);/s,
+  "loaded draft should use an explicit version-guarded session replacement"
 );
 assert.match(
   html,
-  /function\s+resetAll\(\)\s*{[\s\S]*?window\.setTimeout\(sendCollabFullPayload,\s*0\);[\s\S]*?}/,
-  "clear all should sync a full empty draft to active collab session"
+  /function\s+resetAll\(\)\s*{[\s\S]*?window\.setTimeout\(\(\)\s*=>\s*sendCollabFullPayload\(\{\s*replace:\s*true\s*}\),\s*0\);[\s\S]*?}/,
+  "clear all should use an explicit version-guarded session replacement"
 );
+assert.match(html, /if \(message\.type === "ack"\)/, "server acknowledgements should advance the client version");
 assert.match(
   html,
   /function\s+applyActiveDatePickerValue\(\)\s*{[\s\S]*?const path = getControlCollabPath\(displayInput\);[\s\S]*?queueCollabFieldPatch\(path,\s*getCollabFieldValue\(displayInput\),\s*true\);[\s\S]*?}/,
@@ -77,7 +78,37 @@ assert.match(workerWrangler, /new_sqlite_classes\s*=\s*\["MomCollabSession"\]/);
   assert.equal(typeof workerModule.default.fetch, "function");
   assert.equal(typeof workerModule.MomCollabSession, "function");
   assert.equal(typeof workerModule.parseCollabSessionId, "function");
+  assert.equal(typeof workerModule.shouldAcceptFullMessage, "function");
   assert.equal(workerModule.parseCollabSessionId(new Request("https://example.test/api/collab/abc-123")), "abc-123");
+
+  assert.equal(
+    workerModule.shouldAcceptFullMessage(null, 8, { type: "full", baseVersion: 0 }),
+    true,
+    "the first editor should be allowed to seed an empty session"
+  );
+  assert.equal(
+    workerModule.shouldAcceptFullMessage({ version: "draft" }, 8, { type: "full", baseVersion: 8 }),
+    false,
+    "an implicit full snapshot must not replace an existing session"
+  );
+  assert.equal(
+    workerModule.shouldAcceptFullMessage(
+      { version: "draft" },
+      8,
+      { type: "full", replace: true, baseVersion: 7 }
+    ),
+    false,
+    "a stale explicit replacement must not overwrite newer editor patches"
+  );
+  assert.equal(
+    workerModule.shouldAcceptFullMessage(
+      { version: "draft" },
+      8,
+      { type: "full", replace: true, baseVersion: 8 }
+    ),
+    true,
+    "an explicit replacement based on the latest server version should be accepted"
+  );
 
   const draft = { table3State: [{ activity: "old" }] };
   workerModule.setDraftPath(draft, "table3State/0/activity", "new");
