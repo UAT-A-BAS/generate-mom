@@ -40,6 +40,26 @@ assert.match(
   /#table2Rows\s+textarea\[data-field="note"\]\s*\{[^}]*resize:\s*vertical;/s,
   "Table 2 note textareas should be vertically resizable"
 );
+assert.equal(
+  (html.match(/<textarea\b[^>]*class="free-textarea blueprint-link-textarea"[^>]*data-field="blueprintLink"[^>]*rows="1"[^>]*>/g) || []).length,
+  2,
+  "Release and BPRO blueprint links should both render as multiline textareas"
+);
+assert.doesNotMatch(
+  html,
+  /<input\b[^>]*type="url"[^>]*data-field="blueprintLink"/,
+  "blueprint links should not render as single-line URL inputs"
+);
+assert.match(
+  html,
+  /\.field-body\s*>\s*\.blueprint-link-textarea\s*\{(?=[^}]*min-height:\s*64px;)(?=[^}]*resize:\s*vertical;)[^}]*\}/s,
+  "all blueprint link textareas should auto-grow and remain manually resizable"
+);
+assert.match(
+  html,
+  /upgradeFreeTextInputsToTextarea\(elements\.table1Projects\);\s*refreshTextareasScrollState\(elements\.table1Projects\);/,
+  "blueprint textareas should resize immediately when Table 1 is rendered"
+);
 
 const context = { table1BlueprintLevel: "bpro" };
 vm.createContext(context);

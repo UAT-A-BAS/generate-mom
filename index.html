@@ -559,6 +559,14 @@
         scrollbar-width: auto;
       }
 
+      .field-body > .blueprint-link-textarea {
+        min-height: 64px;
+        height: 64px;
+        resize: vertical;
+        overflow: auto !important;
+        scrollbar-width: auto;
+      }
+
       #table2Rows textarea[data-field="note"] {
         min-height: 42px;
         height: 42px;
@@ -6913,7 +6921,7 @@
                             ${renderFlagField(
                               `
                                 <div class="field-body">
-                                  <input type="url" data-field="blueprintLink" value="${escapeHtml(detailRow.blueprintLink)}" placeholder="https://..." />
+                                  <textarea class="free-textarea blueprint-link-textarea" data-field="blueprintLink" placeholder="https://..." rows="1">${escapeHtml(detailRow.blueprintLink)}</textarea>
                                 </div>
                               `,
                               {
@@ -7004,7 +7012,7 @@
                         ${renderFlagField(
                           `
                             <div class="field-body">
-                              <input type="url" data-field="blueprintLink" value="${escapeHtml(relationPackage.blueprintLink)}" placeholder="https://..." />
+                              <textarea class="free-textarea blueprint-link-textarea" data-field="blueprintLink" placeholder="https://..." rows="1">${escapeHtml(relationPackage.blueprintLink)}</textarea>
                             </div>
                           `,
                           {
@@ -7110,6 +7118,7 @@
           })
           .join("");
         upgradeFreeTextInputsToTextarea(elements.table1Projects);
+        refreshTextareasScrollState(elements.table1Projects);
       }
 
       // =====================================================
