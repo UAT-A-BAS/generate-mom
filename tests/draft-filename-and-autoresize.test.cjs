@@ -36,6 +36,14 @@ assert.equal(
   filenameContext.buildDraftFileName({ table1ProjectsState: [{ projectName: "" }] }),
   "Project_MOM.json"
 );
+assert.match(html, /Export to Outlook/);
+assert.match(html, /function exportOutlookResult\(\)/);
+assert.match(html, /exportOutlookBtn/);
+assert.match(html, /previewDrawerExportOutlookBtn/);
+assert.match(html, /outlook: exportOutlookResult/);
+assert.match(html, /elements\.exportOutlookBtn\.addEventListener\("click", exportOutlookResult\)/);
+assert.match(html, /sanitizeDraftFilePart\(getPrimaryProjectName\(\)\)/);
+assert.doesNotMatch(html, /slugifyDraftFilePart/);
 
 const resizeContext = {
   window: {

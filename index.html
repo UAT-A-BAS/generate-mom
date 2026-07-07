@@ -10070,7 +10070,7 @@
           return;
         }
 
-        const projectSlug = slugifyDraftFilePart(getPrimaryProjectName());
+        const projectSlug = sanitizeDraftFilePart(getPrimaryProjectName());
         const fileName = `mom-outlook-export-${projectSlug}-${new Date()
           .toISOString()
           .slice(0, 10)}.html`;
