@@ -60,12 +60,28 @@ assert.match(
   /upgradeFreeTextInputsToTextarea\(elements\.table1Projects\);\s*refreshTextareasScrollState\(elements\.table1Projects\);/,
   "blueprint textareas should resize immediately when Table 1 is rendered"
 );
+assert.match(
+  html,
+  /blueprintValue !== "-"\s*\? formatMultilineWithLinks\(blueprintValue\)/,
+  "Table 1 preview should render every Enter-separated blueprint URL independently"
+);
 
-const context = { table1BlueprintLevel: "bpro" };
+const context = {
+  table1BlueprintLevel: "bpro",
+  escapeHtml(value) {
+    return `${value ?? ""}`
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  },
+};
 vm.createContext(context);
 for (const functionName of [
   "getAutoGrowHeight",
   "formatJoined",
+  "formatMultilineWithLinks",
   "joinDocumentNeeds",
   "buildGroupMeta",
   "normalizeBlueprintMergeKey",
@@ -77,6 +93,20 @@ for (const functionName of [
 assert.equal(context.getAutoGrowHeight(64, 138), 138);
 assert.equal(context.getAutoGrowHeight(200, 138), 200);
 assert.equal(context.getAutoGrowHeight(32, 40), 64);
+
+const multilineBlueprintMarkup = context.formatMultilineWithLinks(
+  "https://example.com/blueprint-a\nhttps://example.com/blueprint-b"
+);
+assert.equal(
+  (multilineBlueprintMarkup.match(/<a class="doc-link"/g) || []).length,
+  2,
+  "each Enter-separated blueprint URL should render as its own link"
+);
+assert.match(
+  multilineBlueprintMarkup,
+  /blueprint-a<\/a><br>\s*<a class="doc-link"[^>]*>https:\/\/example\.com\/blueprint-b<\/a>/,
+  "Enter-separated blueprint links should keep their line break"
+);
 
 const sharedBlueprintRows = [
   {

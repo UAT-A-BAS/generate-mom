@@ -8143,8 +8143,8 @@
               row.relationPackageFlags || createEmptyRelationPackageFlags();
             const blueprintValue = row.blueprintLink || "-";
             const blueprintMarkup =
-              blueprintValue !== "-" && /^https?:\/\//i.test(blueprintValue)
-                ? `<a class="doc-link" href="${escapeHtml(blueprintValue)}" target="_blank" rel="noopener noreferrer">${escapeHtml(blueprintValue)}</a>`
+              blueprintValue !== "-"
+                ? formatMultilineWithLinks(blueprintValue)
                 : escapeHtml(blueprintValue || "-");
             const bproFlagged = meta.bpro.show
               ? hasAnyFlag(
