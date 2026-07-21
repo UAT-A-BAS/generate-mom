@@ -8892,7 +8892,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return ["80px", "400px", "140px", "190px", "170px", "220px"];
+          return ["90px", "430px", "150px", "210px", "190px", "160px"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8914,7 +8914,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return "1200px";
+          return "1230px";
         }
 
         if (table.classList.contains("table3")) {
@@ -9037,13 +9037,14 @@
           }
 
           const tableWidth = getOutlookTableWidth(table);
+          const tableLayout = table.classList.contains("table2") ? "fixed" : "auto";
           table.setAttribute("width", tableWidth.replace("px", ""));
           table.setAttribute("cellpadding", "0");
           table.setAttribute("cellspacing", "0");
           table.setAttribute("border", "0");
           appendInlineStyle(
             table,
-            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:${tableLayout};mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
           );
         });
 

@@ -31,12 +31,12 @@ assert.match(
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "400px", "140px", "190px", "170px", "220px"\];/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["90px", "430px", "150px", "210px", "190px", "160px"\];/,
   "Outlook export should preserve the spacious checklist column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1200px";/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1230px";/,
   "Outlook checklist table should be wide enough to prevent narrow wrapping"
 );
 assert.match(
@@ -71,8 +71,13 @@ assert.match(
 );
 assert.match(
   html,
-  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;/,
-  "Outlook tables should remain adjustable instead of using fixed layout"
+  /const tableLayout = table\.classList\.contains\("table2"\) \? "fixed" : "auto";/,
+  "only the Outlook checklist should use fixed column allocation"
+);
+assert.match(
+  html,
+  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:\$\{tableLayout\};/,
+  "Outlook tables should apply their table-specific layout mode"
 );
 assert.doesNotMatch(
   html,
