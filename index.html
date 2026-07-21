@@ -8253,8 +8253,8 @@
               <thead>
                 <tr>
                   <th style="width: 80px">No.</th>
-                  <th style="width: 240px">Nomor &amp; Nama BPRO</th>
-                  <th style="width: 260px">Changes ID &amp; Changes Name</th>
+                  <th style="width: 200px">Nomor &amp; Nama BPRO</th>
+                  <th style="width: 220px">Changes ID &amp; Changes Name</th>
                   <th style="width: 220px">Release ID &amp; Release Name</th>
                   <th style="width: 280px">Link Blueprint</th>
                   <th style="width: 200px">Apakah diperlukan SK/SE/Service News/Memo?</th>
@@ -8358,11 +8358,11 @@
               <thead>
                 <tr>
                   <th style="width: 80px">No.</th>
-                  <th style="width: 400px">Aktivitas</th>
+                  <th style="width: 360px">Aktivitas</th>
                   <th style="width: 140px">Status</th>
-                  <th style="width: 190px">PIC</th>
+                  <th style="width: 170px">PIC</th>
                   <th style="width: 170px">Target</th>
-                  <th style="width: 220px">Keterangan</th>
+                  <th style="width: 280px">Keterangan</th>
                 </tr>
               </thead>
               <tbody>${orderedMarkup}</tbody>
@@ -8870,47 +8870,19 @@
 
         table.querySelector(":scope > colgroup")?.remove();
 
-        const colgroup = document.createElement("colgroup");
-        widths.forEach((width) => {
-          const col = document.createElement("col");
-          if (width) {
-            col.setAttribute("width", width.replace("px", ""));
-            col.setAttribute("style", `width:${width};`);
+        const headingCells = [
+          ...table.querySelectorAll(":scope > thead > tr:first-child > th"),
+        ];
+        headingCells.forEach((cell, index) => {
+          const width = widths[index];
+          cell.removeAttribute("width");
+          cell.style.removeProperty("width");
+          if (!width) {
+            return;
           }
-          colgroup.appendChild(col);
-        });
 
-        table.insertBefore(colgroup, table.firstElementChild);
-
-        const activeRowSpans = [];
-        [...table.rows].forEach((row) => {
-          let columnIndex = 0;
-
-          [...row.cells].forEach((cell) => {
-            while (activeRowSpans[columnIndex] > 0) {
-              columnIndex += 1;
-            }
-
-            const width = widths[columnIndex];
-            if (width) {
-              cell.setAttribute("width", width.replace("px", ""));
-              appendInlineStyle(cell, `width:${width};`);
-            }
-
-            const rowSpan = Number(cell.getAttribute("rowspan") || 1);
-            const colSpan = Number(cell.getAttribute("colspan") || 1);
-            for (let offset = 0; offset < colSpan; offset += 1) {
-              activeRowSpans[columnIndex + offset] = Math.max(
-                activeRowSpans[columnIndex + offset] || 0,
-                rowSpan
-              );
-            }
-            columnIndex += colSpan;
-          });
-
-          for (let index = 0; index < activeRowSpans.length; index += 1) {
-            activeRowSpans[index] = Math.max((activeRowSpans[index] || 0) - 1, 0);
-          }
+          cell.setAttribute("width", width.replace("px", ""));
+          cell.style.width = width;
         });
       }
 
@@ -9071,7 +9043,7 @@
           table.setAttribute("border", "0");
           appendInlineStyle(
             table,
-            `width:${tableWidth};min-width:${tableWidth};max-width:none;border-collapse:collapse;table-layout:fixed;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
           );
         });
 

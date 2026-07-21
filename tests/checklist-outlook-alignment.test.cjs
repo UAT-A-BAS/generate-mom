@@ -26,8 +26,8 @@ assert.match(
 );
 assert.match(
   html,
-  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 400px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 190px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 220px">Keterangan<\/th>/,
-  "checklist preview should use spacious column widths"
+  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 360px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 170px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 280px">Keterangan<\/th>/,
+  "web checklist preview should keep its existing column widths"
 );
 assert.match(
   html,
@@ -41,8 +41,8 @@ assert.match(
 );
 assert.match(
   html,
-  /<table class="doc-table table1">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 240px">Nomor &amp; Nama BPRO<\/th>[\s\S]*?<th style="width: 260px">Changes ID &amp; Changes Name<\/th>[\s\S]*?<th style="width: 220px">Release ID &amp; Release Name<\/th>[\s\S]*?<th style="width: 280px">Link Blueprint<\/th>[\s\S]*?<th style="width: 200px">Apakah diperlukan SK\/SE\/Service News\/Memo\?<\/th>[\s\S]*?<th style="width: 200px">Pelaku UAT by User<\/th>/,
-  "certification preview should use spacious column widths"
+  /<table class="doc-table table1">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 200px">Nomor &amp; Nama BPRO<\/th>[\s\S]*?<th style="width: 220px">Changes ID &amp; Changes Name<\/th>[\s\S]*?<th style="width: 220px">Release ID &amp; Release Name<\/th>[\s\S]*?<th style="width: 280px">Link Blueprint<\/th>[\s\S]*?<th style="width: 200px">Apakah diperlukan SK\/SE\/Service News\/Memo\?<\/th>[\s\S]*?<th style="width: 200px">Pelaku UAT by User<\/th>/,
+  "web certification preview should keep its existing column widths"
 );
 assert.match(
   html,
@@ -58,6 +58,26 @@ assert.match(
   html,
   /border:1px solid #111;padding:10px 12px;vertical-align:middle;white-space:normal;word-break:normal;overflow-wrap:break-word;line-break:auto;/,
   "Outlook tables should use roomier padding and natural wrapping"
+);
+assert.match(
+  html,
+  /table\.querySelectorAll\(":scope > thead > tr:first-child > th"\)/,
+  "Outlook widths should be applied only to table headers"
+);
+assert.match(
+  html,
+  /cell\.style\.width = width;/,
+  "Outlook header widths should replace the web preview widths"
+);
+assert.match(
+  html,
+  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;/,
+  "Outlook tables should remain adjustable instead of using fixed layout"
+);
+assert.doesNotMatch(
+  html,
+  /document\.createElement\("colgroup"\)/,
+  "Outlook export should not add a colgroup that fights manual resizing"
 );
 
 console.log("checklist Outlook alignment tests passed");
