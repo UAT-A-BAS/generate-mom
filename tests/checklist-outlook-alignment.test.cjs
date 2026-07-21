@@ -31,13 +31,13 @@ assert.match(
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "360px", "130px", "190px", "300px", "140px"\];/,
-  "Outlook export should preserve the spacious checklist column widths"
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["7%", "30%", "11%", "16%", "25%", "11%"\];/,
+  "Outlook export should preserve the responsive checklist column proportions"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1200px";/,
-  "Outlook checklist table should be wide enough to prevent narrow wrapping"
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "100%";/,
+  "Outlook checklist should use the available message width"
 );
 assert.match(
   html,
@@ -71,18 +71,28 @@ assert.match(
 );
 assert.match(
   html,
-  /const tableLayout = table\.classList\.contains\("table2"\) \? "fixed" : "auto";/,
+  /const isChecklistTable = table\.classList\.contains\("table2"\);[\s\S]*?const tableLayout = isChecklistTable \? "fixed" : "auto";/,
   "only the Outlook checklist should use fixed column allocation"
 );
 assert.match(
   html,
-  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:\$\{tableLayout\};\$\{outlookFixedLayout\}/,
+  /width:\$\{tableWidth\};min-width:0;max-width:\$\{tableMaxWidth\};border-collapse:collapse;table-layout:\$\{tableLayout\};/,
   "Outlook tables should apply their table-specific layout mode"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{[\s\S]*?document\.createElement\("colgroup"\)/,
+  /if \(isChecklistTable\) \{[\s\S]*?document\.createElement\("colgroup"\)/,
   "Outlook checklist should use one lightweight colgroup for Word"
+);
+assert.match(
+  html,
+  /row\.id === "c11d" \? " outlook-center-activity"/,
+  "Bahan Sosialisasi should be marked for Outlook-only centering"
+);
+assert.match(
+  html,
+  /if \(cell\.classList\.contains\("outlook-center-activity"\)\) \{[\s\S]*?cell\.setAttribute\("align", "center"\);[\s\S]*?appendInlineStyle\(cell, "text-align:center;"\);/,
+  "Outlook export should center Bahan Sosialisasi explicitly"
 );
 
 console.log("checklist Outlook alignment tests passed");

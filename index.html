@@ -8294,7 +8294,7 @@
               (row) => `
                 <tr class="${getChecklistRowClass(row.status)}">
                   <td class="sub-row-number">${escapeHtml(row.no)}</td>
-                  <td class="activity-cell top">- ${escapeHtml(row.label)}</td>
+                  <td class="activity-cell top${row.id === "c11d" ? " outlook-center-activity" : ""}">- ${escapeHtml(row.label)}</td>
                   <td class="${buildResultCellClass("center", row.flags?.status)}">${renderResultCellContent(
                     escapeHtml(row.status || "-"),
                     row.flags?.status
@@ -8868,18 +8868,16 @@
           return;
         }
 
+        const isChecklistTable = table.classList.contains("table2");
         table.querySelector(":scope > colgroup")?.remove();
 
-        if (table.classList.contains("table2")) {
+        if (isChecklistTable) {
           const colgroup = document.createElement("colgroup");
           widths.forEach((width) => {
             const col = document.createElement("col");
-            const numericWidth = Number.parseFloat(width) || 0;
-            col.setAttribute("width", `${numericWidth}`);
-            col.setAttribute(
-              "style",
-              `width:${width};mso-width-source:userset;mso-width-alt:${Math.round(numericWidth * 15)};`
-            );
+            const widthAttribute = width.endsWith("%") ? width : width.replace("px", "");
+            col.setAttribute("width", widthAttribute);
+            col.setAttribute("style", `width:${width};`);
             colgroup.appendChild(col);
           });
           table.insertBefore(colgroup, table.firstElementChild);
@@ -8896,12 +8894,15 @@
             return;
           }
 
-          cell.setAttribute("width", width.replace("px", ""));
+          const widthAttribute = width.endsWith("%") ? width : width.replace("px", "");
+          cell.setAttribute("width", widthAttribute);
           appendInlineStyle(
             cell,
-            `width:${width};mso-width-source:userset;mso-width-alt:${Math.round(
-              (Number.parseFloat(width) || 0) * 15
-            )};`
+            isChecklistTable
+              ? `width:${width};`
+              : `width:${width};mso-width-source:userset;mso-width-alt:${Math.round(
+                  (Number.parseFloat(width) || 0) * 15
+                )};`
           );
         });
       }
@@ -8912,7 +8913,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return ["80px", "360px", "130px", "190px", "300px", "140px"];
+          return ["7%", "30%", "11%", "16%", "25%", "11%"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8934,7 +8935,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return "1200px";
+          return "100%";
         }
 
         if (table.classList.contains("table3")) {
@@ -9057,19 +9058,19 @@
           }
 
           const tableWidth = getOutlookTableWidth(table);
-          const tableLayout = table.classList.contains("table2") ? "fixed" : "auto";
-          const outlookFixedLayout = table.classList.contains("table2")
-            ? `mso-table-layout-alt:fixed;mso-width-source:userset;mso-width-alt:${Math.round(
-                (Number.parseFloat(tableWidth) || 0) * 15
-              )};`
-            : "";
-          table.setAttribute("width", tableWidth.replace("px", ""));
+          const isChecklistTable = table.classList.contains("table2");
+          const tableLayout = isChecklistTable ? "fixed" : "auto";
+          const tableWidthAttribute = tableWidth.endsWith("%")
+            ? tableWidth
+            : tableWidth.replace("px", "");
+          const tableMaxWidth = isChecklistTable ? "100%" : "none";
+          table.setAttribute("width", tableWidthAttribute);
           table.setAttribute("cellpadding", "0");
           table.setAttribute("cellspacing", "0");
           table.setAttribute("border", "0");
           appendInlineStyle(
             table,
-            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:${tableLayout};${outlookFixedLayout}mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+            `width:${tableWidth};min-width:0;max-width:${tableMaxWidth};border-collapse:collapse;table-layout:${tableLayout};mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
           );
         });
 
@@ -9100,6 +9101,11 @@
           if (cell.classList.contains("top")) {
             appendInlineStyle(cell, "vertical-align:top;");
             cell.setAttribute("valign", "top");
+          }
+
+          if (cell.classList.contains("outlook-center-activity")) {
+            cell.setAttribute("align", "center");
+            appendInlineStyle(cell, "text-align:center;");
           }
 
           if (cell.tagName === "TH") {
