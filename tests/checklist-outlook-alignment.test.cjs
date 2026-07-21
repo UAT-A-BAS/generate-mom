@@ -26,18 +26,38 @@ assert.match(
 );
 assert.match(
   html,
-  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 330px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 170px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 310px">Keterangan<\/th>/,
+  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 360px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 170px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 280px">Keterangan<\/th>/,
   "checklist preview should use spacious column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "330px", "140px", "170px", "170px", "310px"\];/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "360px", "140px", "170px", "170px", "280px"\];/,
   "Outlook export should preserve the spacious checklist column widths"
 );
 assert.match(
   html,
   /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1200px";/,
   "Outlook checklist table should be wide enough to prevent narrow wrapping"
+);
+assert.match(
+  html,
+  /<table class="doc-table table1">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 200px">Nomor &amp; Nama BPRO<\/th>[\s\S]*?<th style="width: 220px">Changes ID &amp; Changes Name<\/th>[\s\S]*?<th style="width: 220px">Release ID &amp; Release Name<\/th>[\s\S]*?<th style="width: 280px">Link Blueprint<\/th>[\s\S]*?<th style="width: 200px">Apakah diperlukan SK\/SE\/Service News\/Memo\?<\/th>[\s\S]*?<th style="width: 200px">Pelaku UAT by User<\/th>/,
+  "certification preview should use spacious column widths"
+);
+assert.match(
+  html,
+  /if \(table\.classList\.contains\("table1"\)\) \{\s*return \["80px", "200px", "220px", "220px", "280px", "200px", "200px"\];/,
+  "Outlook export should preserve the spacious certification column widths"
+);
+assert.match(
+  html,
+  /if \(table\.classList\.contains\("table1"\)\) \{\s*return "1400px";/,
+  "Outlook certification table should be wide enough to avoid narrow wrapping"
+);
+assert.match(
+  html,
+  /border:1px solid #111;padding:10px 12px;vertical-align:middle;white-space:normal;word-break:normal;overflow-wrap:break-word;line-break:auto;/,
+  "Outlook tables should use roomier padding and natural wrapping"
 );
 
 console.log("checklist Outlook alignment tests passed");

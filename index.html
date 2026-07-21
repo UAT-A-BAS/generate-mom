@@ -1731,9 +1731,10 @@
       .doc-table th,
       .doc-table td {
         border: 1px solid #111;
-        padding: 8px 10px;
+        padding: 10px 12px;
         vertical-align: middle;
-        word-break: break-word;
+        word-break: normal;
+        overflow-wrap: break-word;
       }
 
       .doc-table th {
@@ -8251,13 +8252,13 @@
             <table class="doc-table table1">
               <thead>
                 <tr>
-                  <th style="width: 70px">No.</th>
-                  <th style="width: 170px">Nomor &amp; Nama BPRO</th>
-                  <th style="width: 190px">Changes ID &amp; Changes Name</th>
-                  <th style="width: 190px">Release ID &amp; Release Name</th>
-                  <th style="width: 210px">Link Blueprint</th>
-                  <th style="width: 170px">Apakah diperlukan SK/SE/Service News/Memo?</th>
-                  <th style="width: 180px">Pelaku UAT by User</th>
+                  <th style="width: 80px">No.</th>
+                  <th style="width: 200px">Nomor &amp; Nama BPRO</th>
+                  <th style="width: 220px">Changes ID &amp; Changes Name</th>
+                  <th style="width: 220px">Release ID &amp; Release Name</th>
+                  <th style="width: 280px">Link Blueprint</th>
+                  <th style="width: 200px">Apakah diperlukan SK/SE/Service News/Memo?</th>
+                  <th style="width: 200px">Pelaku UAT by User</th>
                 </tr>
               </thead>
               <tbody>${bodyMarkup}</tbody>
@@ -8357,11 +8358,11 @@
               <thead>
                 <tr>
                   <th style="width: 80px">No.</th>
-                  <th style="width: 330px">Aktivitas</th>
+                  <th style="width: 360px">Aktivitas</th>
                   <th style="width: 140px">Status</th>
                   <th style="width: 170px">PIC</th>
                   <th style="width: 170px">Target</th>
-                  <th style="width: 310px">Keterangan</th>
+                  <th style="width: 280px">Keterangan</th>
                 </tr>
               </thead>
               <tbody>${orderedMarkup}</tbody>
@@ -8915,11 +8916,11 @@
 
       function getOutlookColumnWidths(table) {
         if (table.classList.contains("table1")) {
-          return ["70px", "170px", "190px", "190px", "210px", "170px", "180px"];
+          return ["80px", "200px", "220px", "220px", "280px", "200px", "200px"];
         }
 
         if (table.classList.contains("table2")) {
-          return ["80px", "330px", "140px", "170px", "170px", "310px"];
+          return ["80px", "360px", "140px", "170px", "170px", "280px"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8937,7 +8938,7 @@
 
       function getOutlookTableWidth(table) {
         if (table.classList.contains("table1")) {
-          return "1180px";
+          return "1400px";
         }
 
         if (table.classList.contains("table2")) {
@@ -9087,7 +9088,7 @@
           cell.setAttribute("valign", "middle");
           appendInlineStyle(
             cell,
-            "border:1px solid #111;padding:8px 10px;vertical-align:middle;white-space:normal;word-break:break-word;overflow-wrap:anywhere;line-break:anywhere;mso-line-height-rule:exactly;"
+            "border:1px solid #111;padding:10px 12px;vertical-align:middle;white-space:normal;word-break:normal;overflow-wrap:break-word;line-break:auto;mso-line-height-rule:exactly;"
           );
 
           if (cell.classList.contains("center")) {
