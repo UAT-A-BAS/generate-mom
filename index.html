@@ -8294,7 +8294,7 @@
               (row) => `
                 <tr class="${getChecklistRowClass(row.status)}">
                   <td class="sub-row-number">${escapeHtml(row.no)}</td>
-                  <td class="activity-cell top${row.id === "c11d" ? " outlook-center-activity" : ""}">- ${escapeHtml(row.label)}</td>
+                  <td class="activity-cell top${row.id === "c11d" ? " outlook-middle-left-activity" : ""}">- ${escapeHtml(row.label)}</td>
                   <td class="${buildResultCellClass("center", row.flags?.status)}">${renderResultCellContent(
                     escapeHtml(row.status || "-"),
                     row.flags?.status
@@ -8871,18 +8871,6 @@
         const isChecklistTable = table.classList.contains("table2");
         table.querySelector(":scope > colgroup")?.remove();
 
-        if (isChecklistTable) {
-          const colgroup = document.createElement("colgroup");
-          widths.forEach((width) => {
-            const col = document.createElement("col");
-            const widthAttribute = width.endsWith("%") ? width : width.replace("px", "");
-            col.setAttribute("width", widthAttribute);
-            col.setAttribute("style", `width:${width};`);
-            colgroup.appendChild(col);
-          });
-          table.insertBefore(colgroup, table.firstElementChild);
-        }
-
         const headingCells = [
           ...table.querySelectorAll(":scope > thead > tr:first-child > th"),
         ];
@@ -8913,7 +8901,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return ["7%", "30%", "11%", "16%", "25%", "11%"];
+          return ["80px", "360px", "130px", "190px", "300px", "140px"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8935,7 +8923,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return "100%";
+          return "1200px";
         }
 
         if (table.classList.contains("table3")) {
@@ -9058,19 +9046,16 @@
           }
 
           const tableWidth = getOutlookTableWidth(table);
-          const isChecklistTable = table.classList.contains("table2");
-          const tableLayout = isChecklistTable ? "fixed" : "auto";
           const tableWidthAttribute = tableWidth.endsWith("%")
             ? tableWidth
             : tableWidth.replace("px", "");
-          const tableMaxWidth = isChecklistTable ? "100%" : "none";
           table.setAttribute("width", tableWidthAttribute);
           table.setAttribute("cellpadding", "0");
           table.setAttribute("cellspacing", "0");
           table.setAttribute("border", "0");
           appendInlineStyle(
             table,
-            `width:${tableWidth};min-width:0;max-width:${tableMaxWidth};border-collapse:collapse;table-layout:${tableLayout};mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
           );
         });
 
@@ -9103,9 +9088,10 @@
             cell.setAttribute("valign", "top");
           }
 
-          if (cell.classList.contains("outlook-center-activity")) {
-            cell.setAttribute("align", "center");
-            appendInlineStyle(cell, "text-align:center;");
+          if (cell.classList.contains("outlook-middle-left-activity")) {
+            cell.setAttribute("align", "left");
+            cell.setAttribute("valign", "middle");
+            appendInlineStyle(cell, "text-align:left;vertical-align:middle;");
           }
 
           if (cell.tagName === "TH") {
@@ -9162,9 +9148,23 @@
         });
 
         clonedRoot.querySelectorAll("a.doc-link").forEach((link) => {
+          if (link.closest(".table2")) {
+            let charactersSinceBreak = 0;
+            link.textContent = [...(link.textContent || "")]
+              .map((character) => {
+                charactersSinceBreak += 1;
+                const shouldBreak = /[/?&=#._%-]/.test(character) || charactersSinceBreak >= 18;
+                if (!shouldBreak) {
+                  return character;
+                }
+                charactersSinceBreak = 0;
+                return `${character}\u200b`;
+              })
+              .join("");
+          }
           appendInlineStyle(
             link,
-            "color:#0858cb;text-decoration:underline;word-break:break-all;overflow-wrap:anywhere;white-space:normal;display:inline;"
+            "color:#0858cb;text-decoration:underline;word-break:normal;overflow-wrap:break-word;white-space:normal;display:inline;"
           );
         });
 

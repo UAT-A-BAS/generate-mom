@@ -31,13 +31,13 @@ assert.match(
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["7%", "30%", "11%", "16%", "25%", "11%"\];/,
-  "Outlook export should preserve the responsive checklist column proportions"
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "360px", "130px", "190px", "300px", "140px"\];/,
+  "Outlook export should restore the previously approved checklist column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "100%";/,
-  "Outlook checklist should use the available message width"
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1200px";/,
+  "Outlook checklist should restore its previously approved table width"
 );
 assert.match(
   html,
@@ -71,28 +71,28 @@ assert.match(
 );
 assert.match(
   html,
-  /const isChecklistTable = table\.classList\.contains\("table2"\);[\s\S]*?const tableLayout = isChecklistTable \? "fixed" : "auto";/,
-  "only the Outlook checklist should use fixed column allocation"
+  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:auto;/,
+  "Outlook tables should remain adjustable instead of using fixed layout"
+);
+assert.doesNotMatch(
+  html,
+  /document\.createElement\("colgroup"\)/,
+  "Outlook export should not lock columns with a colgroup"
 );
 assert.match(
   html,
-  /width:\$\{tableWidth\};min-width:0;max-width:\$\{tableMaxWidth\};border-collapse:collapse;table-layout:\$\{tableLayout\};/,
-  "Outlook tables should apply their table-specific layout mode"
+  /row\.id === "c11d" \? " outlook-middle-left-activity"/,
+  "Bahan Sosialisasi should be marked for Outlook-only middle-left alignment"
 );
 assert.match(
   html,
-  /if \(isChecklistTable\) \{[\s\S]*?document\.createElement\("colgroup"\)/,
-  "Outlook checklist should use one lightweight colgroup for Word"
+  /if \(cell\.classList\.contains\("outlook-middle-left-activity"\)\) \{[\s\S]*?cell\.setAttribute\("align", "left"\);[\s\S]*?cell\.setAttribute\("valign", "middle"\);[\s\S]*?appendInlineStyle\(cell, "text-align:left;vertical-align:middle;"\);/,
+  "Outlook export should align Bahan Sosialisasi middle-left explicitly"
 );
 assert.match(
   html,
-  /row\.id === "c11d" \? " outlook-center-activity"/,
-  "Bahan Sosialisasi should be marked for Outlook-only centering"
-);
-assert.match(
-  html,
-  /if \(cell\.classList\.contains\("outlook-center-activity"\)\) \{[\s\S]*?cell\.setAttribute\("align", "center"\);[\s\S]*?appendInlineStyle\(cell, "text-align:center;"\);/,
-  "Outlook export should center Bahan Sosialisasi explicitly"
+  /if \(link\.closest\("\.table2"\)\) \{[\s\S]*?return `\$\{character\}\\u200b`;/,
+  "Outlook checklist links should receive invisible wrapping opportunities"
 );
 
 console.log("checklist Outlook alignment tests passed");
