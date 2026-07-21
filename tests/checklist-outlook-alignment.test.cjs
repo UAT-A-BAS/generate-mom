@@ -26,12 +26,12 @@ assert.match(
 );
 assert.match(
   html,
-  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 360px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 170px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 280px">Keterangan<\/th>/,
+  /<table class="doc-table table2">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 400px">Aktivitas<\/th>[\s\S]*?<th style="width: 140px">Status<\/th>[\s\S]*?<th style="width: 190px">PIC<\/th>[\s\S]*?<th style="width: 170px">Target<\/th>[\s\S]*?<th style="width: 220px">Keterangan<\/th>/,
   "checklist preview should use spacious column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "360px", "140px", "170px", "170px", "280px"\];/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "400px", "140px", "190px", "170px", "220px"\];/,
   "Outlook export should preserve the spacious checklist column widths"
 );
 assert.match(
@@ -41,17 +41,17 @@ assert.match(
 );
 assert.match(
   html,
-  /<table class="doc-table table1">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 200px">Nomor &amp; Nama BPRO<\/th>[\s\S]*?<th style="width: 220px">Changes ID &amp; Changes Name<\/th>[\s\S]*?<th style="width: 220px">Release ID &amp; Release Name<\/th>[\s\S]*?<th style="width: 280px">Link Blueprint<\/th>[\s\S]*?<th style="width: 200px">Apakah diperlukan SK\/SE\/Service News\/Memo\?<\/th>[\s\S]*?<th style="width: 200px">Pelaku UAT by User<\/th>/,
+  /<table class="doc-table table1">[\s\S]*?<th style="width: 80px">No\.<\/th>[\s\S]*?<th style="width: 240px">Nomor &amp; Nama BPRO<\/th>[\s\S]*?<th style="width: 260px">Changes ID &amp; Changes Name<\/th>[\s\S]*?<th style="width: 220px">Release ID &amp; Release Name<\/th>[\s\S]*?<th style="width: 280px">Link Blueprint<\/th>[\s\S]*?<th style="width: 200px">Apakah diperlukan SK\/SE\/Service News\/Memo\?<\/th>[\s\S]*?<th style="width: 200px">Pelaku UAT by User<\/th>/,
   "certification preview should use spacious column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table1"\)\) \{\s*return \["80px", "200px", "220px", "220px", "280px", "200px", "200px"\];/,
+  /if \(table\.classList\.contains\("table1"\)\) \{\s*return \["80px", "240px", "260px", "220px", "280px", "200px", "200px"\];/,
   "Outlook export should preserve the spacious certification column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table1"\)\) \{\s*return "1400px";/,
+  /if \(table\.classList\.contains\("table1"\)\) \{\s*return "1480px";/,
   "Outlook certification table should be wide enough to avoid narrow wrapping"
 );
 assert.match(
