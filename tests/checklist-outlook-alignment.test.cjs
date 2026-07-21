@@ -31,12 +31,12 @@ assert.match(
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["90px", "430px", "150px", "210px", "190px", "160px"\];/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return \["80px", "360px", "130px", "190px", "300px", "140px"\];/,
   "Outlook export should preserve the spacious checklist column widths"
 );
 assert.match(
   html,
-  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1230px";/,
+  /if \(table\.classList\.contains\("table2"\)\) \{\s*return "1200px";/,
   "Outlook checklist table should be wide enough to prevent narrow wrapping"
 );
 assert.match(
@@ -66,8 +66,8 @@ assert.match(
 );
 assert.match(
   html,
-  /cell\.style\.width = width;/,
-  "Outlook header widths should replace the web preview widths"
+  /mso-width-source:userset;mso-width-alt:/,
+  "Outlook widths should include Word-compatible preferred widths"
 );
 assert.match(
   html,
@@ -76,13 +76,13 @@ assert.match(
 );
 assert.match(
   html,
-  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:\$\{tableLayout\};/,
+  /width:\$\{tableWidth\};min-width:0;max-width:none;border-collapse:collapse;table-layout:\$\{tableLayout\};\$\{outlookFixedLayout\}/,
   "Outlook tables should apply their table-specific layout mode"
 );
-assert.doesNotMatch(
+assert.match(
   html,
-  /document\.createElement\("colgroup"\)/,
-  "Outlook export should not add a colgroup that fights manual resizing"
+  /if \(table\.classList\.contains\("table2"\)\) \{[\s\S]*?document\.createElement\("colgroup"\)/,
+  "Outlook checklist should use one lightweight colgroup for Word"
 );
 
 console.log("checklist Outlook alignment tests passed");

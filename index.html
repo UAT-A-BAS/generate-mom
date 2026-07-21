@@ -8870,6 +8870,21 @@
 
         table.querySelector(":scope > colgroup")?.remove();
 
+        if (table.classList.contains("table2")) {
+          const colgroup = document.createElement("colgroup");
+          widths.forEach((width) => {
+            const col = document.createElement("col");
+            const numericWidth = Number.parseFloat(width) || 0;
+            col.setAttribute("width", `${numericWidth}`);
+            col.setAttribute(
+              "style",
+              `width:${width};mso-width-source:userset;mso-width-alt:${Math.round(numericWidth * 15)};`
+            );
+            colgroup.appendChild(col);
+          });
+          table.insertBefore(colgroup, table.firstElementChild);
+        }
+
         const headingCells = [
           ...table.querySelectorAll(":scope > thead > tr:first-child > th"),
         ];
@@ -8882,7 +8897,12 @@
           }
 
           cell.setAttribute("width", width.replace("px", ""));
-          cell.style.width = width;
+          appendInlineStyle(
+            cell,
+            `width:${width};mso-width-source:userset;mso-width-alt:${Math.round(
+              (Number.parseFloat(width) || 0) * 15
+            )};`
+          );
         });
       }
 
@@ -8892,7 +8912,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return ["90px", "430px", "150px", "210px", "190px", "160px"];
+          return ["80px", "360px", "130px", "190px", "300px", "140px"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8914,7 +8934,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return "1230px";
+          return "1200px";
         }
 
         if (table.classList.contains("table3")) {
@@ -9038,13 +9058,18 @@
 
           const tableWidth = getOutlookTableWidth(table);
           const tableLayout = table.classList.contains("table2") ? "fixed" : "auto";
+          const outlookFixedLayout = table.classList.contains("table2")
+            ? `mso-table-layout-alt:fixed;mso-width-source:userset;mso-width-alt:${Math.round(
+                (Number.parseFloat(tableWidth) || 0) * 15
+              )};`
+            : "";
           table.setAttribute("width", tableWidth.replace("px", ""));
           table.setAttribute("cellpadding", "0");
           table.setAttribute("cellspacing", "0");
           table.setAttribute("border", "0");
           appendInlineStyle(
             table,
-            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:${tableLayout};mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
+            `width:${tableWidth};min-width:0;max-width:none;border-collapse:collapse;table-layout:${tableLayout};${outlookFixedLayout}mso-table-lspace:0pt;mso-table-rspace:0pt;margin:0;`
           );
         });
 
