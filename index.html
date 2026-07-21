@@ -8356,12 +8356,12 @@
             <table class="doc-table table2">
               <thead>
                 <tr>
-                  <th style="width: 70px">No.</th>
-                  <th style="width: 240px">Aktivitas</th>
-                  <th style="width: 130px">Status</th>
-                  <th style="width: 125px">PIC</th>
-                  <th style="width: 125px">Target</th>
-                  <th style="width: 245px">Keterangan</th>
+                  <th style="width: 80px">No.</th>
+                  <th style="width: 330px">Aktivitas</th>
+                  <th style="width: 140px">Status</th>
+                  <th style="width: 170px">PIC</th>
+                  <th style="width: 170px">Target</th>
+                  <th style="width: 310px">Keterangan</th>
                 </tr>
               </thead>
               <tbody>${orderedMarkup}</tbody>
@@ -8919,7 +8919,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return ["70px", "240px", "130px", "125px", "125px", "245px"];
+          return ["80px", "330px", "140px", "170px", "170px", "310px"];
         }
 
         if (table.classList.contains("table3")) {
@@ -8941,7 +8941,7 @@
         }
 
         if (table.classList.contains("table2")) {
-          return "935px";
+          return "1200px";
         }
 
         if (table.classList.contains("table3")) {
@@ -9092,6 +9092,10 @@
 
           if (cell.classList.contains("center")) {
             appendInlineStyle(cell, "text-align:center;");
+          }
+
+          if (cell.classList.contains("sub-row-number")) {
+            appendInlineStyle(cell, "text-align:right;padding-right:14px;");
           }
 
           if (cell.classList.contains("top")) {
