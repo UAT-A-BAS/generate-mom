@@ -41,7 +41,10 @@ const functionNames = [
   "findNearestSingleDateSegmentIndex",
   "pairDateWithSingleSegment",
   "addDateRangeToSegments",
+  "toggleDateInSegments",
   "removeDateFromSegments",
+  "getDatePickerPreviewRange",
+  "formatDatePickerRangeLabel",
 ];
 const context = {};
 vm.createContext(context);
@@ -114,7 +117,7 @@ assert.deepEqual(
       )
     )
   ),
-  [{ start: "12-06-2026", end: "" }]
+  [{ start: "09-06-2026", end: "12-06-2026" }]
 );
 
 assert.deepEqual(
@@ -145,5 +148,76 @@ assert.deepEqual(
   ),
   []
 );
+
+const forwardRange = context.addDateRangeToSegments([], "2026-06-03", "2026-06-07");
+assert.deepEqual(JSON.parse(JSON.stringify(forwardRange)), [
+  { start: "03-06-2026", end: "07-06-2026" },
+]);
+
+assert.deepEqual(
+  JSON.parse(JSON.stringify(context.addDateRangeToSegments([], "2026-06-07", "2026-06-03"))),
+  JSON.parse(JSON.stringify(forwardRange))
+);
+
+assert.deepEqual(
+  JSON.parse(
+    JSON.stringify(context.addDateRangeToSegments(forwardRange, "2026-06-10", "2026-06-10"))
+  ),
+  [
+    { start: "03-06-2026", end: "07-06-2026" },
+    { start: "10-06-2026", end: "" },
+  ]
+);
+
+assert.deepEqual(
+  JSON.parse(
+    JSON.stringify(
+      context.addDateRangeToSegments(
+        [{ start: "01-06-2026", end: "" }],
+        "2026-06-03",
+        "2026-06-05"
+      )
+    )
+  ),
+  [
+    { start: "01-06-2026", end: "" },
+    { start: "03-06-2026", end: "05-06-2026" },
+  ]
+);
+
+assert.deepEqual(
+  JSON.parse(JSON.stringify(context.toggleDateInSegments(forwardRange, "2026-06-05"))),
+  [
+    { start: "03-06-2026", end: "04-06-2026" },
+    { start: "06-06-2026", end: "07-06-2026" },
+  ]
+);
+
+assert.deepEqual(
+  JSON.parse(
+    JSON.stringify(
+      context.normalizeDateSegments([
+        { start: "03-06-2026", end: "07-06-2026" },
+        { start: "05-06-2026", end: "10-06-2026" },
+      ])
+    )
+  ),
+  [{ start: "03-06-2026", end: "10-06-2026" }]
+);
+
+assert.deepEqual(
+  JSON.parse(JSON.stringify(context.getDatePickerPreviewRange("2026-06-10", "2026-06-05"))),
+  { start: "2026-06-05", end: "2026-06-10" }
+);
+assert.equal(
+  context.formatDatePickerRangeLabel("2026-06-10", "2026-06-05"),
+  "05-06-2026 - 10-06-2026"
+);
+
+assert.match(html, /document\.addEventListener\("pointerdown", handleDatePickerPointerDown\)/);
+assert.match(html, /document\.addEventListener\("pointercancel", handleDatePickerPointerCancel\)/);
+assert.match(html, /aria-pressed="\$\{isSelected \? "true" : "false"\}"/);
+assert.match(html, /Klik satu tanggal · tahan dan geser untuk rentang/);
+assert.match(html, /Lepas untuk menambahkan/);
 
 console.log("date multi tests passed");
