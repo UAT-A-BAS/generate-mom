@@ -216,6 +216,7 @@ assert.equal(
 
 assert.match(html, /document\.addEventListener\("pointerdown", handleDatePickerPointerDown\)/);
 assert.match(html, /document\.addEventListener\("pointercancel", handleDatePickerPointerCancel\)/);
+assert.match(html, /activeDatePicker\?\.picker === picker && activeDatePicker\.dragStart/);
 assert.match(html, /aria-pressed="\$\{isSelected \? "true" : "false"\}"/);
 assert.match(html, /Klik satu tanggal · tahan dan geser untuk rentang/);
 assert.match(html, /Lepas untuk menambahkan/);

@@ -4152,6 +4152,10 @@
       // =====================================================
 
       function positionDateRangePicker(picker, displayInput) {
+        if (activeDatePicker?.picker === picker && activeDatePicker.dragStart) {
+          return;
+        }
+
         const rect = displayInput.getBoundingClientRect();
         const margin = 8;
         const pickerRect = picker.getBoundingClientRect();
