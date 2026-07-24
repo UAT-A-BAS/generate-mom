@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node src/deck.mjs",
+    "verify": "node src/verify-and-montage.mjs",
+    "check": "npm run generate && npm run verify"
+  },
+  "dependencies": {
+    "@oai/artifact-tool": "2.8.24",
+    "skia-canvas": "3.0.8"
+  }
+}
