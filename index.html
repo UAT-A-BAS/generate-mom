@@ -102,6 +102,60 @@
         letter-spacing: -0.04em;
       }
 
+      .hero-heading {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .hero-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 12px;
+        padding: 9px 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        box-shadow: none;
+        font: inherit;
+        font-size: 0.84rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        backdrop-filter: blur(8px);
+        transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+      }
+
+      .hero-download:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .hero-download:active {
+        transform: translateY(0);
+      }
+
+      .hero-download:focus-visible {
+        outline: 3px solid rgba(255, 255, 255, 0.48);
+        outline-offset: 3px;
+      }
+
+      .hero-download svg {
+        width: 17px;
+        height: 17px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
       .hero p {
         margin: 0;
         max-width: 760px;
@@ -2542,7 +2596,22 @@
   <body>
     <div class="workspace">
       <header class="hero">
-        <h1>MOM Persiapan Implementasi</h1>
+        <div class="hero-heading">
+          <h1>MOM Persiapan Implementasi</h1>
+          <a
+            class="hero-download"
+            href="./ExportMOMToDraft.bas"
+            download="ExportMOMToDraft.bas"
+            aria-label="Download Macro Outlook"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 3v12"></path>
+              <path d="m7 10 5 5 5-5"></path>
+              <path d="M5 21h14"></path>
+            </svg>
+            <span>Macro Outlook</span>
+          </a>
+        </div>
         <div class="hero-actions" aria-label="Draft actions">
           <div class="collab-panel" aria-label="Collaboration">
             <input id="collabEditorName" type="hidden" />
