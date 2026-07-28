@@ -51,6 +51,11 @@ const xlsxFunctions = [
   "escapeXml",
   "getXlsxColumnName",
   "getXlsxCellRef",
+  "getXlsxHeaderStyleId",
+  "getXlsxAlignmentStyleId",
+  "getXlsxFlaggedStyleId",
+  "getXlsxChecklistNumberStyleId",
+  "getXlsxStyleId",
   "getXlsxCellColumnIndex",
   "addXlsxCell",
   "estimateXlsxRowHeight",
@@ -137,6 +142,23 @@ async function testXlsxWorkbook() {
   assert.match(worksheetXml, /<c r="A2"[^>]*s="12"/);
 }
 
+function classList(...names) {
+  return { contains: (name) => names.includes(name) };
+}
+
+const checklistTable = { classList: classList("table2") };
+const normalRow = { classList: classList() };
+const mutedRow = { classList: classList("muted-status") };
+const procedureRow = { classList: classList("procedure-group") };
+const numericCell = { cellIndex: 0, classList: classList("center") };
+const alphabeticCell = { cellIndex: 0, classList: classList("sub-row-number") };
+
+assert.equal(context.getXlsxStyleId(checklistTable, normalRow, numericCell, false, false, "1"), 12);
+assert.equal(context.getXlsxStyleId(checklistTable, mutedRow, numericCell, false, false, "2"), 18);
+assert.equal(context.getXlsxStyleId(checklistTable, procedureRow, numericCell, false, false, "11"), 19);
+assert.equal(context.getXlsxStyleId(checklistTable, normalRow, alphabeticCell, false, false, "a"), 20);
+assert.equal(context.getXlsxStyleId(checklistTable, mutedRow, alphabeticCell, false, false, "e"), 21);
+
 assert.match(html, /Export XLSX/);
 assert.match(html, /mom-meeting-export-\$\{new Date\(\)\.toISOString\(\)\.slice\(0, 10\)\}\.xlsx/);
 assert.match(html, /application\/vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet/);
@@ -164,7 +186,7 @@ assert.match(html, /value === "-"/);
 assert.match(html, /getXlsxFlaggedStyleId\(baseStyleId\)/);
 assert.match(html, /horizontal="center" vertical="center"/);
 assert.match(html, /vertical="top" wrapText="1"/);
-assert.match(html, /cellXfs count="18"/);
+assert.match(html, /cellXfs count="22"/);
 assert.match(html, /content: buildXlsxWorksheetXml\(sheet\)/);
 assert.doesNotMatch(html, /sheets\.map\(\(sheet, index\) => \(\{\s*path: `xl\/worksheets\/sheet\$\{index \+ 1\}\.xml`/);
 

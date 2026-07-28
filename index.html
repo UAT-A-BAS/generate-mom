@@ -9805,6 +9805,21 @@
         return 2;
       }
 
+      function getXlsxChecklistNumberStyleId(table, rowElement, cell) {
+        if (!table.classList.contains("table2") || cell.cellIndex !== 0) {
+          return null;
+        }
+
+        const isAlphabetic = cell.classList.contains("sub-row-number");
+        if (rowElement.classList.contains("muted-status")) {
+          return isAlphabetic ? 21 : 18;
+        }
+        if (rowElement.classList.contains("procedure-group")) {
+          return 19;
+        }
+        return isAlphabetic ? 20 : 12;
+      }
+
       function getXlsxStyleId(table, rowElement, cell, isHeader, isFlagged, value = "") {
         const baseStyleId = getXlsxAlignmentStyleId(cell, value);
 
@@ -9813,6 +9828,10 @@
         }
         if (isHeader) {
           return getXlsxHeaderStyleId(table);
+        }
+        const checklistNumberStyleId = getXlsxChecklistNumberStyleId(table, rowElement, cell);
+        if (checklistNumberStyleId !== null) {
+          return checklistNumberStyleId;
         }
         if (rowElement.classList.contains("muted-status")) {
           return 8;
@@ -10064,7 +10083,7 @@
     <border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border>
   </borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="18">
+  <cellXfs count="22">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"><alignment vertical="center" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"><alignment vertical="center" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment vertical="center" wrapText="1"/></xf>
@@ -10083,6 +10102,10 @@
     <xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment vertical="top" wrapText="1"/></xf>
     <xf numFmtId="0" fontId="0" fillId="2" borderId="1" xfId="0" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="1" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="2" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="right" vertical="center" wrapText="1"/></xf>
   </cellXfs>
   <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`;
