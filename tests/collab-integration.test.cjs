@@ -11,6 +11,7 @@ for (const id of [
   "startCollabBtn",
   "copyShareLinkBtn",
   "collabStatus",
+  "collabIdentityText",
   "collabUsersText",
   "collabLastSyncedText",
 ]) {
@@ -24,6 +25,7 @@ for (const functionName of [
   "disconnectCollab",
   "sendCollabPatch",
   "applyRemotePatch",
+  "applyCollabIdentity",
   "updateCollabStatus",
 ]) {
   assert.match(html, new RegExp(`function ${functionName}\\(`), `${functionName} should exist`);
@@ -34,6 +36,11 @@ assert.match(html, /new WebSocket\(/, "frontend should connect via WebSocket");
 assert.match(html, /api\/collab/, "frontend should use the collab API route");
 assert.match(html, /queueRemotePatchUntilBlur/, "focused local fields should queue remote patches");
 assert.match(html, /id="collabEditorName"\s+type="hidden"|id="collabEditorName"[^>]*type="hidden"/, "editor name should be hidden");
+assert.match(
+  html,
+  /id="collabIdentityText"[^>]*hidden/,
+  "verified identity indicator should stay hidden until the Worker confirms an identity"
+);
 assert.match(
   html,
   /if\s*\(\s*applyDraftDataFromJson\(raw\)\s*\)\s*{\s*window\.setTimeout\(\(\)\s*=>\s*sendCollabFullPayload\(\{\s*replace:\s*true\s*}\),\s*0\);/s,
