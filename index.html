@@ -1623,23 +1623,6 @@
         background: #9aa7b8;
       }
 
-      .collab-identity-pill {
-        max-width: min(280px, 72vw);
-        overflow: hidden;
-        border-color: #aac8e8;
-        background: #eef6ff;
-        color: #174b7a;
-        text-overflow: ellipsis;
-      }
-
-      .collab-identity-pill[hidden] {
-        display: none;
-      }
-
-      .collab-identity-pill::before {
-        background: #176438;
-      }
-
       .collab-status.is-live .collab-mode-pill::before,
       .collab-status.is-connected .collab-connection-pill::before {
         background: #176438;
@@ -1652,45 +1635,6 @@
       .collab-status.is-disconnected .collab-connection-pill::before {
         background: var(--danger);
       }
-
-      .collab-expiry-badge {
-        position: fixed;
-        top: 14px;
-        right: 14px;
-        z-index: 9999;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 9px 14px;
-        border-radius: 999px;
-        font-size: 0.82rem;
-        font-weight: 800;
-        letter-spacing: 0.02em;
-        color: #1c2734;
-        background: rgba(255,255,255,0.96);
-        border: 1px solid #c9d3df;
-        box-shadow: 0 8px 24px rgba(31,45,61,0.12);
-        backdrop-filter: blur(8px);
-      }
-      .collab-expiry-badge[hidden] { display: none !important; }
-      .collab-expiry-badge::before {
-        content: "";
-        width: 7px; height: 7px; border-radius: 50%;
-        background: #1b4d78;
-        flex: 0 0 auto;
-      }
-      .collab-expiry-badge.is-expired {
-        color: #fff;
-        background: #b3261e;
-        border-color: #b3261e;
-      }
-      .collab-expiry-badge.is-expired::before { background: #fff; }
-      .collab-expiry-badge.is-warning {
-        color: #7a2e00;
-        background: #fff3e0;
-        border-color: #ff9800;
-      }
-      .collab-expiry-badge.is-warning::before { background: #ff9800; }
 
       .collab-status.is-personal .collab-mode-pill::before {
         background: #5b6778;
@@ -2650,7 +2594,6 @@
     </style>
   </head>
   <body>
-    <div id="collabExpiryBadge" class="collab-expiry-badge" hidden aria-live="polite"><span id="collabExpiryText">Sisa: 7d 0j</span></div>
     <div class="workspace">
       <header class="hero">
         <div class="hero-heading">
@@ -2677,7 +2620,6 @@
             <div id="collabStatus" class="collab-status is-personal" role="status" aria-live="polite">
               <span id="collabModeText" class="collab-pill collab-mode-pill">Personal Draft</span>
               <span id="collabConnectionText" class="collab-pill collab-connection-pill">Offline</span>
-              <span id="collabIdentityText" class="collab-pill collab-identity-pill" hidden></span>
               <span id="collabUsersText" class="collab-pill">Users: 1</span>
               <span id="collabLastSyncedText" class="collab-pill">Last synced: -</span>
             </div>
@@ -3205,11 +3147,8 @@
         collabStatus: document.querySelector("#collabStatus"),
         collabModeText: document.querySelector("#collabModeText"),
         collabConnectionText: document.querySelector("#collabConnectionText"),
-        collabIdentityText: document.querySelector("#collabIdentityText"),
         collabUsersText: document.querySelector("#collabUsersText"),
         collabLastSyncedText: document.querySelector("#collabLastSyncedText"),
-        collabExpiryBadge: document.querySelector("#collabExpiryBadge"),
-        collabExpiryText: document.querySelector("#collabExpiryText"),
         memoFab: document.querySelector("#memoFab"),
         memoPanel: document.querySelector("#memoPanel"),
         memoCloseBtn: document.querySelector("#memoCloseBtn"),
@@ -3275,7 +3214,6 @@
         sessionId: "",
         clientId: "",
         editorName: "",
-        identity: null,
         socket: null,
         version: 0,
         users: 1,
@@ -3292,9 +3230,6 @@
         pendingTimers: new Map(),
         queuedPatches: new Map(),
         queuedFullPatch: null,
-        createdAt: 0,
-        expiresAt: 0,
-        expiryTimer: null,
       };
 
       // =====================================================
@@ -10832,50 +10767,6 @@
         });
       }
 
-      function normalizeCollabIdentity(identity) {
-        if (!identity || identity.verified !== true) {
-          return null;
-        }
-
-        const email = typeof identity.email === "string" ? identity.email.trim().slice(0, 254) : "";
-        const displayName =
-          typeof identity.displayName === "string" ? identity.displayName.trim().slice(0, 120) : "";
-        if (!email && !displayName) {
-          return null;
-        }
-
-        return { email, displayName, verified: true };
-      }
-
-      function applyCollabIdentity(identity) {
-        const verifiedIdentity = normalizeCollabIdentity(identity);
-        collabState.identity = verifiedIdentity;
-
-        if (!verifiedIdentity) {
-          collabState.editorName = getCollabEditorName();
-          elements.collabIdentityText.hidden = true;
-          elements.collabIdentityText.textContent = "";
-          elements.collabIdentityText.title = "";
-          elements.collabIdentityText.removeAttribute("aria-label");
-          return false;
-        }
-
-        const identityLabel = verifiedIdentity.displayName || verifiedIdentity.email;
-        const identityDetail =
-          verifiedIdentity.email && verifiedIdentity.email !== identityLabel
-            ? `${identityLabel} (${verifiedIdentity.email})`
-            : identityLabel;
-        collabState.editorName = identityLabel;
-        elements.collabIdentityText.textContent = `Microsoft \u2713 ${identityLabel}`;
-        elements.collabIdentityText.title = `Identitas Microsoft terverifikasi: ${identityDetail}`;
-        elements.collabIdentityText.setAttribute(
-          "aria-label",
-          `Identitas Microsoft terverifikasi: ${identityDetail}`
-        );
-        elements.collabIdentityText.hidden = false;
-        return true;
-      }
-
       function updateCollabStatus(status = {}) {
         if (typeof status.active === "boolean") {
           collabState.active = status.active;
@@ -10914,63 +10805,6 @@
         )}`;
         elements.copyShareLinkBtn.hidden = !collabState.active;
         elements.startCollabBtn.textContent = collabState.active ? "Restart Collab" : "Start Collab";
-        updateCollabExpiryBadge();
-      }
-
-      function formatCollabExpiry(expiresAt) {
-        if (!expiresAt) return "";
-        const diff = Number(expiresAt) - Date.now();
-        if (diff <= 0) return "Expired";
-        const dayMs = 24*60*60*1000;
-        const hourMs = 60*60*1000;
-        const minuteMs = 60*1000;
-        const days = Math.floor(diff / dayMs);
-        const hours = Math.floor((diff % dayMs) / hourMs);
-        const minutes = Math.floor((diff % hourMs) / minuteMs);
-        if (days > 0) return Sisa: d j;
-        if (hours > 0) return Sisa: j m;
-        return Sisa: m;
-      }
-
-      function updateCollabExpiryBadge() {
-        const badge = elements.collabExpiryBadge;
-        const textEl = elements.collabExpiryText;
-        if (!badge || !textEl) return;
-        if (!collabState.active || !collabState.expiresAt) {
-          badge.hidden = true;
-          badge.classList.remove("is-expired","is-warning");
-          return;
-        }
-        const diff = Number(collabState.expiresAt) - Date.now();
-        if (diff <= 0) {
-          textEl.textContent = "Expired";
-          badge.hidden = false;
-          badge.classList.add("is-expired");
-          badge.classList.remove("is-warning");
-          badge.title = "Session collab sudah expired (7 hari). Silakan Start Collab baru.";
-          return;
-        }
-        const label = formatCollabExpiry(collabState.expiresAt);
-        textEl.textContent = label;
-        badge.hidden = false;
-        if (diff < 24*60*60*1000) {
-          badge.classList.add("is-warning");
-          badge.classList.remove("is-expired");
-        } else {
-          badge.classList.remove("is-warning","is-expired");
-        }
-        const expiresDate = new Date(Number(collabState.expiresAt));
-        badge.title = "Expired: " + expiresDate.toLocaleString("id-ID", {dateStyle:"medium", timeStyle:"short"});
-      }
-
-      function startCollabExpiryTimer() {
-        if (collabState.expiryTimer) window.clearInterval(collabState.expiryTimer);
-        collabState.expiryTimer = window.setInterval(updateCollabExpiryBadge, 60*1000);
-      }
-
-      function stopCollabExpiryTimer() {
-        if (collabState.expiryTimer) { window.clearInterval(collabState.expiryTimer); collabState.expiryTimer=null; }
-        updateCollabExpiryBadge();
       }
 
       function clearCollabTimer(timerKey) {
@@ -11680,18 +11514,7 @@
         }
 
         if (message.type === "init") {
-          const serverClientId =
-            typeof message.serverClientId === "string" ? message.serverClientId.trim().slice(0, 128) : "";
-          if (serverClientId) {
-            collabState.clientId = serverClientId;
-          }
-          applyCollabIdentity(message.identity);
           collabState.version = Number(message.version) || 0;
-          collabState.createdAt = Number(message.createdAt) || 0;
-          collabState.expiresAt = Number(message.expiresAt) || 0;
-          if (typeof updateCollabExpiryBadge === 'function') {
-            if (collabState.active && collabState.expiresAt) { if (typeof startCollabExpiryTimer === 'function') startCollabExpiryTimer(); updateCollabExpiryBadge(); } else if (typeof stopCollabExpiryTimer === 'function') { stopCollabExpiryTimer(); }
-          }
           updateCollabStatus({
             active: true,
             connected: true,
@@ -11725,7 +11548,6 @@
         }
 
         if (message.type === "ack") {
-          if (message.expiresAt) { collabState.expiresAt = Number(message.expiresAt)|| collabState.expiresAt; collabState.createdAt = Number(message.createdAt)|| collabState.createdAt; updateCollabExpiryBadge(); startCollabExpiryTimer(); }
           collabState.version = Math.max(collabState.version, Number(message.version) || 0);
           updateCollabStatus({
             active: true,
@@ -11745,7 +11567,6 @@
           flushPendingCollabChanges();
         }
 
-        stopCollabExpiryTimer();
         collabState.active = false;
         collabState.connected = false;
         collabState.idle = false;
@@ -11775,7 +11596,7 @@
         collabState.connected = false;
         collabState.sessionId = cleanSessionId;
         collabState.clientId = getStoredCollabClientId();
-        applyCollabIdentity(null);
+        collabState.editorName = getCollabEditorName();
         collabState.idle = false;
         collabState.suspendReason = "";
         collabState.lastActivityAt = Date.now();
