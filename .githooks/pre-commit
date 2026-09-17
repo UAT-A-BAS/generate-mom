@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+node tools/build-offline-html.mjs
+git add -- generate-mom-offline.html
