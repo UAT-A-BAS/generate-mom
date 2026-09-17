@@ -81,4 +81,76 @@ assert.match(
   "the disabled share button needs a visible disabled style"
 );
 
+// The status pills change wording when a session starts ("Personal Draft" -> "Live",
+// "Offline" -> "Connected", "Sync: -" -> "Sync: 12.34"). Because the row is right-aligned,
+// those wording changes slid the whole cluster and could even change how many lines it
+// wrapped onto. Each value reserves the width of its longest variant.
+assert.match(
+  html,
+  /\.collab-stable-pill \.collab-pill-value\s*{\s*display:\s*inline-grid;\s*place-items:\s*center;\s*}/,
+  "dynamic pills must stack their value and sizer in one grid cell"
+);
+assert.match(
+  html,
+  /\.collab-stable-pill \.collab-pill-value::after\s*{\s*content:\s*attr\(data-sizer\);\s*grid-area:\s*1 \/ 1;\s*visibility:\s*hidden;\s*white-space:\s*nowrap;\s*}/,
+  "the hidden sizer must measure the longest wording without showing it"
+);
+assert.match(
+  html,
+  /\.collab-stable-pill \.collab-pill-text\s*{\s*grid-area:\s*1 \/ 1;\s*white-space:\s*nowrap;\s*}/,
+  "the visible value must share the sizer's grid cell"
+);
+
+for (const [id, sizer] of [
+  ["collabModeText", "Personal Draft"],
+  ["collabConnectionText", "Disconnected"],
+  ["collabLastSyncedText", "Sync: 00.00"],
+]) {
+  assert.match(
+    html,
+    new RegExp(`id="${id}"[^>]*collab-stable-pill`),
+    `${id} must be a stable pill`
+  );
+  assert.ok(
+    html.includes(`data-sizer="${sizer}"`),
+    `${id} must reserve the width of its longest wording ("${sizer}")`
+  );
+}
+
+// Updating a pill must go through the value span. Writing to the pill directly would delete
+// the sizer that lives in the same grid cell, and the shifting would come straight back.
+assert.match(
+  html,
+  /function setCollabPillText\(pill, text\)\s*{[\s\S]*?querySelector\("\.collab-pill-text"\)/,
+  "status updates must target the value span so the sizer survives"
+);
+for (const ref of [
+  "elements.collabModeText.textContent",
+  "elements.collabConnectionText.textContent",
+  "elements.collabLastSyncedText.textContent",
+]) {
+  assert.equal(
+    html.includes(ref),
+    false,
+    `${ref} would overwrite the sizer and must not be used`
+  );
+}
+
+// The reserved row has to fit beside the buttons on one line. The toolbar only leaves about
+// 494px of room at 1440px, and the sync pill is the widest, so its label stays short and
+// second-precision is dropped from the timestamp.
+assert.equal(
+  /second:\s*"2-digit"/.test(html),
+  false,
+  "the sync timestamp must not carry seconds, or the reserved row no longer fits on one line"
+);
+
+// `hidden` must beat the pill's own `display`, otherwise an empty conflict pill still
+// renders its status dot on a second row.
+assert.match(
+  html,
+  /\.collab-pill\[hidden\]\s*{\s*display:\s*none;\s*}/,
+  "hidden pills must actually be removed from the layout"
+);
+
 console.log("collab toolbar stability tests passed");
