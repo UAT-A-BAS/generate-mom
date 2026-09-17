@@ -56,17 +56,39 @@ assert.doesNotMatch(
   "hiding the live label with display:none would reintroduce the width shift"
 );
 
-// The share button ships disabled in the markup so it cannot flash as enabled before the
-// first status update, and its state is driven by `disabled` rather than visibility.
+// Copy Share Link only appears once a session exists, but it keeps its slot reserved. That
+// is the only way to satisfy both requirements at once: hidden until Start Collab, yet
+// nothing in the toolbar moves when it shows up. `visibility` keeps the box in the layout;
+// `display: none` would collapse it and shove the pill row sideways.
 assert.match(
   html,
-  /<button id="copyShareLinkBtn" type="button" class="btn-ghost" disabled>Copy Share Link<\/button>/,
-  "the share button must start disabled and always occupy its slot"
+  /<button\s+id="copyShareLinkBtn"[\s\S]*?class="btn-ghost collab-share-action"[\s\S]*?aria-hidden="true"[\s\S]*?tabindex="-1"[\s\S]*?disabled/,
+  "the share button must ship hidden, untabbable and disabled"
 );
 assert.match(
   html,
-  /elements\.copyShareLinkBtn\.disabled = collabState\.offline \|\| !collabState\.active;/,
-  "the share button must toggle disabled, not visibility"
+  /\.collab-share-action\s*{\s*visibility:\s*hidden;\s*pointer-events:\s*none;\s*}/,
+  "the inactive share button must be invisible but keep its box"
+);
+assert.match(
+  html,
+  /\.collab-share-action\.is-visible\s*{\s*visibility:\s*visible;\s*pointer-events:\s*auto;\s*}/,
+  "the active share button must become visible in the same slot"
+);
+assert.doesNotMatch(
+  html,
+  /copyShareLinkBtn\.hidden\s*=/,
+  "display-based hiding would reintroduce the layout shift"
+);
+assert.match(
+  html,
+  /const canShare = !collabState\.offline && collabState\.active;\s*elements\.copyShareLinkBtn\.classList\.toggle\("is-visible", canShare\);/,
+  "visibility must be driven by whether a session exists"
+);
+assert.match(
+  html,
+  /elements\.copyShareLinkBtn\.setAttribute\("aria-hidden", canShare \? "false" : "true"\);[\s\S]*?elements\.copyShareLinkBtn\.tabIndex = canShare \? 0 : -1;/,
+  "the inactive share button must leave the tab order and the accessibility tree"
 );
 assert.match(
   html,
@@ -104,6 +126,7 @@ assert.match(
 for (const [id, sizer] of [
   ["collabModeText", "Personal Draft"],
   ["collabConnectionText", "Disconnected"],
+  ["collabUsersText", "Users: 00"],
   ["collabLastSyncedText", "Sync: 00.00"],
 ]) {
   assert.match(
@@ -127,6 +150,7 @@ assert.match(
 for (const ref of [
   "elements.collabModeText.textContent",
   "elements.collabConnectionText.textContent",
+  "elements.collabUsersText.textContent",
   "elements.collabLastSyncedText.textContent",
 ]) {
   assert.equal(
