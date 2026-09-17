@@ -1655,6 +1655,38 @@
         opacity: 0.6;
       }
 
+      /* Both labels share a single grid cell, so the button is always as wide as the
+         longest label. Without this, switching to "Restart Collab" widens the button and
+         shoves the whole control cluster sideways the moment collaboration starts. */
+      .collab-primary-action {
+        display: inline-grid;
+        place-items: center;
+      }
+
+      .collab-primary-action .collab-action-label {
+        grid-area: 1 / 1;
+        white-space: nowrap;
+      }
+
+      /* visibility (not display) keeps the inactive label out of the accessibility tree
+         while still reserving its width, so the button never resizes. */
+      .collab-primary-action .collab-action-label-live {
+        visibility: hidden;
+      }
+
+      .collab-primary-action.is-live .collab-action-label-idle {
+        visibility: hidden;
+      }
+
+      .collab-primary-action.is-live .collab-action-label-live {
+        visibility: visible;
+      }
+
+      .collab-panel .btn-ghost:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
       .feedback {
         display: none;
         margin-top: 14px;
@@ -2630,8 +2662,11 @@
         <div class="hero-actions" aria-label="Draft actions">
           <div class="collab-panel" aria-label="Collaboration">
             <input id="collabEditorName" type="hidden" />
-            <button id="startCollabBtn" type="button" class="btn-secondary">Start Collab</button>
-            <button id="copyShareLinkBtn" type="button" class="btn-ghost" hidden>Copy Share Link</button>
+            <button id="startCollabBtn" type="button" class="btn-secondary collab-primary-action">
+              <span class="collab-action-label collab-action-label-idle">Start Collab</span>
+              <span class="collab-action-label collab-action-label-live">Restart Collab</span>
+            </button>
+            <button id="copyShareLinkBtn" type="button" class="btn-ghost" disabled>Copy Share Link</button>
             <div id="collabStatus" class="collab-status is-personal" role="status" aria-live="polite">
               <span id="collabModeText" class="collab-pill collab-mode-pill">Personal Draft</span>
               <span id="collabConnectionText" class="collab-pill collab-connection-pill">Offline</span>
@@ -10942,8 +10977,15 @@
                 .join("\n")
             : "";
         }
-        elements.copyShareLinkBtn.hidden = !collabState.active;
-        elements.startCollabBtn.textContent = collabState.active ? "Restart Collab" : "Start Collab";
+        // Both controls keep their footprint in every state: the share button stays in the
+        // layout (disabled until a session exists) and the primary button swaps labels
+        // inside a fixed-width grid cell. Hiding or re-wording them used to shove the whole
+        // cluster sideways the instant collaboration started.
+        elements.copyShareLinkBtn.disabled = collabState.offline || !collabState.active;
+        elements.copyShareLinkBtn.title = collabState.active
+          ? ""
+          : "Bagikan tautan setelah sesi kolaborasi dimulai.";
+        elements.startCollabBtn.classList.toggle("is-live", collabState.active);
         elements.startCollabBtn.disabled = collabState.offline;
         elements.startCollabBtn.title = collabState.offline
           ? "Mode offline: kolaborasi tidak aktif pada file offline."
